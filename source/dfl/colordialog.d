@@ -1,13 +1,15 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.colordialog;
 
-private import dfl.commondialog, dfl.base, dfl.internal.winapi, dfl.internal.wincom;
-private import dfl.internal.utf, dfl.application, dfl.drawing, dfl.internal.dlib;
+private import dfl.commondialog;
+private import dfl.base;
+private import dfl.application;
+private import dfl.drawing;
 
+private import core.sys.windows.windows;
 
 ///
 class ColorDialog: CommonDialog // docmain
@@ -224,10 +226,11 @@ private extern(Windows) UINT ccHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		
 		if(cd)
 		{
+			// If IntelliSense highlights the following line as an error, it's on mushrooms again
 			result = cast(UINT)cd.hookProc(hwnd, msg, wparam, lparam);
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}

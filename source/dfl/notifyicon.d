@@ -1,13 +1,18 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.notifyicon;
 
-private import dfl.internal.winapi, dfl.base, dfl.drawing;
-private import dfl.control, dfl.form, dfl.application;
-private import dfl.event, dfl.internal.utf, dfl.internal.dlib;
+private import dfl.base;
+private import dfl.drawing;
+private import dfl.control;
+private import dfl.form;
+private import dfl.application;
+private import dfl.event;
+
+private import core.sys.windows.windows;
+private import std.conv : to;
 
 version(DFL_NO_MENUS)
 {
@@ -49,7 +54,7 @@ class NotifyIcon // docmain
 		if(visible)
 		{
 			nid.uFlags = NIF_ICON;
-			Shell_NotifyIconA(NIM_MODIFY, &nid);
+			Shell_NotifyIcon(NIM_MODIFY, &nid);
 		}
 	}
 	
@@ -63,32 +68,37 @@ class NotifyIcon // docmain
 	///
 	// Must be less than 64 chars.
 	// To-do: hold reference to setter's string, use that for getter.. ?
-	final @property void text(Dstring txt) // setter
+	final @property void text(string txt) // setter
 	{
 		if(txt.length >= nid.szTip.length)
 			throw new DflException("Notify icon text too long");
 		
 		// To-do: support Unicode.
 		
+		/*
 		txt = unsafeAnsi(txt); // ...
 		nid.szTip[txt.length] = 0;
 		nid.szTip[0 .. txt.length] = txt[];
 		tipLen = cast(int)txt.length;
+		*/
+		// To-done :) - D.O
+		nid.szTip = to!wstring(txt.dup);
+		tipLen = to!uint(txt.length);
 		
 		if(visible)
 		{
 			nid.uFlags = NIF_TIP;
-			Shell_NotifyIconA(NIM_MODIFY, &nid);
+			Shell_NotifyIcon(NIM_MODIFY, &nid);
 		}
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		//return nid.szTip[0 .. tipLen]; // Returning possibly mutated text!
 		//return nid.szTip[0 .. tipLen].dup;
 		//return nid.szTip[0 .. tipLen].idup; // Needed in D2. Doesn't work in D1.
-		return cast(Dstring)nid.szTip[0 .. tipLen].dup; // Needed in D2. Doesn't work in D1.
+		return cast(string)nid.szTip[0 .. tipLen].dup; // Needed in D2. Doesn't work in D1.
 	}
 	
 	
@@ -257,7 +267,7 @@ class NotifyIcon // docmain
 	private:
 	
 	NOTIFYICONDATA nid;
-	int tipLen = 0;
+	uint tipLen = 0; // Changed from int to uint, hope this doesn't cause problems - D.O
 	version(DFL_NO_MENUS)
 	{
 	}
@@ -271,13 +281,13 @@ class NotifyIcon // docmain
 	package final void _forceAdd()
 	{
 		nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-		Shell_NotifyIconA(NIM_ADD, &nid);
+		Shell_NotifyIcon(NIM_ADD, &nid);
 	}
 	
 	
 	package final void _forceDelete()
 	{
-		Shell_NotifyIconA(NIM_DELETE, &nid);
+		Shell_NotifyIcon(NIM_DELETE, &nid);
 	}
 	
 	

@@ -1,15 +1,19 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 // Not actually part of forms, but is handy.
 
 ///
 module dfl.environment;
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.base;
+private import dfl.event;
 
-private import dfl.internal.winapi, dfl.base, dfl.internal.utf, dfl.event;
+private import core.sys.windows.winbase;
+private import core.sys.windows.windows;
+
+private import std.conv;
+private import std.string;
 
 
 ///
@@ -21,41 +25,44 @@ final class Environment // docmain
 	static:
 	
 	///
-	@property Dstring commandLine() // getter
+	@property string commandLine() // getter
 	{
-		return dfl.internal.utf.getCommandLine();
+		return to!string(fromStringz(GetCommandLineA()));
 	}
 	
 	
 	///
-	@property void currentDirectory(Dstring cd) // setter
+	@property void currentDirectory(string cd) // setter
 	{
-		if(!dfl.internal.utf.setCurrentDirectory(cd))
+		if(!SetCurrentDirectoryA(cd.ptr))
 			throw new DflException("Unable to set current directory");
 	}
 	
 	/// ditto
-	@property Dstring currentDirectory() // getter
+	@property string currentDirectory() // getter
 	{
-		return dfl.internal.utf.getCurrentDirectory();
+		char[MAX_PATH] buf;
+		GetCurrentDirectoryA(MAX_PATH, buf.ptr);
+		return to!string(fromStringz(buf));
 	}
 	
 	
 	///
-	@property Dstring machineName() // getter
+	@property string machineName() // getter
 	{
-		Dstring result;
-		result = dfl.internal.utf.getComputerName();
-		if(!result.length)
+		char[] result;
+		uint len;
+		if(GetComputerNameA(result.ptr, &len) == 0)
 			throw new DflException("Unable to obtain machine name");
-		return result;
+		return to!string(fromStringz(result));
 	}
 	
 	
 	///
-	@property Dstring newLine() // getter
+	@property string newLine() // getter
 	{
-		return nativeLineSeparatorString;
+		static import std.ascii;
+		return std.ascii.newline;
 	}
 	
 	
@@ -80,7 +87,7 @@ final class Environment // docmain
 			case VER_PLATFORM_WIN32_WINDOWS:
 				ver = new Version(osi.dwMajorVersion, osi.dwMinorVersion, LOWORD(osi.dwBuildNumber));
 				break;
-			case VER_PLATFORM_X64_WINDOWS:
+			case 3: // VER_PLATFORM_X64_WINDOWS: // Idk, for some reason this just does not exist - D.O
 				ver = new Version(osi.dwMajorVersion, osi.dwMinorVersion, LOWORD(osi.dwBuildNumber));
 				break;
 			default:
@@ -92,13 +99,12 @@ final class Environment // docmain
 	
 	
 	///
-	@property Dstring systemDirectory() // getter
+	@property string systemDirectory() // getter
 	{
-		Dstring result;
-		result = dfl.internal.utf.getSystemDirectory();
-		if(!result.length)
+		char[MAX_PATH] result;
+		if(GetSystemDirectoryA(result.ptr, MAX_PATH) == 0)
 			throw new DflException("Unable to obtain system directory");
-		return result;
+		return to!string(fromStringz(result));
 	}
 	
 	
@@ -110,13 +116,13 @@ final class Environment // docmain
 	
 	
 	///
-	@property Dstring userName() // getter
+	@property string userName() // getter
 	{
-		Dstring result;
-		result = dfl.internal.utf.getUserName();
-		if(!result.length)
+		char[] result;
+		uint len;
+		if(GetUserNameA(result.ptr, &len) == 0)
 			throw new DflException("Unable to obtain user name");
-		return result;
+		return to!string(fromStringz(result));
 	}
 	
 	
@@ -124,64 +130,75 @@ final class Environment // docmain
 	void exit(int code)
 	{
 		// This is probably better than ExitProcess(code).
-		dfl.internal.clib.exit(code);
+		// I'm pretty sure that C in Windows uses ExitProcess() for exit() - D.O
+		ExitProcess(code);
 	}
 	
 	
 	///
-	Dstring expandEnvironmentVariables(Dstring str)
+	string expandEnvironmentVariables(string str)
 	{
-		if(!str.length)
-		{
+		if(str.length == 0) {
 			return str;
 		}
-		Dstring result;
-		if(!dfl.internal.utf.expandEnvironmentStrings(str, result))
+		uint lenRequired = 0;
+		lenRequired = ExpandEnvironmentStringsA(str.ptr, null, 1);
+
+		if (lenRequired == 0)
 			throw new DflException("Unable to expand environment variables");
-		return result;
+
+		char[] buf;
+		if (ExpandEnvironmentStringsA(str.ptr, buf.ptr, lenRequired) == 0)
+			throw new DflException("Unable to expand environment variables");
+		return to!string(fromStringz(buf));
 	}
 	
 	
 	///
-	Dstring[] getCommandLineArgs()
+	string[] getCommandLineArgs()
 	{
 		return parseArgs(commandLine);
 	}
 	
 	
 	///
-	Dstring getEnvironmentVariable(Dstring name, bool throwIfMissing)
+	string getEnvironmentVariable(string name, bool throwIfMissing)
 	{
-		Dstring result;
-		result = dfl.internal.utf.getEnvironmentVariable(name);
-		if(!result.length)
-		{
-			if(!throwIfMissing)
-			{
-				if(GetLastError() == 203) // ERROR_ENVVAR_NOT_FOUND
-					return null;
+		if(name.length == 0) {
+			return name;
+		}
+		uint lenRequired = 0;
+		lenRequired = GetEnvironmentVariableA(name.ptr, null, 1);
+
+		if (lenRequired == 0) {
+			if(!throwIfMissing && GetLastError() == 203) { // ERROR_ENVVAR_NOT_FOUND
+			    return "";
 			}
 			throw new DflException("Unable to obtain environment variable");
-		}
-		return result;
+        }
+
+		char[] buf;
+		if (GetEnvironmentVariableA(name.ptr, buf.ptr, lenRequired) == 0)
+			throw new DflException("Unable to obtain environment variable");
+		return to!string(fromStringz(buf));
 	}
 	
 	/// ditto
-	Dstring getEnvironmentVariable(Dstring name)
+	string getEnvironmentVariable(string name)
 	{
 		return getEnvironmentVariable(name, true);
 	}
 	
 	
-	//Dstring[Dstring] getEnvironmentVariables()
-	//Dstring[] getEnvironmentVariables()
+	//string[string] getEnvironmentVariables()
+	//string[] getEnvironmentVariables()
 	
 	
 	///
-	Dstring[] getLogicalDrives()
+	string[] getLogicalDrives()
 	{
 		DWORD dr = GetLogicalDrives();
-		Dstring[] result;
+		string[] result;
 		int i;
 		char[4] tmp = " :\\\0";
 		
@@ -192,7 +209,7 @@ final class Environment // docmain
 				char[] s = tmp.dup[0 .. 3];
 				s[0] = cast(char)('A' + i);
 				//result ~= s;
-				result ~= cast(Dstring)s; // Needed in D2.
+				result ~= cast(string)s; // Needed in D2.
 			}
 			dr >>= 1;
 		}
@@ -412,9 +429,9 @@ final class SystemEvents // docmain
 +/
 
 
-package Dstring[] parseArgs(Dstring args)
+package string[] parseArgs(string args)
 {
-	Dstring[] result;
+	string[] result;
 	uint i;
 	bool inQuote = false;
 	bool findStart = true;
@@ -483,7 +500,7 @@ package Dstring[] parseArgs(Dstring args)
 
 unittest
 {
-	Dstring[] args;
+	string[] args;
 	
 	args = parseArgs(`"foo" bar`);
 	assert(args.length == 2);
@@ -496,7 +513,7 @@ unittest
 	
 	/+
 	writefln("commandLine = '%s'", Environment.commandLine);
-	foreach(Dstring arg; Environment.getCommandLineArgs())
+	foreach(string arg; Environment.getCommandLineArgs())
 	{
 		writefln("\t'%s'", arg);
 	}
@@ -526,25 +543,29 @@ class Version // docmain ?
 	/// ditto
 	// A string containing "major.minor.build.revision".
 	// 2 to 4 parts expected.
-	this(Dstring str)
+	this(string str)
 	{
-		Dstring[] stuff = stringSplit(str, ".");
+		string[] stuff = split(str, ".");
 		
-		switch(stuff.length)
-		{
-			case 4:
-				_revision = stringToInt(stuff[3]);
-				goto case 3;
-			case 3:
-				_build = stringToInt(stuff[2]);
-				goto case 2;
-			case 2:
-				_minor = stringToInt(stuff[1]);
-				_major = stringToInt(stuff[0]);
-				break;
-			default:
-				throw new DflException("Invalid version parameter");
-		}
+		try {
+			switch(stuff.length)
+			{
+				case 4:
+					_revision = to!int(stuff[3]);
+					goto case 3;
+				case 3:
+					_build = to!int(stuff[2]);
+					goto case 2;
+				case 2:
+					_minor = to!int(stuff[1]);
+					_major = to!int(stuff[0]);
+					break;
+				default:
+					throw new DflException("Invalid version parameter");
+			}
+        } catch (ConvException ex) {
+			throw new DflException("Version parameter is not an integer");
+        }
 	}
 	
 	/// ditto
@@ -584,15 +605,15 @@ class Version // docmain ?
 	
 	
 	///
-	override Dstring toString()
+	override string toString()
 	{
-		Dstring result;
+		string result;
 		
-		result = intToString(_major) ~ "." ~ intToString(_minor);
+		result = to!string(_major) ~ "." ~ to!string(_minor);
 		if(_build != -1)
-			result ~= "." ~ intToString(_build);
+			result ~= "." ~ to!string(_build);
 		if(_revision != -1)
-			result ~= "." ~ intToString(_revision);
+			result ~= "." ~ to!string(_revision);
 		
 		return result;
 	}
@@ -627,13 +648,13 @@ class Version // docmain ?
 
 
 ///
-enum PlatformId: DWORD
+enum PlatformId: uint
 {
 	WIN_CE = cast(DWORD)-1,
 	WIN32s = VER_PLATFORM_WIN32s,
 	WIN32_WINDOWS = VER_PLATFORM_WIN32_WINDOWS,
 	WIN32_NT = VER_PLATFORM_WIN32_NT,
-	WIN64_WINDOWS = VER_PLATFORM_X64_WINDOWS,
+	WIN64_WINDOWS = 3, // VER_PLATFORM_X64_WINDOWS, // Again, for some reason this specific one is missing - D.O
 }
 
 
@@ -651,15 +672,15 @@ final class OperatingSystem // docmain
 		
 		
 		///
-		override Dstring toString()
+		override string toString()
 		{
-			Dstring result;
+			string result;
 			
 			// DMD 0.92 says error: cannot implicitly convert uint to PlatformId
-			switch(cast(DWORD)platId)
+			switch(platId)
 			{
 				case PlatformId.WIN64_WINDOWS:
-					result = "Microsoft Windows 7 ";
+					result = "Microsoft Windows (64-bit) ";
 				break;
 				case PlatformId.WIN32_NT:
 					result = "Microsoft Windows NT ";

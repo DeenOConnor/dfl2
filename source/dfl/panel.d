@@ -1,11 +1,13 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.panel;
 
-private import dfl.control, dfl.base, dfl.internal.winapi;
+private import dfl.control;
+private import dfl.base;
+
+private import core.sys.windows.windows;
 
 
 ///

@@ -1,9 +1,22 @@
 ///
+
+// I suppose Mr. Christopher E. Miller forgot to add copyright information here? - D.O
+
+///
 module dfl.toolbar;
 
-private import dfl.base, dfl.control, dfl.drawing, dfl.application,
-	dfl.event, dfl.collections;
-private import dfl.internal.winapi, dfl.internal.dlib;
+private import dfl.base;
+private import dfl.control;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+private import dfl.collections;
+private import dfl.internal.dlib;
+private static import dfl.internal.utf;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
 
 version(DFL_NO_IMAGELIST)
 {
@@ -594,7 +607,7 @@ class ToolBar: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -654,7 +667,7 @@ class ToolBar: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcW(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

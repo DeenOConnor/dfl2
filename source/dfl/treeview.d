@@ -1,14 +1,22 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.treeview;
 
 private import dfl.internal.dlib;
 
-private import dfl.control, dfl.application, dfl.base, dfl.internal.winapi;
-private import dfl.event, dfl.drawing, dfl.collections, dfl.internal.utf;
+private import dfl.control;
+private import dfl.application;l
+private import dfl.base;
+private import dfl.event;
+private import dfl.drawing;
+private import dfl.collections;
+private import dfl.internal.utf;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
 
 version(DFL_NO_IMAGELIST)
 {

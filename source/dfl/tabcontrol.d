@@ -1,14 +1,21 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.tabcontrol;
 
 private import dfl.internal.dlib;
 
-private import dfl.control, dfl.panel, dfl.internal.winapi, dfl.drawing;
-private import dfl.application, dfl.event, dfl.base, dfl.collections;
+private import dfl.control;
+private import dfl.panel;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+private import dfl.base;
+private import dfl.collections;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 
 private extern(Windows) void _initTabcontrol();

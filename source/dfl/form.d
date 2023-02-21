@@ -1,15 +1,19 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.form;
 
-private import dfl.internal.dlib;
-
-private import dfl.control, dfl.internal.winapi, dfl.event, dfl.drawing;
-private import dfl.application, dfl.base, dfl.internal.utf;
+private import dfl.control;
+private import dfl.event;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.base;
 private import dfl.collections;
+
+private import core.sys.windows.windows;
+
+
 
 version(DFL_NO_MENUS)
 {
@@ -28,7 +32,7 @@ else
 }
 
 
-version = DFL_NO_ZOMBIE_FORM;
+// version = DFL_NO_ZOMBIE_FORM; // Unzombifying windows is a good idea - D.O
 
 
 private extern(Windows) void _initMdiclient();
@@ -170,7 +174,7 @@ class Form: ContainerControl, IDialogResult // docmain
 		assert(shortcut & Keys.KEY_CODE); // At least one key code.
 		assert(pressed !is null);
 	}
-	body
+	do
 	{
 		if(shortcut in _shortcuts)
 			throw new DflException("Shortcut key conflict");
@@ -380,7 +384,7 @@ class Form: ContainerControl, IDialogResult // docmain
 		
 		debug
 		{
-			Dstring er;
+			string er;
 		}
 		if(killing)
 		{
@@ -400,7 +404,7 @@ class Form: ContainerControl, IDialogResult // docmain
 			}
 			
 			create_err:
-			Dstring kmsg = "Form creation failure";
+			string kmsg = "Form creation failure";
 			if(name.length)
 				kmsg ~= " (" ~ name ~ ")";
 			debug
@@ -451,7 +455,7 @@ class Form: ContainerControl, IDialogResult // docmain
 				ly = SW_HIDE;
 			
 			Application.creatingControl(this);
-			hwnd = dfl.internal.utf.createWindowEx(exStyle, className, caption, wstyle & ~WS_VISIBLE,
+			hwnd = CreateWindowExA(exStyle, className.ptr, caption.ptr, wstyle & ~WS_VISIBLE,
 				x, ly, width, height, parent, menu, inst, param);
 			if(!hwnd)
 			{
@@ -490,7 +494,7 @@ class Form: ContainerControl, IDialogResult // docmain
 		{
 			createChildren(); // Might throw.
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 		}
@@ -1038,7 +1042,7 @@ class Form: ContainerControl, IDialogResult // docmain
 					assert(found);
 				}
 			}+/
-			body
+			do
 			{
 				if(wmdiparent is frm)
 					return;
@@ -1491,7 +1495,7 @@ class Form: ContainerControl, IDialogResult // docmain
 			assert(found);
 		}
 	}+/
-	body
+	do
 	{
 		if(wowner is frm)
 			return;
@@ -1519,7 +1523,7 @@ class Form: ContainerControl, IDialogResult // docmain
 			wowner = frm;
 			if(isHandleCreated)
 			{
-				if(CCompat.DFL095 == _compat)
+				if(0x01 == _compat) // CCompat.DFL095
 					SetParent(hwnd, frm.hwnd);
 				else
 					_crecreate();
@@ -1529,7 +1533,7 @@ class Form: ContainerControl, IDialogResult // docmain
 		{
 			if(isHandleCreated)
 			{
-				if(showInTaskbar || CCompat.DFL095 == _compat)
+				if(showInTaskbar || 0x01 == _compat) // CCompat.DFL095
 					SetParent(hwnd, HWND.init);
 				else
 					_crecreate();
@@ -2738,7 +2742,7 @@ class Form: ContainerControl, IDialogResult // docmain
 	}
 	
 	
-	package alias dfl.internal.utf.defDlgProc _defFormProc;
+	//package alias dfl.internal.utf.defDlgProc _defFormProc;
 	
 	protected override void defWndProc(ref Message msg)
 	{
@@ -2789,7 +2793,7 @@ class Form: ContainerControl, IDialogResult // docmain
 					{
 						// ?
 						//msg.result = DefMDIChildProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-						msg.result = dfl.internal.utf.defMDIChildProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+						msg.result = DefMDIChildProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 						return;
 					}
 				}
@@ -2886,13 +2890,13 @@ class Form: ContainerControl, IDialogResult // docmain
 				{
 					if(mdiClient && mdiClient.isHandleCreated && msg.msg != WM_SIZE)
 						//msg.result = DefFrameProcA(msg.hWnd, mdiClient.handle, msg.msg, msg.wParam, msg.lParam);
-						msg.result = dfl.internal.utf.defFrameProc(msg.hWnd, mdiClient.handle, msg.msg, msg.wParam, msg.lParam);
+						msg.result = DefFrameProcA(msg.hWnd, mdiClient.handle, msg.msg, msg.wParam, msg.lParam);
 					else if(isMdiChild)
 						//msg.result = DefMDIChildProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-						msg.result = dfl.internal.utf.defMDIChildProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+						msg.result = DefMDIChildProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 					else
 						//msg.result = DefDlgProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-						msg.result = _defFormProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+						msg.result = DefDlgProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 				}
 		}
 	}
@@ -3084,7 +3088,7 @@ class Form: ContainerControl, IDialogResult // docmain
 							case Keys.ENTER:
 								if(form.acceptButton)
 								{
-									dfl.internal.utf.isDialogMessage(form.handle, &m._winMsg);
+									IsDialogMessageA(form.handle, &m._winMsg);
 									return true; // Prevent.
 								}
 								return false;
@@ -3494,7 +3498,7 @@ version(NO_MDI) {} else
 		protected override void prevWndProc(ref Message msg)
 		{
 			//msg.result = CallWindowProcA(mdiclientPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-			msg.result = dfl.internal.utf.callWindowProc(mdiclientPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+			msg.result = CallWindowProcA(mdiclientPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 		}
 		
 		

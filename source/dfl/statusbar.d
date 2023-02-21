@@ -1,16 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.statusbar;
 
 
-private import dfl.control, dfl.base, dfl.internal.winapi, dfl.event,
-	dfl.collections, dfl.internal.utf, dfl.internal.dlib, dfl.application;
-
+private import dfl.control;
+private import dfl.base;
+private import dfl.event;
+private import dfl.collections;
+private import dfl.internal.utf;
 private import dfl.internal.dlib;
+private import dfl.application;
 
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 private extern(Windows) void _initStatusbar();
 
@@ -286,7 +290,7 @@ class StatusBar: ControlSuperClass // docmain
 		{
 			assert(sb.lpanels is null);
 		}
-		body
+		do
 		{
 			this.sb = sb;
 		}

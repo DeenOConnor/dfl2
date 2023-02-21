@@ -1,13 +1,18 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.groupbox;
 
-private import dfl.control, dfl.base, dfl.button, dfl.drawing;
-private import dfl.internal.winapi, dfl.application, dfl.event;
+private import dfl.control;
+private import dfl.base;
+private import dfl.button;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
 
+private import core.sys.windows.windows;
+private import core.sys.windows.winuser;
 
 private extern(Windows) void _initButton();
 
@@ -120,7 +125,7 @@ class GroupBox: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 		
 		// Work around a Windows issue...
 		if(WM_PAINT == msg.msg)
@@ -128,15 +133,17 @@ class GroupBox: ControlSuperClass // docmain
 			auto hmuxt = GetModuleHandleA("uxtheme.dll");
 			if(hmuxt)
 			{
-				auto isAppThemed = cast(typeof(&IsAppThemed))GetProcAddress(hmuxt, "IsAppThemed");
-				if(isAppThemed && isAppThemed())
+				alias int function() nothrow f_IsAppThemed;
+				auto isAppThemed = cast(f_IsAppThemed)GetProcAddress(hmuxt, "IsAppThemed");
+				if(isAppThemed !is null && isAppThemed())
 				{
 					auto txt = text;
 					if(txt.length)
 					{
-						auto openThemeData = cast(typeof(&OpenThemeData))GetProcAddress(hmuxt, "OpenThemeData");
+						alias void* function(void* hwnd, const(wchar*) pszClassList) f_OpenThemeData;
+						auto openThemeData = cast(f_OpenThemeData)GetProcAddress(hmuxt, "OpenThemeData");
 						HTHEME htd;
-						if(openThemeData
+						if(openThemeData !is null
 							&& HTHEME.init != (htd = openThemeData(msg.hWnd, "Button")))
 						{
 							HDC hdc = cast(HDC)msg.wParam;
@@ -156,9 +163,10 @@ class GroupBox: ControlSuperClass // docmain
 								
 								Color c;
 								COLORREF cr;
-								auto getThemeColor = cast(typeof(&GetThemeColor))GetProcAddress(hmuxt, "GetThemeColor");
+								alias int function(void* hTheme, int iPartId, int iStateId, int iPropId, uint* pColor) f_GetThemeColor;
+								auto getThemeColor = cast(f_GetThemeColor)GetProcAddress(hmuxt, "GetThemeColor");
 								auto gtcState = enabled ? (1 /*PBS_NORMAL*/) : (2 /*GBS_DISABLED*/);
-								if(getThemeColor
+								if(getThemeColor !is null
 									&& 0 == getThemeColor(htd, 4 /*BP_GROUPBOX*/, gtcState, 3803 /*TMT_TEXTCOLOR*/, &cr))
 									c = Color.fromRgb(cr);
 								else
@@ -176,7 +184,8 @@ class GroupBox: ControlSuperClass // docmain
 								if(gotdc)
 									ReleaseDC(msg.hWnd, hdc);
 								
-								auto closeThemeData = cast(typeof(&CloseThemeData))GetProcAddress(hmuxt, "CloseThemeData");
+								alias int function(void* hTheme) f_CloseThemeData;
+								auto closeThemeData = cast(f_CloseThemeData)GetProcAddress(hmuxt, "CloseThemeData");
 								assert(closeThemeData !is null);
 								closeThemeData(htd);
 							}

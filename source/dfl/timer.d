@@ -1,12 +1,15 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.timer;
 
-private import dfl.internal.winapi, dfl.event, dfl.base, dfl.application,
-	dfl.internal.dlib;
+private import dfl.event;
+private import dfl.base;
+private import dfl.application;
+private import dfl.internal.dlib;
+
+private import core.sys.windows.windows;
 
 
 ///
@@ -98,7 +101,7 @@ class Timer // docmain
 		if(dg)
 		{
 			this._dg = dg;
-			tick ~= &_dgcall;
+			tick.addHandler(&_dgcall);
 		}
 	}
 	
@@ -108,7 +111,7 @@ class Timer // docmain
 		assert(dg !is null);
 		
 		this();
-		tick ~= dg;
+		tick.addHandler(dg);
 	}
 	
 	/// ditto
@@ -117,7 +120,7 @@ class Timer // docmain
 		assert(dg !is null);
 		
 		this();
-		tick ~= dg;
+		tick.addHandler(dg);
 	}
 	
 	

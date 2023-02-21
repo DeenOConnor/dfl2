@@ -1,12 +1,15 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.imagelist;
 
-import dfl.base, dfl.drawing, dfl.internal.winapi;
+import dfl.base;
+private import dfl.drawing;
 import dfl.collections;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 
 version(DFL_NO_IMAGELIST)

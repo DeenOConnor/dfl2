@@ -1,9 +1,8 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
-module dfl.socket;
+module dfl.sockets;
 
 
 version(WINE)
@@ -11,6 +10,8 @@ version(WINE)
 	version = DFL_NoSocket;
 }
 
+// Temporary - D.O
+version = DFL_NoSocket;
 
 version(DFL_NoSocket)
 {
@@ -18,13 +19,14 @@ version(DFL_NoSocket)
 else
 {
 
-private import dfl.internal.dlib, dfl.internal.clib;
+//private
+//{
+	import core.bitop;
+	//private import std.c.windows.winsock;//core.sys.windows.winsock;
+	import std.socket;
+	import core.sys.windows.winsock2;
 
-private
-{
-	private import std.socket, core.bitop;
-	private import std.c.windows.winsock;//core.sys.windows.winsock;
-	
+
 	alias InternetHost DInternetHost;
 	alias InternetAddress DInternetAddress;
 	
@@ -32,11 +34,16 @@ private
 	{
 		return sock.handle;
 	}
-}
+//}
 
 alias std.socket.Socket DflSocket; ///
 
-private import dfl.internal.winapi, dfl.application, dfl.base, dfl.internal.utf;
+private import dfl.application;
+private import dfl.base;
+private import dfl.internal.utf;
+
+
+private import core.sys.windows.windows;
 
 
 private
@@ -325,10 +332,21 @@ alias void delegate(DInternetHost inetHost, int err) GetHostCallback;
 ///
 class GetHost // docmain
 {
+
+	alias extern(Windows) int function(void* hAsyncTaskHandle) nothrow WSACancelAsyncRequest;
+	static WSACancelAsyncRequest f_WSACancelAsyncRequest;
+	static this() {
+		HMODULE ws_s32;
+		ws_s32 = GetModuleHandleA("Ws2_32.dll");
+		f_WSACancelAsyncRequest = cast(WSACancelAsyncRequest)GetProcAddress(ws_s32, "WSACancelAsyncRequest");
+    }
+
+
 	///
 	void cancel()
 	{
-		WSACancelAsyncRequest(h);
+		assert(f_WSACancelAsyncRequest);
+		f_WSACancelAsyncRequest(h);
 		h = null;
 	}
 	
@@ -427,7 +445,7 @@ class SocketQueue // docmain
 	{
 		assert(sock !is null);
 	}
-	body
+	do
 	{
 		this.sock = sock;
 	}
@@ -561,7 +579,7 @@ class SocketQueue // docmain
 	{
 		assert(_sock is sock);
 	}
-	body
+	do
 	{
 		switch(type)
 		{

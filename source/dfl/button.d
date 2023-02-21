@@ -1,13 +1,16 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.button;
 
-private import dfl.base, dfl.control, dfl.application, dfl.internal.winapi;
-private import dfl.event, dfl.drawing, dfl.internal.dlib;
+private import dfl.application;
+private import dfl.base;
+private import dfl.control;
+private import dfl.event;
+private import dfl.drawing;
 
+import core.sys.windows.windows;
 
 private extern(Windows) void _initButton();
 
@@ -378,7 +381,7 @@ class Button: ButtonBase, IButtonControl // docmain
 	}
 	
 	
-	override @property void text(Dstring txt) // setter
+	override @property void text(string txt) // setter
 	{
 		if(txt.length)
 			assert(!this.image, "Button image with text not supported");
@@ -402,7 +405,7 @@ class Button: ButtonBase, IButtonControl // docmain
 		if(img)
 			assert(!this.text.length, "Button image with text not supported");
 	}
-	body
+	do
 	{
 		/+
 		if(_picbm)
@@ -470,7 +473,7 @@ class Button: ButtonBase, IButtonControl // docmain
 	{
 		assert(isHandleCreated);
 	}
-	body
+	do
 	{
 		WPARAM wparam = 0;
 		LPARAM lparam = 0;

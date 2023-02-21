@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33130.400
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "dfl", "source\dfl.visualdproj", "{13A743BF-14CA-4000-B66D-13E47B6E1823}"
 EndProject
 Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "dflTEST", "example\dflTEST.visualdproj", "{2480FA5C-5D6A-497C-B208-BF90DF379377}"
@@ -8,7 +10,7 @@ Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "dflTEST", "example\dflTEST.
 		{13A743BF-14CA-4000-B66D-13E47B6E1823} = {13A743BF-14CA-4000-B66D-13E47B6E1823}
 	EndProjectSection
 EndProject
-Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "dflexe", "othersource\dflexe\source\dfl_exe.visualdproj", "{A3C7FC9E-D964-4783-AC46-0690042350E6}"
+Project("{002A2DE9-8BB6-484D-9802-7E4AD4084715}") = "Failed to load dfl_exe", "othersource\dflexe\source\dfl_exe.visualdproj", "{A3C7FC9E-D964-4783-AC46-0690042350E6}"
 	ProjectSection(ProjectDependencies) = postProject
 		{13A743BF-14CA-4000-B66D-13E47B6E1823} = {13A743BF-14CA-4000-B66D-13E47B6E1823}
 	EndProjectSection
@@ -34,7 +36,6 @@ Global
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Debug|Win32.ActiveCfg = Debug|Win32
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Debug|Win32.Build.0 = Debug|Win32
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Debug|x64.ActiveCfg = Debug|x64
-		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Debug|x64.Build.0 = Debug|x64
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Release|Win32.ActiveCfg = Release|Win32
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Release|Win32.Build.0 = Release|Win32
 		{2480FA5C-5D6A-497C-B208-BF90DF379377}.Release|x64.ActiveCfg = Release|x64
@@ -54,5 +55,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9B2A6878-3704-45FC-9885-FF8F9D02AB14}
 	EndGlobalSection
 EndGlobal

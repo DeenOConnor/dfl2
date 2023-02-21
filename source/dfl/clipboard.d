@@ -1,13 +1,16 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 /// Interfacing with the system clipboard for copy and paste operations.
 module dfl.clipboard;
 
-private import dfl.base, dfl.internal.winapi, dfl.data, dfl.internal.wincom,
-	dfl.internal.dlib;
+private import dfl.base;
+private import dfl.data;
 
+private import core.sys.windows.commctrl;
+private import core.sys.windows.objidl;
+private import core.sys.windows.ole2;
+private import core.sys.windows.windows;
 
 ///
 class Clipboard // docmain
@@ -18,9 +21,9 @@ class Clipboard // docmain
 	static:
 	
 	///
-	dfl.data.IDataObject getDataObject()
+	IDflDataObject getDataObject()
 	{
-		dfl.internal.wincom.IDataObject comdobj;
+		IDataObject comdobj;
 		if(S_OK != OleGetClipboard(&comdobj))
 			throw new DflException("Unable to obtain clipboard data object");
 		if(comdobj is comd)
@@ -54,9 +57,9 @@ class Clipboard // docmain
 				{
 					// ...
 				}
-				else +/ if(cast(dfl.data.IDataObject)foo)
+				else +/ if(cast(IDflDataObject)foo)
 				{
-					dd = cast(dfl.data.IDataObject)foo;
+					dd = cast(IDflDataObject)foo;
 					objref = foo;
 				}
 				else
@@ -65,9 +68,9 @@ class Clipboard // docmain
 					throw new DflException("Unknown data object");
 				}
 			}
-			else if(obj.info == typeid(dfl.data.IDataObject))
+			else if(obj.info == typeid(IDflDataObject))
 			{
-				dd = obj.getValue!(dfl.data.IDataObject)();
+				dd = obj.getValue!(IDflDataObject)();
 				objref = cast(Object)dd;
 			}
 			else if(cast(TypeInfo_Interface)obj.info)
@@ -109,22 +112,22 @@ class Clipboard // docmain
 	}
 	
 	/// ditto
-	void setDataObject(dfl.data.IDataObject obj, bool persist = false)
+	void setDataObject(IDataObject obj, bool persist = false)
 	{
 		setDataObject(Data(obj), persist);
 	}
 	
 	
 	///
-	void setString(Dstring str, bool persist = false)
+	void setString(string str, bool persist = false)
 	{
 		setDataObject(Data(str), persist);
 	}
 	
 	/// ditto
-	Dstring getString()
+	string getString()
 	{
-		dfl.data.IDataObject ido;
+		IDflDataObject ido;
 		ido = getDataObject();
 		if(ido.getDataPresent(DataFormats.utf8))
 			return ido.getData(DataFormats.utf8).getString();
@@ -142,7 +145,7 @@ class Clipboard // docmain
 	/// ditto
 	ubyte[] getText()
 	{
-		dfl.data.IDataObject ido;
+		IDflDataObject ido;
 		ido = getDataObject();
 		if(ido.getDataPresent(DataFormats.text))
 			return ido.getData(DataFormats.text).getText();
@@ -151,8 +154,8 @@ class Clipboard // docmain
 	
 	
 	private:
-	dfl.internal.wincom.IDataObject comd;
-	dfl.data.IDataObject dd;
+	IDataObject comd;
+	IDflDataObject dd;
 	Object objref; // Prevent dd from being garbage collected!
 	
 	

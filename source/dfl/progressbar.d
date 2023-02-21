@@ -1,13 +1,17 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.progressbar;
 
-private import dfl.base, dfl.control, dfl.drawing, dfl.application,
-	dfl.event;
-private import dfl.internal.winapi;
+private import dfl.base;
+private import dfl.control;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 
 private extern(Windows) void _initProgressbar();
@@ -205,7 +209,7 @@ class ProgressBar: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -224,7 +228,7 @@ class ProgressBar: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcW(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

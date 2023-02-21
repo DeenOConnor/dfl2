@@ -1,7 +1,10 @@
 ﻿module dfl.clippingform;
 
-private import dfl.all, dfl.internal.winapi;
+private import dfl.all;
+private import dfl.form;
 private import core.memory;
+
+private import core.sys.windows.windows;
 
 private extern (Windows)
 {

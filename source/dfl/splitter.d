@@ -1,12 +1,15 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.splitter;
 
-private import dfl.control, dfl.internal.winapi, dfl.base, dfl.drawing;
+private import dfl.control;
+private import dfl.base;
+private import dfl.drawing;
 private import dfl.event;
+
+private import core.sys.windows.windows;
 
 
 ///

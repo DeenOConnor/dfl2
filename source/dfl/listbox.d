@@ -1,7 +1,6 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.listbox;
 
@@ -9,11 +8,19 @@ static import std.algorithm;
 
 private import dfl.internal.dlib;
 
-private import dfl.internal.winapi, dfl.control, dfl.base, dfl.application;
-private import dfl.drawing, dfl.event, dfl.collections;
+private import dfl.control;
+private import dfl.base;
+private import dfl.application;
+private import dfl.drawing;
+private import dfl.event;
+private import dfl.collections;
+
+private import core.stdc.string : memmove;
+
+private import core.sys.windows.windows;
 
 
-private extern(C) void* memmove(void*, void*, size_t len);
+// private extern(C) void* memmove(void*, void*, size_t len); // Included in core.stdc
 
 private extern(Windows) void _initListbox();
 

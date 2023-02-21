@@ -4,15 +4,16 @@
 /// Event handling.
 module dfl.event;
 
-import dfl.internal.dlib;
 import std.functional;
 
 
+/*
 // Create an event handler; old style.
 deprecated template Event(TArgs : EventArgs = EventArgs)
 {
 	alias Event!(Object, TArgs) Event;
 }
+*/
 
 
 /** Managing event handlers.
@@ -34,7 +35,7 @@ template Event(T1, T2) // docmain
 		{
 			assert(handler);
 		}
-		body
+		do
 		{
 			if(!_array.length)
 			{
@@ -63,7 +64,7 @@ template Event(T1, T2) // docmain
 		{
 			assert(handler);
 		}
-		body
+		do
 		{
 			mixin _validateHandler!(TDG);
 			
@@ -72,7 +73,7 @@ template Event(T1, T2) // docmain
 		
 		
 		/// Shortcut for addHandler().
-		void opCatAssign(TDG)(TDG handler)
+		void opOpAssign(TDG)(TDG handler)
 		{
 			addHandler(toDelegate(handler));
 		}
@@ -189,7 +190,7 @@ template Event(T1, T2) // docmain
 			{
 				return _array[1 .. _array.length].dup; // Because _array can be modified. Function is deprecated anyway.
 			}
-			catch (DThrowable e)
+			catch (Throwable e)
 			{
 				return null;
 			}
@@ -313,20 +314,20 @@ class ThreadExceptionEventArgs: EventArgs
 {
 	///
 	// The exception that occured.
-	this(DThrowable theException) pure nothrow
+	this(Throwable theException) pure nothrow
 	{
 		except = theException;
 	}
 	
 	
 	///
-	final @property DThrowable exception() pure nothrow // getter
+	final @property Throwable exception() pure nothrow // getter
 	{
 		return except;
 	}
 	
 	
 	private:
-	DThrowable except;
+	Throwable except;
 }
 

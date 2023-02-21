@@ -1,11 +1,13 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.messagebox;
 
-private import dfl.internal.winapi, dfl.internal.dlib, dfl.base;
+private import dfl.internal.dlib;
+private import dfl.base;
+
+private import core.sys.windows.windows;
 
 
 ///

@@ -1,13 +1,10 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 // Not actually part of forms, but is handy.
 
 ///
 module dfl.collections;
-
-private import dfl.internal.dlib;
 
 private import dfl.base;
 
@@ -20,17 +17,18 @@ void _blankListCallback(TValue)(size_t idx, TValue val) // package
 // Mixin.
 // Item*Callback called before modifications.
 // For clear(), index is size_t.max and value is null. If CLEAR_EACH, also called back for each value.
-template ListWrapArray(TValue, alias Array,
+mixin template ListWrapArray(TValue, TValue[] Array,
 	/+ // DMD 1.005: basic type expected, not function
 	alias ItemAddingCallback = function(size_t idx, TValue val){},
 	alias ItemAddedCallback = function(size_t idx, TValue val){},
 	alias ItemRemovingCallback = function(size_t idx, TValue val){},
 	alias ItemRemovedCallback = function(size_t idx, TValue val){},
 	+/
-	alias ItemAddingCallback,
-	alias ItemAddedCallback,
-	alias ItemRemovingCallback,
-	alias ItemRemovedCallback,
+	// At least for DMD 2.102.0 this is the way, otherwise error instantiating
+	void function(size_t idx, TValue val) ItemAddingCallback,
+	void function(size_t idx, TValue val) ItemAddedCallback,
+	void function(size_t idx, TValue val) ItemRemovingCallback,
+	void function(size_t idx, TValue val) ItemRemovedCallback,
 	bool OVERLOAD_STRING = false,
 	bool OVERLOAD_OBJECT = false,
 	bool COW = true,

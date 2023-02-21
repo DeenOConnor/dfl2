@@ -1,15 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.tooltip;
 
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.internal.dlib;
+private import dfl.internal.clib;
 
-private import dfl.control, dfl.base, dfl.application, dfl.internal.winapi,
-	dfl.internal.utf;
+private import dfl.control;
+private import dfl.base;
+private import dfl.application;
+private import dfl.internal.utf;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 
 ///
@@ -214,7 +219,7 @@ class ToolTip // docmain
 			//throw o;
 		}
 	}
-	body
+	do
 	{
 		TOOLINFOA tool;
 		tool.cbSize = TOOLINFOA.sizeof;

@@ -1,14 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.textbox;
 
 private import dfl.internal.dlib;
 
-private import dfl.control, dfl.base, dfl.internal.winapi, dfl.application;
-private import dfl.drawing, dfl.event, dfl.internal.utf;
+private import dfl.control;
+private import dfl.base;
+private import dfl.application;
+private import dfl.drawing;
+private import dfl.event;
+private import dfl.internal.utf;
+
+private import core.sys.windows.windows;
+
 
 version(DFL_NO_MENUS)
 {

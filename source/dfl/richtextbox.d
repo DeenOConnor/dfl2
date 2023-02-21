@@ -1,13 +1,23 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.richtextbox;
 
-private import dfl.textbox, dfl.internal.winapi, dfl.event, dfl.application;
-private import dfl.base, dfl.drawing, dfl.data;
-private import dfl.control, dfl.internal.utf, dfl.internal.dlib;
+private import dfl.textbox;
+private import dfl.event;
+private import dfl.application;
+private import dfl.base;
+private import dfl.drawing;
+private import dfl.data;
+private import dfl.control;
+private import dfl.internal.utf;
+private import dfl.internal.dlib;
+
+private import core.sys.windows.richedit;
+private import core.sys.windows.windows;
+
+private import core.stdc.string : strcpy;
 
 version(DFL_NO_MENUS)
 {
@@ -18,10 +28,19 @@ else
 }
 
 
-private extern(C) char* strcpy(char*, char*);
+//private extern(C) char* strcpy(char*, char*); // Unnecessary, available in core.stdc
 
 
 private extern(Windows) void _initRichtextbox();
+
+private {
+	// Magic numbers because for some reason they are not in core.sys.windows.richedit
+	enum CFM_BACKCOLOR = 0x04000000;
+    enum CFE_AUTOBACKCOLOR = CFM_BACKCOLOR;
+    enum CFM_UNDERLINETYPE = 0x00800000;
+	enum CFM_WEIGHT = 0x00400000;
+    enum CFU_UNDERLINE = 1;
+}
 
 
 ///
@@ -80,11 +99,11 @@ class RichTextBox: TextBoxBase // docmain
 			with(miredo = new MenuItem)
 			{
 				text = "&Redo";
-				click ~= &menuRedo;
+				click.addHandler(&menuRedo);
 				contextMenu.menuItems.insert(1, miredo);
 			}
 			
-			contextMenu.popup ~= &menuPopup2;
+			contextMenu.popup.addHandler(&menuPopup2);
 		}
 	}
 	
@@ -748,7 +767,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		//SendMessageA(handle, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
 		//CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
@@ -761,7 +780,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		/+
 		//if(!SendMessageA(handle, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
@@ -787,7 +806,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		_StreamStr si;
 		EDITSTREAM es;
@@ -808,7 +827,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		_StreamStr so;
 		EDITSTREAM es;
@@ -927,7 +946,7 @@ class RichTextBox: TextBoxBase // docmain
 		assert(max >= 0);
 		assert(max >= min);
 	}
-	body
+	do
 	{
 		if(min == max)
 			return null;

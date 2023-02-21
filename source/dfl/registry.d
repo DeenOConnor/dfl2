@@ -1,7 +1,6 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 // Not actually part of forms, but is handy.
 
 ///
@@ -9,7 +8,10 @@ module dfl.registry;
 
 private import dfl.internal.dlib;
 
-private import dfl.internal.winapi, dfl.base, dfl.internal.utf;
+private import dfl.base;
+private import dfl.internal.utf;
+
+private import core.sys.windows.windows;
 
 
 class DflRegistryException: DflException // package
@@ -336,7 +338,7 @@ out(result)
 		assert(charIsHexDigit(ch));
 	}
 }
-body
+do
 {
 	char[] result;
 	Dstring stmp;
