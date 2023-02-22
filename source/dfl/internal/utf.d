@@ -22,7 +22,7 @@
 module dfl.internal.utf;
 
 private import dfl.internal.dlib;
-private import dfl.internal.clib;
+// private import dfl.internal.clib;
 
 private import std.windows.charset;
 

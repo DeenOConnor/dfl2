@@ -6,7 +6,7 @@ module dfl.tooltip;
 
 
 private import dfl.internal.dlib;
-private import dfl.internal.clib;
+// private import dfl.internal.clib;
 
 private import dfl.control;
 private import dfl.base;
