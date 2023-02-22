@@ -226,13 +226,13 @@ private import std.ascii;
 alias std.ascii.isHexDigit charIsHexDigit;
 
 
-private import std.stream;
+private import undead.stream;
 
-alias std.stream.Stream DStream;
+alias undead.stream.Stream DStream;
 
-alias std.stream.OutputStream DOutputStream;
+alias undead.stream.OutputStream DOutputStream;
 
-alias std.stream.StreamException DStreamException;
+alias undead.stream.StreamException DStreamException;
 
 
 alias Object DObject;
