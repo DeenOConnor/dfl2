@@ -187,7 +187,7 @@ class TabPageCollection
 	{
 		assert(owner.tchildren is null);
 	}
-	body
+	do
 	{
 		tc = owner;
 	}
@@ -204,7 +204,7 @@ class TabPageCollection
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		Rect area;
 		area = tc.displayRectangle;
@@ -506,7 +506,7 @@ class TabControlBase: ControlSuperClass
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -993,7 +993,7 @@ class TabControl: TabControlBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		int i;
 		i = tabPages.indexOf(page);

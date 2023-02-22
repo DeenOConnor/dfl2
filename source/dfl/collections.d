@@ -17,7 +17,7 @@ void _blankListCallback(TValue)(size_t idx, TValue val) // package
 // Mixin.
 // Item*Callback called before modifications.
 // For clear(), index is size_t.max and value is null. If CLEAR_EACH, also called back for each value.
-mixin template ListWrapArray(TValue, alias TValue[] Array,
+mixin template ListWrapArray(TValue, TValue[] Array,
 	/+ // DMD 1.005: basic type expected, not function
 	alias ItemAddingCallback = function(size_t idx, TValue val){},
 	alias ItemAddedCallback = function(size_t idx, TValue val){},

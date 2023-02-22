@@ -2,7 +2,7 @@
 // See the included license.txt for copyright and license details.
 
 ///
-module dfl.sockets;
+module dfl.socket;
 
 
 version(WINE)

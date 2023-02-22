@@ -446,7 +446,8 @@ final class Application // docmain
 		scope tmr = new TMR.Timer();
 		bool keep = true;
 		tmr.interval = msDelay;
-		tmr.tick.addHandler((TMR.Timer sender, EventArgs ea) { sender.stop(); keep = false; });
+		auto callback = (TMR.Timer sender, EventArgs ea) { sender.stop(); keep = false; };
+		tmr.tick.addHandler!(typeof(callback))(callback);
 		tmr.start();
 		while(keep)
 		{
@@ -904,7 +905,7 @@ final class Application // docmain
 			
 			if(except)
 			{
-				writef("Error: %.*s\n", cast(int)getObjectString(e).length, getObjectString(e).ptr);
+				writef("Error: %s\n", e.toString());
 				
 				abort();
 				return;
@@ -2123,8 +2124,8 @@ alias HANDLE HTHEME;
 
 extern(Windows)
 {
-	alias BOOL function(LPTRACKMOUSEEVENT lpEventTrack) TrackMouseEventProc;
-	alias BOOL function(HWND, COLORREF, BYTE, DWORD) SetLayeredWindowAttributesProc;
+	// alias BOOL function(LPTRACKMOUSEEVENT lpEventTrack) TrackMouseEventProc; // Exists in core.sys.windows.winuser
+	// alias BOOL function(HWND, COLORREF, BYTE, DWORD) SetLayeredWindowAttributesProc; // Same as above
 	
 	alias HTHEME function(HWND) GetWindowThemeProc;
 	alias BOOL function(HTHEME hTheme, int iPartId, int iStateId) IsThemeBackgroundPartiallyTransparentProc;
@@ -2134,10 +2135,10 @@ extern(Windows)
 
 
 // Set version = SUPPORTS_MOUSE_TRACKING if it is guaranteed to be supported.
-TrackMouseEventProc trackMouseEvent;
+// TrackMouseEventProc trackMouseEvent;
 
 // Set version = SUPPORTS_OPACITY if it is guaranteed to be supported.
-SetLayeredWindowAttributesProc setLayeredWindowAttributes;
+// SetLayeredWindowAttributesProc setLayeredWindowAttributes;
 
 /+
 GetWindowThemeProc getWindowTheme;
@@ -2296,9 +2297,11 @@ static this()
 	}
 	else
 	{
+		/* TrackMouseEvent exists in core.sys.windows.winuser
 		trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(user32, "TrackMouseEvent");
 		if(!trackMouseEvent) // Must be Windows 95; check if common controls has it (IE 5.5).
 			trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(GetModuleHandleA("comctl32.dll"), "_TrackMouseEvent");
+		*/
 	}
 	
 	version(SUPPORTS_OPACITY)
@@ -2309,7 +2312,8 @@ static this()
 	}
 	else
 	{
-		setLayeredWindowAttributes = cast(SetLayeredWindowAttributesProc)GetProcAddress(user32, "SetLayeredWindowAttributes");
+		// Exists in core.sys.windows.winuser
+		// setLayeredWindowAttributes = cast(SetLayeredWindowAttributesProc)GetProcAddress(user32, "SetLayeredWindowAttributes");
 	}
 }
 
@@ -2355,20 +2359,20 @@ do
 {
 	Application.hinst = inst;
 	
-	WndClass wc;
-	wc.wc.style = WNDCLASS_STYLE;
-	wc.wc.hInstance = inst;
-	wc.wc.lpfnWndProc = &dflWndProc;
+	WNDCLASSA wc;
+	wc.style = WNDCLASS_STYLE;
+	wc.hInstance = inst;
+	wc.lpfnWndProc = &dflWndProc;
 	
 	// Control wndclass.
-	wc.className = CONTROL_CLASSNAME;
-	if(!registerClass(wc))
+	wc.lpszClassName = CONTROL_CLASSNAME.ptr;
+	if(!RegisterClassA(&wc))
 		_unableToInit(CONTROL_CLASSNAME);
 	
 	// Form wndclass.
-	wc.wc.cbWndExtra = DLGWINDOWEXTRA;
-	wc.className = FORM_CLASSNAME;
-	if(!registerClass(wc))
+	wc.cbWndExtra = DLGWINDOWEXTRA;
+	wc.lpszClassName = FORM_CLASSNAME.ptr;
+	if(!RegisterClassA(&wc))
 		_unableToInit(FORM_CLASSNAME);
 }
 
@@ -2379,11 +2383,11 @@ extern(Windows)
 	{
 		if(!textBoxPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			textBoxPrevWndProc = superClass(HINSTANCE.init, "EDIT", TEXTBOX_CLASSNAME, info);
 			if(!textBoxPrevWndProc)
 				_unableToInit(TEXTBOX_CLASSNAME);
-			textBoxClassStyle = info.wc.style;
+			textBoxClassStyle = info.style;
 		}
 	}
 	
@@ -2532,11 +2536,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_WIN95_CLASSES);
 			
-			WndClass info;
+			WNDCLASSA info;
 			statusbarPrevWndProc = superClass(HINSTANCE.init, "msctls_statusbar32", STATUSBAR_CLASSNAME, info);
 			if(!statusbarPrevWndProc)
 				_unableToInit(STATUSBAR_CLASSNAME);
-			statusbarClassStyle = info.wc.style;
+			statusbarClassStyle = info.style;
 		}
 	}
 	
@@ -2547,21 +2551,21 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_PROGRESS_CLASS);
 			
-			WndClass info;
+			WNDCLASSA info;
 			progressbarPrevWndProc = superClass(HINSTANCE.init, "msctls_progress32", PROGRESSBAR_CLASSNAME, info);
 			if(!progressbarPrevWndProc)
 				_unableToInit(PROGRESSBAR_CLASSNAME);
-			progressbarClassStyle = info.wc.style;
+			progressbarClassStyle = info.style;
 		}
 	}
 }
 
-
+/*
 WNDPROC _superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // deprecated
 {
 	WNDPROC wndProc;
 	
-	if(!GetClassInfoA(hinst, unsafeStringz(className), &getInfo)) // TODO: unicode.
+	if(!GetClassInfoA(hinst, className.ptr, &getInfo)) // TODO: unicode.
 		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
 	
 	wndProc = getInfo.lpfnWndProc;
@@ -2569,7 +2573,7 @@ WNDPROC _superClass(HINSTANCE hinst, string className, string newClassName, out 
 	
 	getInfo.style &= ~CS_GLOBALCLASS;
 	getInfo.hCursor = HCURSOR.init;
-	getInfo.lpszClassName = unsafeStringz(newClassName);
+	getInfo.lpszClassName = newClassName.ptr;
 	getInfo.hInstance = Application.getInstance();
 	
 	if(!RegisterClassA(&getInfo)) // TODO: unicode.
@@ -2577,10 +2581,11 @@ WNDPROC _superClass(HINSTANCE hinst, string className, string newClassName, out 
 		//return null;
 	return wndProc;
 }
+*/
 
 
 public:
-
+/*
 // Returns the old wndProc.
 // This is the old, unsafe, unicode-unfriendly function for superclassing.
 deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
@@ -2594,25 +2599,25 @@ deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClass
 	WNDCLASSA info;
 	return _superClass(hinst, className, newClassName, info);
 }
-
+*/
 
 // Returns the old wndProc.
-WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WndClass getInfo) // package
+WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
 {
 	WNDPROC wndProc;
 	
-	if(!getClassInfo(hinst, className, getInfo))
+	if(!GetClassInfoA(hinst, className.ptr, &getInfo))
 		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
 	
-	wndProc = getInfo.wc.lpfnWndProc;
-	getInfo.wc.lpfnWndProc = &dflWndProc;
+	wndProc = getInfo.lpfnWndProc;
+	getInfo.lpfnWndProc = &dflWndProc;
 	
-	getInfo.wc.style &= ~CS_GLOBALCLASS;
-	getInfo.wc.hCursor = HCURSOR.init;
-	getInfo.className = newClassName;
-	getInfo.wc.hInstance = Application.getInstance();
+	getInfo.style &= ~CS_GLOBALCLASS;
+	getInfo.hCursor = HCURSOR.init;
+	getInfo.lpszClassName = newClassName.ptr;
+	getInfo.hInstance = Application.getInstance();
 	
-	if(!registerClass(getInfo))
+	if(RegisterClassA(&getInfo) == 0)
 		//throw new DflException("Unable to register window class '" ~ newClassName ~ "'");
 		return null;
 	return wndProc;

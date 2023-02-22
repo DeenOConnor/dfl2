@@ -21,6 +21,7 @@
 
 module dfl.internal.dlib;
 
+private static import std.algorithm;
 
 alias typeof(""c[]) Dstring;
 alias typeof(""c.ptr) Dstringz;

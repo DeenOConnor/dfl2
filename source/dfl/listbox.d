@@ -1272,7 +1272,7 @@ class ListBox: ListControl // docmain
 		assert(dis.hwndItem == handle);
 		assert(dis.CtlType == ODT_LISTBOX);
 	}
-	body
+	do
 	{
 		DrawItemState state;
 		state = cast(DrawItemState)dis.itemState;
@@ -1313,7 +1313,7 @@ class ListBox: ListControl // docmain
 	{
 		assert(mis.CtlType == ODT_LISTBOX);
 	}
-	body
+	do
 	{
 		MeasureItemEventArgs miea;
 		scope Graphics gpx = new CommonGraphics(handle(), GetDC(handle));

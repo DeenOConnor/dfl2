@@ -874,7 +874,7 @@ class TreeNodeCollection
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		TV_INSERTSTRUCTA tis;
 		Message m;

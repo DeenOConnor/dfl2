@@ -8,7 +8,6 @@ module dfl.data;
 
 private import dfl.base;
 private import dfl.application;
-private import dfl.internal.utf;
 private import dfl.internal.com;
 
 private import core.sys.windows.objidl;
@@ -17,6 +16,11 @@ private import core.sys.windows.winbase;
 private import core.sys.windows.windows;
 private import core.sys.windows.winuser;
 private import core.sys.windows.wtypes;
+
+private import std.conv : to;
+private import std.string : icmp, fromStringz;
+private import std.utf : toUTF8;
+
 
 ///
 class DataFormats // docmain
@@ -223,11 +227,11 @@ class DataFormats // docmain
 		_init();
 		foreach(Format onfmt; fmts)
 		{
-			if(!stringICmp(name, onfmt.name))
+			if(!icmp(name, onfmt.name))
 				return onfmt;
 		}
 		// Didn't find it.
-		return _didntFindId(dfl.internal.utf.registerClipboardFormat(name));
+		return _didntFindId(RegisterClipboardFormatA(name.ptr));
 	}
 	
 	/// ditto
@@ -287,11 +291,13 @@ class DataFormats // docmain
 	// Does not get the name of one of the predefined constant ones.
 	string getName(int id)
 	{
-		string result;
-		result = dfl.internal.utf.getClipboardFormatName(id);
-		if(!result.length)
+		char[] buf;
+		int len;
+		buf = new char[64];
+		len = GetClipboardFormatNameA(id, buf.ptr, 64);
+		if(len == 0)
 			throw new DflException("Unable to get format");
-		return result;
+		return to!string(fromStringz(buf));
 	}
 	
 	
@@ -301,7 +307,7 @@ class DataFormats // docmain
 			return getFormat(text);
 		if(type == typeid(string))
 			return getFormat(stringFormat);
-		if(type == typeid(Dwstring))
+		if(type == typeid(wstring))
 			return getFormat(unicodeText);
 		//if(type == typeid(Bitmap))
 		//	return getFormat(bitmap);
@@ -309,7 +315,7 @@ class DataFormats // docmain
 		if(cast(TypeInfo_Class)type)
 			throw new DflException("Unknown data format");
 		
-		return getFormat(getObjectString(type)); // ?
+		return getFormat(type.toString()); // ?
 	}
 	
 	
@@ -349,14 +355,14 @@ class DataFormats // docmain
 		
 		if(df.fWide) // Unicode.
 		{
-			Dwstring uni = cast(Dwstring)((value.ptr + df.pFiles)[0 .. value.length]);
+			wstring uni = cast(wstring)((value.ptr + df.pFiles)[0 .. value.length]);
 			for(iw = startiw = 0;; iw++)
 			{
 				if(!uni[iw])
 				{
 					if(startiw == iw)
 						break;
-					result ~= fromUnicode(uni.ptr + startiw, iw - startiw);
+					result ~= toUTF8((uni.ptr + startiw)[0..iw - startiw]);
 					assert(result[result.length - 1].length);
 					startiw = iw + 1;
 				}
@@ -371,7 +377,7 @@ class DataFormats // docmain
 				{
 					if(startiw == iw)
 						break;
-					result ~= fromAnsi(ansi.ptr + startiw, iw - startiw);
+					result ~= to!string((ansi.ptr + startiw)[0..iw - startiw]);
 					assert(result[result.length - 1].length);
 					startiw = iw + 1;
 				}
@@ -391,14 +397,14 @@ class DataFormats // docmain
 				return Data(stopAtNull!(ubyte)(cast(ubyte[])value));
 			
 			case CF_UNICODETEXT:
-				return Data(stopAtNull!(Dwchar)(cast(Dwstring)value));
+				return Data(stopAtNull!(wchar)(cast(wstring)value));
 			
 			case CF_HDROP:
 				return Data(getHDropStrings(value));
 			
 			default:
 				if(id == getFormat(stringFormat).id)
-					return Data(stopAtNull!(Dchar)(cast(string)value));
+					return Data(stopAtNull!(char)(cast(string)value));
 		}
 		
 		//throw new DflException("Unknown data format");
@@ -414,7 +420,7 @@ class DataFormats // docmain
 		
 		foreach(fn; fileNames)
 		{
-			sz += (dfl.internal.utf.toUnicodeLength(fn) + 1) << 1;
+			sz += (fn.length + 1) << 1;
 		}
 		sz += 2;
 		
@@ -460,20 +466,20 @@ class DataFormats // docmain
 			//return unsafeStringz(str)[0 .. str.length + 1]; // ?
 			return cast(void[])unsafeStringz(str)[0 .. str.length + 1]; // ? Needed in D2.
 		}
-		//else if(data.info == typeid(Dwstring))
+		//else if(data.info == typeid(wstring))
 		//else if(CF_UNICODETEXT == id)
-		else if((CF_UNICODETEXT == id) || (data.info == typeid(Dwstring)))
+		else if((CF_UNICODETEXT == id) || (data.info == typeid(wstring)))
 		{
 			// Unicode string.
-			//return data.getUnicodeText() ~ cast(Dwstring)"\0";
-			//return cast(void[])(data.getUnicodeText() ~ cast(Dwstring)"\0"); // Needed in D2. Not guaranteed safe.
-			return (data.getUnicodeText() ~ cast(Dwstring)"\0").dup; // Needed in D2.
+			//return data.getUnicodeText() ~ cast(wstring)"\0";
+			//return cast(void[])(data.getUnicodeText() ~ cast(wstring)"\0"); // Needed in D2. Not guaranteed safe.
+			return (data.getUnicodeText() ~ cast(wstring)"\0").dup; // Needed in D2.
 		}
-		else if(data.info == typeid(Dstring))
+		else if(data.info == typeid(string))
 		{
-			//return (*cast(Dstring*)data.value) ~ "\0";
-			//return cast(void[])((*cast(Dstring*)data.value) ~ "\0"); // Needed in D2. Not guaranteed safe.
-			return ((*cast(Dstring*)data.value) ~ "\0").dup; // Needed in D2.
+			//return (*cast(string*)data.value) ~ "\0";
+			//return cast(void[])((*cast(string*)data.value) ~ "\0"); // Needed in D2. Not guaranteed safe.
+			return ((*cast(string*)data.value) ~ "\0").dup; // Needed in D2.
 		}
 		else if(CF_HDROP == id)
 		{
@@ -812,7 +818,7 @@ class DataObject: IDflDataObject // docmain
 		int i;
 		for(i = 0; i != all.length; i++)
 		{
-			if(!stringICmp(all[i].fmt, fmt))
+			if(!icmp(all[i].fmt, fmt))
 			{
 				if(fix && all[i].obj.info == typeid(_DataConvert))
 					fixPairEntry(all[i]);
@@ -832,19 +838,19 @@ private struct _DataConvert
 
 package void _canConvertFormats(string fmt, void delegate(string cfmt) callback)
 {
-	//if(!stringICmp(fmt, DataFormats.utf8))
-	if(!stringICmp(fmt, "UTF-8"))
+	//if(!icmp(fmt, DataFormats.utf8))
+	if(!icmp(fmt, "UTF-8"))
 	{
 		callback(DataFormats.unicodeText);
 		callback(DataFormats.text);
 	}
-	else if(!stringICmp(fmt, DataFormats.unicodeText))
+	else if(!icmp(fmt, DataFormats.unicodeText))
 	{
 		//callback(DataFormats.utf8);
 		callback("UTF-8");
 		callback(DataFormats.text);
 	}
-	else if(!stringICmp(fmt, DataFormats.text))
+	else if(!icmp(fmt, DataFormats.text))
 	{
 		//callback(DataFormats.utf8);
 		callback("UTF-8");
@@ -856,10 +862,10 @@ package void _canConvertFormats(string fmt, void delegate(string cfmt) callback)
 package Data _doConvertFormat(Data dat, string toFmt)
 {
 	Data result;
-	//if(!stringICmp(toFmt, DataFormats.utf8))
-	if(!stringICmp(toFmt, "UTF-8"))
+	//if(!icmp(toFmt, DataFormats.utf8))
+	if(!icmp(toFmt, "UTF-8"))
 	{
-		if(typeid(Dwstring) == dat.info)
+		if(typeid(wstring) == dat.info)
 		{
 			result = Data(utf16stringtoUtf8string(dat.getUnicodeText()));
 		}
@@ -870,7 +876,7 @@ package Data _doConvertFormat(Data dat, string toFmt)
 			result = Data(dfl.internal.utf.fromAnsi(cast(stringz)ubs.ptr, ubs.length));
 		}
 	}
-	else if(!stringICmp(toFmt, DataFormats.unicodeText))
+	else if(!icmp(toFmt, DataFormats.unicodeText))
 	{
 		if(typeid(string) == dat.info)
 		{
@@ -883,15 +889,15 @@ package Data _doConvertFormat(Data dat, string toFmt)
 			result = Data(dfl.internal.utf.ansiToUnicode(cast(stringz)ubs.ptr, ubs.length));
 		}
 	}
-	else if(!stringICmp(toFmt, DataFormats.text))
+	else if(!icmp(toFmt, DataFormats.text))
 	{
 		if(typeid(string) == dat.info)
 		{
 			result = Data(cast(ubyte[])dfl.internal.utf.toAnsi(dat.getString()));
 		}
-		else if(typeid(Dwstring) == dat.info)
+		else if(typeid(wstring) == dat.info)
 		{
-			Dwstring wcs;
+			wstring wcs;
 			wcs = dat.getUnicodeText();
 			result = Data(cast(ubyte[])unicodeToAnsi(wcs.ptr, wcs.length));
 		}
