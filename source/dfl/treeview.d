@@ -7,7 +7,7 @@ module dfl.treeview;
 private import dfl.internal.dlib;
 
 private import dfl.control;
-private import dfl.application;l
+private import dfl.application;
 private import dfl.base;
 private import dfl.event;
 private import dfl.drawing;
