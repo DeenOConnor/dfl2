@@ -4,7 +4,6 @@
 ///
 module dfl.messagebox;
 
-private import dfl.internal.dlib;
 private import dfl.base;
 
 private import core.sys.windows.windows;
@@ -60,83 +59,83 @@ enum MsgBoxOptions
 
 
 ///
-DialogResult msgBox(Dstring txt) // docmain
+DialogResult msgBox(string txt) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(GetActiveWindow(), txt, "\0", MB_OK);
+	return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, "\0", MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt) // docmain
+DialogResult msgBox(IWindow owner, string txt) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, "\0", MB_OK);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, "\0", MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(Dstring txt, Dstring caption) // docmain
+DialogResult msgBox(string txt, string caption) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(GetActiveWindow(), txt, caption, MB_OK);
+	return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, caption.ptr, MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt, Dstring caption) // docmain
+DialogResult msgBox(IWindow owner, string txt, string caption) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, caption, MB_OK);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, caption.ptr, MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(Dstring txt, Dstring caption, MsgBoxButtons buttons) // docmain
+DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(GetActiveWindow(), txt, caption, buttons);
+	return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, caption.ptr, buttons);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt, Dstring caption,
+DialogResult msgBox(IWindow owner, string txt, string caption,
 	MsgBoxButtons buttons) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, caption, buttons);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, caption.ptr, buttons);
 }
 
 /// ditto
-DialogResult msgBox(Dstring txt, Dstring caption, MsgBoxButtons buttons,
+DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons,
 	MsgBoxIcon icon) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(GetActiveWindow(), txt,
-		caption, buttons | icon);
+	return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr,
+		caption.ptr, buttons | icon);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt, Dstring caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
 	MsgBoxIcon icon) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, caption, buttons | icon);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, caption.ptr, buttons | icon);
 }
 
 /// ditto
-DialogResult msgBox(Dstring txt, Dstring caption, MsgBoxButtons buttons, MsgBoxIcon icon,
+DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons, MsgBoxIcon icon,
 	MsgBoxDefaultButton defaultButton) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(GetActiveWindow(), txt,
-		caption, buttons | icon | defaultButton);
+	return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr,
+		caption.ptr, buttons | icon | defaultButton);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt, Dstring caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
 	MsgBoxIcon icon, MsgBoxDefaultButton defaultButton) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, caption, buttons | icon | defaultButton);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, caption.ptr, buttons | icon | defaultButton);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, Dstring txt, Dstring caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
 	MsgBoxIcon icon, MsgBoxDefaultButton defaultButton, MsgBoxOptions options) // docmain
 {
-	return cast(DialogResult)dfl.internal.utf.messageBox(owner ? owner.handle : GetActiveWindow(),
-		txt, caption, buttons | icon | defaultButton | options);
+	return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+		txt.ptr, caption.ptr, buttons | icon | defaultButton | options);
 }
 
 

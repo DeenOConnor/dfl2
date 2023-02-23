@@ -13,6 +13,9 @@ private import dfl.event;
 private import dfl.internal.utf;
 
 private import core.sys.windows.windows;
+private import std.conv : to;
+private import std.string : fromStringz;
+//private import std.path : join;
 
 ///
 abstract class FileDialog: CommonDialog // docmain
@@ -527,7 +530,7 @@ abstract class FileDialog: CommonDialog // docmain
 			
 			if(fileNames.length)
 			{
-				Dwstring ts;
+				wstring ts;
 				ts = dfl.internal.utf.toUnicode(_fileNames[0]);
 				buf[0 .. ts.length] = ts[];
 				buf[ts.length] = 0;
@@ -637,7 +640,8 @@ abstract class FileDialog: CommonDialog // docmain
 				+/
 				for(i = 1; i != _fileNames.length; i++)
 				{
-					_fileNames[i] = pathJoin(s, _fileNames[i]);
+					// What was std.path.join that is aliased to pathJoin in dlib?
+					_fileNames[i] = s ~ _fileNames[i];
 				}
 				_fileNames = _fileNames[1 .. _fileNames.length];
 			}
@@ -645,14 +649,14 @@ abstract class FileDialog: CommonDialog // docmain
 		else
 		{
 			_fileNames = new string[1];
-			if(dfl.internal.utf.useUnicode)
-			{
-				_fileNames[0] = dfl.internal.utf.fromUnicodez(ofnw.lpstrFile);
-			}
-			else
-			{
-				_fileNames[0] = dfl.internal.utf.fromAnsiz(ofna.lpstrFile);
-			}
+			//if(dfl.internal.utf.useUnicode)
+			//{
+				//_fileNames[0] = dfl.internal.utf.fromUnicodez(ofnw.lpstrFile);
+			//}
+			///else
+			//{
+				_fileNames[0] = to!string(fromStringz(ofna.lpstrFile));
+			//}
 			
 			/+
 			if(addext && checkFileExists() && ofn.nFilterIndex)
@@ -827,24 +831,7 @@ class OpenFileDialog: FileDialog // docmain
 		
 		//synchronized(typeid(dfl.internal.utf.CurDirLockType))
 		{
-			if(dfl.internal.utf.useUnicode)
-			{
-				enum NAME = "GetOpenFileNameW";
-				static GetOpenFileNameWProc proc = null;
-				
-				if(!proc)
-				{
-					proc = cast(GetOpenFileNameWProc)GetProcAddress(GetModuleHandleA("comdlg32.dll"), NAME.ptr);
-					if(!proc)
-						throw new Exception("Unable to load procedure " ~ NAME ~ "");
-				}
-				
-				result = proc(&ofnw);
-			}
-			else
-			{
-				result = GetOpenFileNameA(&ofna);
-			}
+			result = GetOpenFileNameA(&ofna);
 		}
 		
 		if(result)
@@ -928,31 +915,10 @@ class SaveFileDialog: FileDialog // docmain
 		
 		//synchronized(typeid(dfl.internal.utf.CurDirLockType))
 		{
-			if(dfl.internal.utf.useUnicode)
+			if(GetSaveFileNameA(&ofna))
 			{
-				enum NAME = "GetSaveFileNameW";
-				static GetSaveFileNameWProc proc = null;
-				
-				if(!proc)
-				{
-					proc = cast(GetSaveFileNameWProc)GetProcAddress(GetModuleHandleA("comdlg32.dll"), NAME.ptr);
-					if(!proc)
-						throw new Exception("Unable to load procedure " ~ NAME ~ "");
-				}
-				
-				if(proc(&ofnw))
-				{
-					finishOfn();
-					return true;
-				}
-			}
-			else
-			{
-				if(GetSaveFileNameA(&ofna))
-				{
-					finishOfn();
-					return true;
-				}
+				finishOfn();
+				return true;
 			}
 		}
 		
@@ -964,8 +930,6 @@ class SaveFileDialog: FileDialog // docmain
 
 private extern(Windows) LRESULT ofnHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
 {
-	alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
-	
 	enum PROP_STR = "DFL_FileDialog";
 	FileDialog fd;
 	LRESULT result = 0;
@@ -991,7 +955,7 @@ private extern(Windows) LRESULT ofnHookProc(HWND hwnd, UINT msg, WPARAM wparam, 
 			result = fd.hookProc(hwnd, msg, wparam, lparam);
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}

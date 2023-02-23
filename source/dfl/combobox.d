@@ -14,6 +14,8 @@ private import dfl.control;
 
 private import core.sys.windows.windows;
 
+private import std.string;
+
 
 private extern(Windows) void _initCombobox();
 
@@ -254,10 +256,10 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(CB_FINstring, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(CB_FINstring, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			//if(dfl.internal.utf.useUnicode)
+				//result = cast(int)prevwproc(CB_FINstring, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
+			//else
+				result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)str.ptr);
 			if(result == CB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -281,10 +283,10 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(CB_FINstringEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(CB_FINstringEXACT, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			//if(dfl.internal.utf.useUnicode)
+				//result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
+			//else
+				result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)str.ptr);
 			if(result == CB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -438,7 +440,7 @@ class ComboBox: ListControl // docmain
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && isHandleCreated)
 			//return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-			return cast(uint)dfl.internal.utf.sendMessage(handle, WM_GETTEXTLENGTH, 0, 0);
+			return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
 		return cast(uint)wtext.length;
 	}
 	
@@ -626,10 +628,10 @@ class ComboBox: ListControl // docmain
 		{
 			if(lbox.isHandleCreated)
 			{
-				if(dfl.internal.utf.useUnicode)
-					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
-				else
-					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(val))); // Can this be unsafeAnsiz()?
+				//if(dfl.internal.utf.useUnicode)
+					//lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
+				//else
+					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
 			}
 		}
 		
@@ -692,7 +694,7 @@ class ComboBox: ListControl // docmain
 		m.hWnd = hwnd;
 		m.msg = CB_INSERTSTRING;
 		// Note: duplicate code.
-		if(dfl.internal.utf.useUnicode)
+		/*if(dfl.internal.utf.useUnicode)
 		{
 			foreach(int i, Object obj; icollection._items)
 			{
@@ -708,11 +710,11 @@ class ComboBox: ListControl // docmain
 			}
 		}
 		else
-		{
+		{*/
 			foreach(int i, Object obj; icollection._items)
 			{
 				m.wParam = i;
-				m.lParam = cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(obj)); // Can this be unsafeAnsiz()? // <--
+				m.lParam = cast(LPARAM)obj.toString().ptr; // Can this be unsafeAnsiz()? // <--
 				
 				prevWndProc(m);
 				//if(CB_ERR == m.result || CB_ERRSPACE == m.result)
@@ -721,7 +723,7 @@ class ComboBox: ListControl // docmain
 				
 				//prevwproc(CB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
 			}
-		}
+		//}
 		
 		//redrawEntire();
 	}
@@ -765,10 +767,10 @@ class ComboBox: ListControl // docmain
 		// Fix the combo box's text since the initial window
 		// text isn't put in the edit box for some reason.
 		Message m;
-		if(dfl.internal.utf.useUnicode)
-			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toUnicodez(ft));
-		else
-			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toAnsiz(ft)); // Can this be unsafeAnsiz()?
+		//if(dfl.internal.utf.useUnicode)
+			//m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toUnicodez(ft));
+		//else
+			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)ft.ptr); // Can this be unsafeAnsiz()?
 		prevWndProc(m);
 	}
 	
@@ -869,7 +871,7 @@ class ComboBox: ListControl // docmain
 	override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -941,16 +943,16 @@ class ComboBox: ListControl // docmain
 	{
 		switch(msg.msg)
 		{
-			case CB_ADstring:
+			case CB_ADDSTRING:
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.add2(cast(string)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.add2(cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_INSERTSTRING:
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.insert2(msg.wParam, cast(string)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.insert2(msg.wParam, cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_DELETESTRING:
@@ -999,7 +1001,7 @@ class ComboBox: ListControl // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

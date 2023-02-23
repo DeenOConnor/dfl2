@@ -35,9 +35,6 @@ abstract class CommonDialog // docmain
 	///
 	Event!(CommonDialog, HelpEventArgs) helpRequest;
 	
-	
-	protected:
-	
 	///
 	// See the CDN_* Windows notification messages.
 	LRESULT hookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -68,6 +65,9 @@ abstract class CommonDialog // docmain
 		
 		return 0;
 	}
+	
+	
+	protected:
 	
 	
 	// TODO: implement.

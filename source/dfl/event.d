@@ -5,6 +5,7 @@
 module dfl.event;
 
 import std.functional;
+import std.traits : ParameterTypeTuple = Parameters;
 
 
 /*

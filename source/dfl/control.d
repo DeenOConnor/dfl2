@@ -4109,7 +4109,7 @@ class Control: Object, IWindow // docmain
 	// Returns true on Windows 95 with IE 5.5, Windows 98+ or Windows NT 4.0+.
 	static @property bool supportsMouseTracking() // getter
 	{
-		return trackMouseEvent != null;
+		return &TrackMouseEvent != null;
 	}
 	
 	
@@ -4776,7 +4776,7 @@ class Control: Object, IWindow // docmain
 						_clicking = false;
 				}
 				
-				if(trackMouseEvent) // Requires Windows 95 with IE 5.5, 98 or NT4.
+				if(&TrackMouseEvent !is null) // Requires Windows 95 with IE 5.5, 98 or NT4.
 				{
 					if(!menter)
 					{
@@ -4793,7 +4793,7 @@ class Control: Object, IWindow // docmain
 						tme.dwFlags = TME_HOVER | TME_LEAVE;
 						tme.hwndTrack = msg.hWnd;
 						tme.dwHoverTime = HOVER_DEFAULT;
-						trackMouseEvent(&tme);
+						TrackMouseEvent(&tme);
 					}
 				}
 				
@@ -6270,7 +6270,7 @@ class Control: Object, IWindow // docmain
 			return;
 		
 		Application.creatingControl(this);
-		hwnd = CreateWindowExA(wexstyle, className, wtext, wstyle, wrect.x, wrect.y,
+		hwnd = CreateWindowExA(wexstyle, className.ptr, wtext.ptr, wstyle, wrect.x, wrect.y,
 			wrect.width, wrect.height, wparent.handle, HMENU.init, Application.getInstance(), null);
 		if(!hwnd)
 			goto create_err;

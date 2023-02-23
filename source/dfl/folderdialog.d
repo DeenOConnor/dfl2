@@ -176,7 +176,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 			biw.pszDisplayName = cast(wchar*)pdescz;
 			if(_desc.length)
 			{
-				Dwstring tmp;
+				wstring tmp;
 				tmp = dfl.internal.utf.toUnicode(_desc);
 				if(tmp.length >= MAX_PATH)
 					_errPathTooLong();
@@ -225,7 +225,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 			bia.pszDisplayName = cast(char*)pdescz;
 			if(_desc.length)
 			{
-				Dstring tmp; // ansi.
+				string tmp; // ansi.
 				tmp = dfl.internal.utf.toAnsi(_desc);
 				if(tmp.length >= MAX_PATH)
 					_errPathTooLong();
@@ -335,7 +335,7 @@ private extern(Windows) int fbdHookProc(HWND hwnd, UINT msg, LPARAM lparam, LPAR
 		fd = cast(FolderBrowserDialog)cast(void*)lpData;
 		if(fd)
 		{
-			Dstring s;
+			string s;
 			switch(msg)
 			{
 				case BFFM_INITIALIZED:
@@ -353,7 +353,7 @@ private extern(Windows) int fbdHookProc(HWND hwnd, UINT msg, LPARAM lparam, LPAR
 			}
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}

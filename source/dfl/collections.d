@@ -205,7 +205,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 					if (onval == value) // TValue must have opEquals.
 						return idx;
 				} else {
-					if (getObjectString(onval) == value)
+					if (onval.toString() == value)
 						return idx;
 				}
 			}

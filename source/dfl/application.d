@@ -18,15 +18,17 @@ private import dfl.menu;
 
 private import core.sys.windows.commctrl;
 private import core.sys.windows.ole2;
+private import core.sys.windows.windef;
 private import core.sys.windows.windows;
 
 private import core.stdc.stdlib : abort;
+private import core.memory;
 
 private import std.string;
 private import std.conv;
 private import std.file : thisExePath;
 private import std.path : dirName;
-private import std.stdio : writef, writefln;
+private import std.stdio : writef, writefln, writeln;
 
 
 //debug = APP_PRINT;
@@ -56,7 +58,7 @@ class ApplicationContext // docmain
 	this(Form mainForm)
 	{
 		mform = mainForm;
-		mainForm.closed ~= &onMainFormClosed;
+		mainForm.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
 	}
 	
 	
@@ -64,12 +66,12 @@ class ApplicationContext // docmain
 	final @property void mainForm(Form mainForm) // setter
 	{
 		if(mform)
-			mform.closed ~= &onMainFormClosed;
+			mform.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
 		
 		mform = mainForm;
 		
 		if(mainForm)
-			mainForm.closed ~= &onMainFormClosed;
+			mainForm.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
 	}
 	
 	/// ditto
@@ -933,7 +935,7 @@ final class Application // docmain
 			//throw e;
 			writefln("Error: %*s", e.toString());
 			//exitThread();
-			Environment.exit(EXIT_FAILURE);
+			Environment.exit(1);
 		}
 		catch (Throwable e)
 		{
@@ -1208,7 +1210,7 @@ final class Application // docmain
 					break;
 				}
 			}
-			tempmenus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * (nmenus + 1));
+			tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * (nmenus + 1));
 			if(!tempmenus)
 			{
 				//throw new OutOfMemory;
@@ -1232,7 +1234,7 @@ final class Application // docmain
 			
 			idx = nmenus;
 			nmenus++;
-			tempmenus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * nmenus);
+			tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
 			if(!tempmenus)
 			{
 				nmenus--;
@@ -1261,7 +1263,7 @@ final class Application // docmain
 			found:
 			if(nmenus == 1)
 			{
-				dfl.internal.clib.free(menus);
+				GC.free(menus);
 				menus = null;
 				nmenus--;
 			}
@@ -1271,7 +1273,7 @@ final class Application // docmain
 					menus[idx] = menus[nmenus - 1]; // Move last one in its place
 				
 				nmenus--;
-				menus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * nmenus);
+				menus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
 				assert(menus != null); // Memory shrink shouldn't be a problem.
 			}
 		}
@@ -1396,7 +1398,7 @@ final class Application // docmain
 		{
 			gcinfo = gcinfo.max;
 			assert(!gctimer);
-			gctimer = SetTimer(HWND.init, 0, 200, &_gcTimeout);
+			gctimer = to!int(SetTimer(HWND.init, 0, 200, &_gcTimeout));
 		}
 		
 		_waitMsg();
@@ -1490,13 +1492,15 @@ final class Application // docmain
 	
 	package void ppin(void* p)
 	{
-		dfl.internal.dlib.gcPin(p);
+		// TODO : Figure out what this is supposed to do
+		//gcPin(p);
 	}
 	
 	
 	package void punpin(void* p)
 	{
-		dfl.internal.dlib.gcUnpin(p);
+		// TODO : Figure out what this is supposed to do
+		//gcUnpin(p);
 	}
 	
 	
@@ -1545,7 +1549,7 @@ final class Application // docmain
 				DestroyMenu(m.handle);
 			}
 			nmenus = 0;
-			dfl.internal.clib.free(menus);
+			GC.free(menus);
 			menus = null;
 		}
 	}
@@ -1680,7 +1684,7 @@ final class Application // docmain
 		}
 		TranslateMessage(&msg._winMsg);
 		//DispatchMessageA(&msg._winMsg);
-		dispatchMessage(&msg._winMsg);
+		DispatchMessageA(&msg._winMsg);
 	}
 }
 
@@ -1697,7 +1701,6 @@ extern(Windows) void _gcTimeout(HWND hwnd, UINT uMsg, size_t idEvent, DWORD dwTi
 		writeln("Auto-collecting");
     }
 	try {
-		import core.memory : GC;
 		GC.collect();
     } catch (Exception ex) {
 		// Do nothing
@@ -1961,8 +1964,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					{
 						Application.onThreadException(e);
 					}
-					import core.memory : pureFree;
-					pureFree(p);
+					GC.free(p);
 				}
 				break;
 			
@@ -2396,11 +2398,11 @@ extern(Windows)
 	{
 		if(!listboxPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			listboxPrevWndProc = superClass(HINSTANCE.init, "LISTBOX", LISTBOX_CLASSNAME, info);
 			if(!listboxPrevWndProc)
 				_unableToInit(LISTBOX_CLASSNAME);
-			listboxClassStyle = info.wc.style;
+			listboxClassStyle = info.style;
 		}
 	}
 	
@@ -2410,7 +2412,7 @@ extern(Windows)
 	{
 		if(!labelPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			labelPrevWndProc = superClass(HINSTANCE.init, "STATIC", LABEL_CLASSNAME, info);
 			if(!labelPrevWndProc)
 				_unableToInit(LABEL_CLASSNAME);
@@ -2424,11 +2426,11 @@ extern(Windows)
 	{
 		if(!buttonPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			buttonPrevWndProc = superClass(HINSTANCE.init, "BUTTON", BUTTON_CLASSNAME, info);
 			if(!buttonPrevWndProc)
 				_unableToInit(BUTTON_CLASSNAME);
-			buttonClassStyle = info.wc.style;
+			buttonClassStyle = info.style;
 		}
 	}
 	
@@ -2437,11 +2439,11 @@ extern(Windows)
 	{
 		if(!mdiclientPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			mdiclientPrevWndProc = superClass(HINSTANCE.init, "MDICLIENT", MDICLIENT_CLASSNAME, info);
 			if(!mdiclientPrevWndProc)
 				_unableToInit(MDICLIENT_CLASSNAME);
-			mdiclientClassStyle = info.wc.style;
+			mdiclientClassStyle = info.style;
 		}
 	}
 	
@@ -2458,16 +2460,16 @@ extern(Windows)
 			}
 			
 			string classname;
-			if(useUnicode)
-				classname = "RichEdit20W";
-			else
+			//if(useUnicode)
+				//classname = "RichEdit20W";
+			//else
 				classname = "RichEdit20A";
 			
-			WndClass info;
+			WNDCLASSA info;
 			richtextboxPrevWndProc = superClass(HINSTANCE.init, classname, RICHTEXTBOX_CLASSNAME, info);
 			if(!richtextboxPrevWndProc)
 				_unableToInit(RICHTEXTBOX_CLASSNAME);
-			richtextboxClassStyle = info.wc.style;
+			richtextboxClassStyle = info.style;
 		}
 	}
 	
@@ -2476,11 +2478,11 @@ extern(Windows)
 	{
 		if(!comboboxPrevWndProc)
 		{
-			WndClass info;
+			WNDCLASSA info;
 			comboboxPrevWndProc = superClass(HINSTANCE.init, "COMBOBOX", COMBOBOX_CLASSNAME, info);
 			if(!comboboxPrevWndProc)
 				_unableToInit(COMBOBOX_CLASSNAME);
-			comboboxClassStyle = info.wc.style;
+			comboboxClassStyle = info.style;
 		}
 	}
 	
@@ -2491,11 +2493,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_TREEVIEW_CLASSES);
 			
-			WndClass info;
+			WNDCLASSA info;
 			treeviewPrevWndProc = superClass(HINSTANCE.init, "SysTreeView32", TREEVIEW_CLASSNAME, info);
 			if(!treeviewPrevWndProc)
 				_unableToInit(TREEVIEW_CLASSNAME);
-			treeviewClassStyle = info.wc.style;
+			treeviewClassStyle = info.style;
 		}
 	}
 	
@@ -2506,11 +2508,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_TAB_CLASSES);
 			
-			WndClass info;
+			WNDCLASSA info;
 			tabcontrolPrevWndProc = superClass(HINSTANCE.init, "SysTabControl32", TABCONTROL_CLASSNAME, info);
 			if(!tabcontrolPrevWndProc)
 				_unableToInit(TABCONTROL_CLASSNAME);
-			tabcontrolClassStyle = info.wc.style;
+			tabcontrolClassStyle = info.style;
 		}
 	}
 	
@@ -2521,11 +2523,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_LISTVIEW_CLASSES);
 			
-			WndClass info;
+			WNDCLASSA info;
 			listviewPrevWndProc = superClass(HINSTANCE.init, "SysListView32", LISTVIEW_CLASSNAME, info);
 			if(!listviewPrevWndProc)
 				_unableToInit(LISTVIEW_CLASSNAME);
-			listviewClassStyle = info.wc.style;
+			listviewClassStyle = info.style;
 		}
 	}
 	

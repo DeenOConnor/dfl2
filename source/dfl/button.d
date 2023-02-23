@@ -12,6 +12,9 @@ private import dfl.drawing;
 
 import core.sys.windows.windows;
 
+import core.stdc.string : strcpy;
+
+
 private extern(Windows) void _initButton();
 
 
@@ -136,7 +139,7 @@ abstract class ButtonBase: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	

@@ -9,6 +9,11 @@ private import dfl.event;
 
 private import core.sys.windows.windows;
 
+private import std.string : icmp;
+private import core.stdc.string : strcpy;
+private import core.stdc.stdlib : alloca;
+private import core.memory;
+
 alias HWND HWindow;
 
 
@@ -59,7 +64,7 @@ class StringObject: Object
 	
 	override bool opEquals(Object o)
 	{
-		return value == getObjectString(o); // ?
+		return value == o.toString(); // ?
 	}
 	
 	
@@ -71,13 +76,13 @@ class StringObject: Object
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(value, getObjectString(o)); // ?
+		return icmp(value, o.toString()); // ?
 	}
 	
 	
 	int opCmp(StringObject s)
 	{
-		return stringICmp(value, s.value);
+		return icmp(value, s.value);
 	}
 }
 
@@ -870,10 +875,7 @@ class KeyPressEventArgs: KeyEventArgs
 		_keych = ch;
 		
 		int vk;
-		if(dfl.internal.utf.useUnicode)
-			vk = 0xFF & VkKeyScanW(cast(WCHAR)ch);
-		else
-			vk = 0xFF & VkKeyScanA(cast(char)ch);
+		vk = 0xFF & VkKeyScanA(cast(char)ch);
 		
 		super(cast(Keys)(vk | modifiers));
 	}

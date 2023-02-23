@@ -16,7 +16,7 @@ private import dfl.event;
 private import dfl.collections;
 
 private import core.stdc.string : memmove;
-
+private import std.string : toStringz;
 private import core.sys.windows.windows;
 
 
@@ -855,10 +855,7 @@ class ListBox: ListControl // docmain
 		
 		if(created)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(LB_FINDSTRING, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(LB_FINDSTRING, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			result = cast(int)prevwproc(LB_FINDSTRING, startIndex, cast(LPARAM)toStringz(str));
 			if(result == LB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -882,10 +879,7 @@ class ListBox: ListControl // docmain
 		
 		if(created)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(LB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(LB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			result = cast(int)prevwproc(LB_FINDSTRINGEXACT, startIndex, cast(LPARAM)toStringz(str));
 			if(result == LB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -1118,10 +1112,7 @@ class ListBox: ListControl // docmain
 		{
 			if(lbox.created)
 			{
-				if(dfl.internal.utf.useUnicode)
-					lbox.prevwproc(LB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
-				else
-					lbox.prevwproc(LB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(val))); // Can this be unsafeAnsiz()?
+				lbox.prevwproc(LB_INSERTSTRING, idx, cast(LPARAM)toStringz(val.toString())); // Can this be unsafeAnsiz()?
 			}
 		}
 		
@@ -1188,12 +1179,10 @@ class ListBox: ListControl // docmain
 		m.hWnd = handle;
 		m.msg = LB_INSERTSTRING;
 		// Note: duplicate code.
-		if(dfl.internal.utf.useUnicode)
-		{
 			foreach(int i, Object obj; icollection._items)
 			{
 				m.wParam = i;
-				m.lParam = cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(obj)); // <--
+				m.lParam = cast(LPARAM)toStringz(obj.toString()); // Can this be unsafeAnsiz? // <--
 				
 				prevWndProc(m);
 				//if(LB_ERR == m.result || LB_ERRSPACE == m.result)
@@ -1202,22 +1191,6 @@ class ListBox: ListControl // docmain
 				
 				//prevwproc(LB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
 			}
-		}
-		else
-		{
-			foreach(int i, Object obj; icollection._items)
-			{
-				m.wParam = i;
-				m.lParam = cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(obj)); // Can this be unsafeAnsiz? // <--
-				
-				prevWndProc(m);
-				//if(LB_ERR == m.result || LB_ERRSPACE == m.result)
-				if(m.result < 0)
-					throw new DflException("Unable to add list item");
-				
-				//prevwproc(LB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
-			}
-		}
 		
 		//redrawEntire();
 	}
@@ -1330,7 +1303,7 @@ class ListBox: ListControl // docmain
 	override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(listboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(listboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(listboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -1429,7 +1402,7 @@ class ListBox: ListControl // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(listboxPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(listboxPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

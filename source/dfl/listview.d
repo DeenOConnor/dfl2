@@ -15,7 +15,7 @@ private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
 private import std.conv : wtext;
-private import std.string : icmp;
+private import std.string : icmp, fromStringz;
 
 version(DFL_NO_IMAGELIST)
 {
@@ -291,7 +291,7 @@ class ListViewItem: Object
 	
 	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 	
 	
@@ -303,13 +303,13 @@ class ListViewItem: Object
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 	
 	
 	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
@@ -400,14 +400,7 @@ class ListViewItem: Object
 	{
 		if(lview && lview.created)
 		{
-			if(dfl.internal.utf.useUnicode)
-			{
-				lview.prevwproc(LVM_EDITLABELW, index, 0);
-			}
-			else
-			{
-				lview.prevwproc(LVM_EDITLABELA, index, 0);
-			}
+			lview.prevwproc(LVM_EDITLABELA, index, 0);
 		}
 	}
 	
@@ -2120,7 +2113,7 @@ class ListView: ControlSuperClass // docmain
 		}
 		
 		//msg.result = CallWindowProcA(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -2272,12 +2265,6 @@ class ListView: ControlSuperClass // docmain
 					switch(nmh.code)
 					{
 						case LVN_GETDISPINFOA:
-							if(dfl.internal.utf.useUnicode)
-							{
-								break;
-							}
-							else
-							{
 								LV_DISPINFOA* lvdi;
 								lvdi = cast(LV_DISPINFOA*)nmh;
 								
@@ -2309,7 +2296,6 @@ class ListView: ControlSuperClass // docmain
 									}
 								}
 								break;
-							}
 						
 						case LVN_GETDISPINFOW:
 							{
@@ -2407,8 +2393,6 @@ class ListView: ControlSuperClass // docmain
 							goto begin_label_edit;
 						
 						case LVN_BEGINLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-								break;
 							begin_label_edit:
 							
 							{
@@ -2441,7 +2425,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromUnicodez(nmdi.item.pszText);
+									label = fromStringz(nmdi.item.pszText);
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2461,12 +2445,6 @@ class ListView: ControlSuperClass // docmain
 							break;
 						
 						case LVN_ENDLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-							{
-								break;
-							}
-							else
-							{
 								string label;
 								LV_DISPINFOA* nmdi;
 								nmdi = cast(LV_DISPINFOA*)nmh;
@@ -2479,7 +2457,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromAnsiz(nmdi.item.pszText);
+									label = fromStrings(nmdi.item.pszText);
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2496,7 +2474,6 @@ class ListView: ControlSuperClass // docmain
 									}
 								}
 								break;
-							}
 						
 						default:
 					}
@@ -2660,16 +2637,8 @@ class ListView: ControlSuperClass // docmain
 		}
 		lvc.cx = header.width;
 		lvc.iSubItem = index; // iSubItem is probably only used when retrieving column info.
-		if(dfl.internal.utf.useUnicode)
-		{
-			lvc.lvcw.pszText = cast(typeof(lvc.lvcw.pszText))dfl.internal.utf.toUnicodez(header.text);
-			return prevwproc(LVM_INSERTCOLUMNW, cast(WPARAM)index, cast(LPARAM)&lvc.lvcw);
-		}
-		else
-		{
-			lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))dfl.internal.utf.toAnsiz(header.text);
-			return prevwproc(LVM_INSERTCOLUMNA, cast(WPARAM)index, cast(LPARAM)&lvc.lvca);
-		}
+		lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))header.text.ptr;
+		return prevwproc(LVM_INSERTCOLUMNA, cast(WPARAM)index, cast(LPARAM)&lvc.lvca);
 	}
 	
 	
@@ -2711,16 +2680,8 @@ class ListView: ControlSuperClass // docmain
 		LvColumn lvc;
 		
 		lvc.mask = LVCF_TEXT;
-		if(dfl.internal.utf.useUnicode)
-		{
-			lvc.lvcw.pszText = cast(typeof(lvc.lvcw.pszText))dfl.internal.utf.toUnicodez(newText);
-			return prevwproc(LVM_SETCOLUMNW, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvcw);
-		}
-		else
-		{
-			lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))dfl.internal.utf.toAnsiz(newText);
-			return prevwproc(LVM_SETCOLUMNA, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvca);
-		}
+		lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))newText.ptr;
+		return prevwproc(LVM_SETCOLUMNA, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvca);
 	}
 	
 	
@@ -2805,7 +2766,7 @@ class ListView: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(listviewPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

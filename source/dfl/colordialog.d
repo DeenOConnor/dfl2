@@ -5,6 +5,7 @@
 module dfl.colordialog;
 
 private import dfl.commondialog;
+private import dfl.control;
 private import dfl.base;
 private import dfl.application;
 private import dfl.drawing;
@@ -200,6 +201,37 @@ class ColorDialog: CommonDialog // docmain
 		{
 			cref = cdef;
 		}
+	}
+
+
+	// Attempt to resolve "Error: no property hookProc for type dfl.colordialog.ColorDialog"
+	public override LRESULT hookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	{
+		switch(msg)
+		{
+			case WM_NOTIFY:
+				{
+					NMHDR* nmhdr;
+					nmhdr = cast(NMHDR*)lparam;
+					switch(nmhdr.code)
+					{
+						case CDN_HELP:
+							{
+								Point pt;
+								GetCursorPos(&pt.point);
+								onHelpRequest(new HelpEventArgs(pt));
+							}
+							break;
+
+						default:
+					}
+				}
+				break;
+
+			default:
+		}
+
+		return 0;
 	}
 }
 

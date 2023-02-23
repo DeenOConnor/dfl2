@@ -12,6 +12,7 @@ private import dfl.base;
 private import dfl.collections;
 
 private import core.sys.windows.windows;
+private import std.string : format;
 
 
 
@@ -461,14 +462,14 @@ class Form: ContainerControl, IDialogResult // docmain
 			{
 				debug
 				{
-					er = std.string.format("CreateWindowEx failed {className=%s;exStyle=0x%X;style=0x%X;parent=0x%X;menu=0x%X;inst=0x%X;}",
+					er = format!"CreateWindowEx failed {className=%s;exStyle=0x%X;style=0x%X;parent=0x%X;menu=0x%X;inst=0x%X;}"(
 						className, exStyle, style, cast(void*)parent, cast(void*)menu, cast(void*)inst);
 				}
 				goto create_err;
 			}
 		}
 		
-		if(setLayeredWindowAttributes)
+		if(&SetLayeredWindowAttributes !is null)
 		{
 			BYTE alpha = opacityToAlpha(opa);
 			DWORD flags = 0;
@@ -482,7 +483,7 @@ class Form: ContainerControl, IDialogResult // docmain
 			if(flags)
 			{
 				//_exStyle(_exStyle() | WS_EX_LAYERED); // Should already be set.
-				setLayeredWindowAttributes(hwnd, transKey.toRgb(), alpha, flags);
+				SetLayeredWindowAttributes(hwnd, transKey.toRgb(), alpha, flags);
 			}
 		}
 		
@@ -1379,7 +1380,7 @@ class Form: ContainerControl, IDialogResult // docmain
 	// If opacity and transparency are supported.
 	static @property bool supportsOpacity() // getter
 	{
-		return setLayeredWindowAttributes != null;
+		return &SetLayeredWindowAttributes !is null;
 	}
 	
 	
@@ -1394,7 +1395,7 @@ class Form: ContainerControl, IDialogResult // docmain
 	// Does nothing if not supported.
 	final @property void opacity(double opa) // setter
 	{
-		if(setLayeredWindowAttributes)
+		if(&SetLayeredWindowAttributes !is null)
 		{
 			BYTE alpha;
 			
@@ -1419,7 +1420,7 @@ class Form: ContainerControl, IDialogResult // docmain
 				if(transKey == Color.empty)
 					_exStyle(_exStyle() & ~WS_EX_LAYERED);
 				else
-					setLayeredWindowAttributes(handle, transKey.toRgb(), 0, LWA_COLORKEY);
+					SetLayeredWindowAttributes(handle, transKey.toRgb(), 0, LWA_COLORKEY);
 			}
 			else
 			{
@@ -1428,9 +1429,9 @@ class Form: ContainerControl, IDialogResult // docmain
 				{
 					//_exStyle(_exStyle() | WS_EX_LAYERED);
 					if(transKey == Color.empty)
-						setLayeredWindowAttributes(handle, 0, alpha, LWA_ALPHA);
+						SetLayeredWindowAttributes(handle, 0, alpha, LWA_ALPHA);
 					else
-						setLayeredWindowAttributes(handle, transKey.toRgb(), alpha, LWA_ALPHA | LWA_COLORKEY);
+						SetLayeredWindowAttributes(handle, transKey.toRgb(), alpha, LWA_ALPHA | LWA_COLORKEY);
 				}
 			}
 		}
@@ -1692,7 +1693,7 @@ class Form: ContainerControl, IDialogResult // docmain
 	///
 	final @property void transparencyKey(Color c) // setter
 	{
-		if(setLayeredWindowAttributes)
+		if(&SetLayeredWindowAttributes !is null)
 		{
 			transKey = c;
 			BYTE alpha = opacityToAlpha(opa);
@@ -1702,7 +1703,7 @@ class Form: ContainerControl, IDialogResult // docmain
 				if(alpha == BYTE.max)
 					_exStyle(_exStyle() & ~WS_EX_LAYERED);
 				else
-					setLayeredWindowAttributes(handle, 0, alpha, LWA_ALPHA);
+					SetLayeredWindowAttributes(handle, 0, alpha, LWA_ALPHA);
 			}
 			else
 			{
@@ -1711,9 +1712,9 @@ class Form: ContainerControl, IDialogResult // docmain
 				{
 					//_exStyle(_exStyle() | WS_EX_LAYERED);
 					if(alpha == BYTE.max)
-						setLayeredWindowAttributes(handle, c.toRgb(), 0, LWA_COLORKEY);
+						SetLayeredWindowAttributes(handle, c.toRgb(), 0, LWA_COLORKEY);
 					else
-						setLayeredWindowAttributes(handle, c.toRgb(), alpha, LWA_COLORKEY | LWA_ALPHA);
+						SetLayeredWindowAttributes(handle, c.toRgb(), alpha, LWA_COLORKEY | LWA_ALPHA);
 				}
 			}
 		}

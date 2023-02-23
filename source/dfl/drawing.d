@@ -7,6 +7,7 @@ module dfl.drawing;
 private import dfl.base;
 private import dfl.internal.com;
 
+// !!! Left here to not have an error about LogFont
 private import dfl.internal.utf;
 
 private import core.sys.windows.com;
@@ -15,6 +16,8 @@ private import core.sys.windows.ocidl;
 private import core.sys.windows.olectl;
 private import core.sys.windows.windows;
 private import core.sys.windows.wingdi;
+
+private import std.conv : to;
 
 
 version(D_Version2)
@@ -2404,7 +2407,7 @@ class Graphics // docmain
 		
 		RECT rect;
 		r.getRect(&rect);
-		DrawTextExA(hdc, cast(char*)text.ptr, text.length, &rect, DT_EXPANDTABS | DT_TABSTOP |
+		DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
 			fmt._trim | fmt._flags | fmt._align, &fmt._params);
 		
 		// Reset stuff.
@@ -2475,7 +2478,7 @@ class Graphics // docmain
 		
 		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
 		
-		if(!DrawTextExA(hdc, cast(char*)text.ptr, text.length, &rect, DT_EXPANDTABS | DT_TABSTOP |
+		if(!DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
 			fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_NOCLIP, &fmt._params))
 		{
 			//throw new DflException("Text measure error");

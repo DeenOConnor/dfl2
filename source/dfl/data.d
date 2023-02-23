@@ -18,8 +18,9 @@ private import core.sys.windows.winuser;
 private import core.sys.windows.wtypes;
 
 private import std.conv : to;
-private import std.string : icmp, fromStringz;
+private import std.string : icmp, fromStringz, toStringz;
 private import std.utf : toUTF8;
+private import core.exception : OutOfMemoryError;
 
 
 ///
@@ -397,14 +398,14 @@ class DataFormats // docmain
 				return Data(stopAtNull!(ubyte)(cast(ubyte[])value));
 			
 			case CF_UNICODETEXT:
-				return Data(stopAtNull!(wchar)(cast(wstring)value));
+				return Data(stopAtNull!(wchar)(cast(wchar[])value));
 			
 			case CF_HDROP:
 				return Data(getHDropStrings(value));
 			
 			default:
 				if(id == getFormat(stringFormat).id)
-					return Data(stopAtNull!(char)(cast(string)value));
+					return Data(stopAtNull!(char)(cast(char[])value));
 		}
 		
 		//throw new DflException("Unknown data format");
@@ -464,7 +465,7 @@ class DataFormats // docmain
 			str = data.getString();
 			//return toStringz(str)[0 .. str.length + 1];
 			//return unsafeStringz(str)[0 .. str.length + 1]; // ?
-			return cast(void[])unsafeStringz(str)[0 .. str.length + 1]; // ? Needed in D2.
+			return cast(void[])str[0 .. str.length + 1]; // ? Needed in D2.
 		}
 		//else if(data.info == typeid(wstring))
 		//else if(CF_UNICODETEXT == id)
@@ -867,39 +868,39 @@ package Data _doConvertFormat(Data dat, string toFmt)
 	{
 		if(typeid(wstring) == dat.info)
 		{
-			result = Data(utf16stringtoUtf8string(dat.getUnicodeText()));
+			result = Data(to!string(dat.getUnicodeText()));
 		}
 		else if(typeid(ubyte[]) == dat.info)
 		{
 			ubyte[] ubs;
 			ubs = dat.getText();
-			result = Data(dfl.internal.utf.fromAnsi(cast(stringz)ubs.ptr, ubs.length));
+			result = Data(to!string(fromStringz(cast(char[])ubs)));
 		}
 	}
 	else if(!icmp(toFmt, DataFormats.unicodeText))
 	{
 		if(typeid(string) == dat.info)
 		{
-			result = Data(utf8stringtoUtf16string(dat.getString()));
+			result = Data(to!wstring(dat.getString()));
 		}
 		else if(typeid(ubyte[]) == dat.info)
 		{
 			ubyte[] ubs;
 			ubs = dat.getText();
-			result = Data(dfl.internal.utf.ansiToUnicode(cast(stringz)ubs.ptr, ubs.length));
+			result = Data(to!string(fromStringz(cast(char[])ubs)));
 		}
 	}
 	else if(!icmp(toFmt, DataFormats.text))
 	{
 		if(typeid(string) == dat.info)
 		{
-			result = Data(cast(ubyte[])dfl.internal.utf.toAnsi(dat.getString()));
+			result = Data(cast(ubyte[])dat.getString());
 		}
 		else if(typeid(wstring) == dat.info)
 		{
 			wstring wcs;
 			wcs = dat.getUnicodeText();
-			result = Data(cast(ubyte[])unicodeToAnsi(wcs.ptr, wcs.length));
+			result = Data(cast(ubyte[])to!string(wcs));
 		}
 	}
 	return result;
@@ -1218,7 +1219,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 				result = S_FALSE;
 			}
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1247,7 +1248,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 			
 			result = S_OK;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1267,7 +1268,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 			*ppenum = new EnumDataObjectFORMATETC(dataObj, fmts, idx);
 			result = S_OK;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1385,13 +1386,13 @@ class DtoComDataObject: DflComObject, IDataObject // package
 			
 			result = DV_E_FORMATETC;
 		}
-		catch(OomException e)
+		catch(OutOfMemoryError e)
 		{
 			Application.onThreadException(e);
 			
 			result = E_OUTOFMEMORY;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1443,13 +1444,13 @@ class DtoComDataObject: DflComObject, IDataObject // package
 			
 			result = DV_E_FORMATETC;
 		}
-		catch(OomException e)
+		catch(OutOfMemoryError e)
 		{
 			Application.onThreadException(e);
 			
 			result = E_OUTOFMEMORY;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1493,7 +1494,7 @@ class DtoComDataObject: DflComObject, IDataObject // package
 				result = E_NOTIMPL;
 			}
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
