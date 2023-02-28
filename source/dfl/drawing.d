@@ -60,16 +60,16 @@ struct Point // docmain
 		}
 		POINT point; // package
 	}
-	
-	
+
+
 	/// Construct a new Point.
 	this(int x, int y)
 	{
 		this.x = x;
 		this.y = y;
 	}
-	
-	
+
+
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
@@ -77,7 +77,7 @@ struct Point // docmain
 		{
 			return x == pt.x && y == pt.y;
 		}
-		
+
 		/// ditto
 		const bool opEquals(Point pt)
 		{
@@ -92,8 +92,8 @@ struct Point // docmain
 			return x == pt.x && y == pt.y;
 		}
 	}
-	
-	
+
+
 	///
 	Point opAdd(Size sz)
 	{
@@ -102,8 +102,8 @@ struct Point // docmain
 		result.y = y + sz.height;
 		return result;
 	}
-	
-	
+
+
 	///
 	Point opSub(Size sz)
 	{
@@ -112,24 +112,24 @@ struct Point // docmain
 		result.y = y - sz.height;
 		return result;
 	}
-	
-	
+
+
 	///
 	void opAddAssign(Size sz)
 	{
 		x += sz.width;
 		y += sz.height;
 	}
-	
-	
+
+
 	///
 	void opSubAssign(Size sz)
 	{
 		x -= sz.width;
 		y -= sz.height;
 	}
-	
-	
+
+
 	///
 	Point opNeg()
 	{
@@ -143,8 +143,8 @@ struct Size // docmain
 {
 	int width;
 	int height;
-	
-	
+
+
 	SIZE size() const
 	{
 		SIZE sz;
@@ -152,23 +152,23 @@ struct Size // docmain
 		sz.cy = height;
 		return sz;
 	}
-	
-	
+
+
 	void size(SIZE sz)
 	{
 		width = sz.cx;
 		height = sz.cy;
 	}
-	
-	
+
+
 	/// Construct a new Size.
 	this(int width, int height)
 	{
 		this.width = width;
 		this.height = height;
 	}
-	
-	
+
+
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
@@ -176,7 +176,7 @@ struct Size // docmain
 		{
 			return width == sz.width && height == sz.height;
 		}
-		
+
 		/// ditto
 		const bool opEquals(Size sz)
 		{
@@ -191,8 +191,8 @@ struct Size // docmain
 			return width == sz.width && height == sz.height;
 		}
 	}
-	
-	
+
+
 	///
 	Size opAdd(Size sz)
 	{
@@ -201,8 +201,8 @@ struct Size // docmain
 		result.height = height + sz.height;
 		return result;
 	}
-	
-	
+
+
 	///
 	Size opSub(Size sz)
 	{
@@ -211,16 +211,16 @@ struct Size // docmain
 		result.height = height - sz.height;
 		return result;
 	}
-	
-	
+
+
 	///
 	void opAddAssign(Size sz)
 	{
 		width += sz.width;
 		height += sz.height;
 	}
-	
-	
+
+
 	///
 	void opSubAssign(Size sz)
 	{
@@ -234,7 +234,7 @@ struct Size // docmain
 struct Rect // docmain
 {
 	int x, y, width, height;
-	
+
 	// Used internally.
 	pure nothrow void getRect(RECT* r) // package
 	{
@@ -243,50 +243,50 @@ struct Rect // docmain
 		r.top = y;
 		r.bottom = y + height;
 	}
-	
-	
+
+
 	///
 	@property Point location() // getter
 	{
 		return Point(x, y);
 	}
-	
+
 	/// ditto
 	@property void location(Point pt) // setter
 	{
 		x = pt.x;
 		y = pt.y;
 	}
-	
-	
+
+
 	///
 	@property Size size() //getter
 	{
 		return Size(width, height);
 	}
-	
+
 	/// ditto
 	@property void size(Size sz) // setter
 	{
 		width = sz.width;
 		height = sz.height;
 	}
-	
-	
+
+
 	///
 	@property int right() // getter
 	{
 		return x + width;
 	}
-	
-	
+
+
 	///
 	@property int bottom() // getter
 	{
 		return y + height;
 	}
-	
-	
+
+
 	/// Construct a new Rect.
 	static Rect opCall(int x, int y, int width, int height)
 	{
@@ -297,7 +297,7 @@ struct Rect // docmain
 		r.height = height;
 		return r;
 	}
-	
+
 	/// ditto
 	static Rect opCall(Point location, Size size)
 	{
@@ -308,15 +308,15 @@ struct Rect // docmain
 		r.height = size.height;
 		return r;
 	}
-	
+
 	/// ditto
 	static Rect opCall()
 	{
 		Rect r;
 		return r;
 	}
-	
-	
+
+
 	// Used internally.
 	static Rect opCall(RECT* rect) // package
 	{
@@ -327,8 +327,8 @@ struct Rect // docmain
 		r.height = rect.bottom - rect.top;
 		return r;
 	}
-	
-	
+
+
 	/// Construct a new Rect from left, top, right and bottom values.
 	static Rect fromLTRB(int left, int top, int right, int bottom)
 	{
@@ -339,8 +339,8 @@ struct Rect // docmain
 		r.height = bottom - top;
 		return r;
 	}
-	
-	
+
+
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
@@ -349,7 +349,7 @@ struct Rect // docmain
 			return x == r.x && y == r.y &&
 				width == r.width && height == r.height;
 		}
-		
+
 		/// ditto
 		const bool opEquals(Rect r)
 		{
@@ -366,8 +366,8 @@ struct Rect // docmain
 				width == r.width && height == r.height;
 		}
 	}
-	
-	
+
+
 	///
 	bool contains(int c_x, int c_y)
 	{
@@ -378,13 +378,13 @@ struct Rect // docmain
 		}
 		return false;
 	}
-	
+
 	/// ditto
 	bool contains(Point pos)
 	{
 		return contains(pos.x, pos.y);
 	}
-	
+
 	/// ditto
 	// Contained entirely within -this-.
 	bool contains(Rect r)
@@ -396,8 +396,8 @@ struct Rect // docmain
 		}
 		return false;
 	}
-	
-	
+
+
 	///
 	void inflate(int i_width, int i_height)
 	{
@@ -406,14 +406,14 @@ struct Rect // docmain
 		y -= i_height;
 		height += i_height * 2;
 	}
-	
+
 	/// ditto
 	void inflate(Size insz)
 	{
 		inflate(insz.width, insz.height);
 	}
-	
-	
+
+
 	///
 	// Just tests if there's an intersection.
 	bool intersectsWith(Rect r)
@@ -425,15 +425,15 @@ struct Rect // docmain
 		}
 		return false;
 	}
-	
-	
+
+
 	///
 	void offset(int x, int y)
 	{
 		this.x += x;
 		this.y += y;
 	}
-	
+
 	/// ditto
 	void offset(Point pt)
 	{
@@ -441,8 +441,8 @@ struct Rect // docmain
 		this.x += pt.x;
 		this.y += pt.y;
 	}
-	
-	
+
+
 	/+
 	// Modify -this- to include only the intersection
 	// of -this- and -r-.
@@ -450,8 +450,8 @@ struct Rect // docmain
 	{
 	}
 	+/
-	
-	
+
+
 	// void offset(Point), void offset(int, int)
 	// static Rect union(Rect, Rect)
 }
@@ -460,7 +460,7 @@ struct Rect // docmain
 unittest
 {
 	Rect r = Rect(3, 3, 3, 3);
-	
+
 	assert(r.contains(3, 3));
 	assert(!r.contains(3, 2));
 	assert(r.contains(6, 6));
@@ -469,7 +469,7 @@ unittest
 	assert(r.contains(Rect(4, 4, 2, 2)));
 	assert(!r.contains(Rect(2, 4, 4, 2)));
 	assert(!r.contains(Rect(4, 3, 2, 4)));
-	
+
 	r.inflate(2, 1);
 	assert(r.x == 1);
 	assert(r.right == 8);
@@ -477,7 +477,7 @@ unittest
 	assert(r.bottom == 7);
 	r.inflate(-2, -1);
 	assert(r == Rect(3, 3, 3, 3));
-	
+
 	assert(r.intersectsWith(Rect(4, 4, 2, 9)));
 	assert(r.intersectsWith(Rect(3, 3, 1, 1)));
 	assert(r.intersectsWith(Rect(0, 3, 3, 0)));
@@ -495,36 +495,36 @@ struct Color // docmain
 	/// Red, green, blue and alpha channel color values.
 	@property ubyte r() nothrow // getter
 	{ validateColor(); return color.red; }
-	
+
 	/// ditto
 	@property ubyte g() nothrow // getter
 	{ validateColor(); return color.green; }
-	
+
 	/// ditto
 	@property ubyte b() nothrow // getter
 	{ validateColor(); return color.blue; }
-	
+
 	/// ditto
 	@property ubyte a() nothrow // getter
 	{ /+ validateColor(); +/ return color.alpha; }
-	
-	
+
+
 	/// Return the numeric color value.
 	COLORREF toArgb() nothrow
 	{
 		validateColor();
 		return color.cref;
 	}
-	
-	
+
+
 	/// Return the numeric red, green and blue color value.
 	COLORREF toRgb() nothrow
 	{
 		validateColor();
 		return color.cref & 0x00FFFFFF;
 	}
-	
-	
+
+
 	// Used internally.
 	HBRUSH createBrush() nothrow // package
 	{
@@ -535,53 +535,53 @@ struct Color // docmain
 			hbr = GetSysColorBrush(_systemColorIndex);
 		return hbr;
 	}
-	
-	
+
+
 	Color* Dthisptr(Color* t) pure nothrow { return t; }
 	Color* Dthisptr(ref return Color t) pure nothrow { return &t; }
 	Color Dthisval(Color* t) pure nothrow { return *t; }
 	Color Dthisval(Color t) pure nothrow { return t; }
-	
-	
+
+
 	deprecated static Color opCall(COLORREF argb)
 	{
 		Color nc;
 		nc.color.cref = argb;
 		return nc;
 	}
-	
-	
+
+
 	/// Construct a new color.
 	private this(_color c) pure nothrow
 	{
 		color = c;
 	}
-	
+
 	/// Construct a new color.
 	this(ubyte alpha, Color c) pure nothrow
 	{
 		this = fromRgb(alpha, c.color.cref);
 	}
-	
+
 	/// ditto
 	this(ubyte red, ubyte green, ubyte blue) pure nothrow
 	{
 		this = fromArgb(0xff, red, green, blue);
 	}
-	
+
 	/// ditto
 	this(ubyte alpha, ubyte red, ubyte green, ubyte blue) pure nothrow
 	{
 		this = fromArgb(alpha, red, green, blue);
 	}
-	
+
 	/// ditto
 	//alias opCall fromArgb;
 	static Color fromArgb(ubyte alpha, ubyte red, ubyte green, ubyte blue) pure nothrow
 	{
 		return Color(_color((alpha << 24) | (blue << 16) | (green << 8) | red));
 	}
-	
+
 	/// ditto
 	static Color fromRgb(COLORREF rgb) pure nothrow
 	{
@@ -589,30 +589,30 @@ struct Color // docmain
 			return empty;
 		return Color(_color(cast(COLORREF)(rgb | 0xff000000)));
 	}
-	
+
 	/// ditto
 	static Color fromRgb(ubyte alpha, COLORREF rgb) pure nothrow
 	{
 		return Color(_color(rgb | ((cast(COLORREF)alpha) << 24)));
 	}
-	
+
 	/// ditto
 	static @property Color empty() pure nothrow // getter
 	{
 		return Color(0, 0, 0, 0);
 	}
-	
-	
+
+
 	/// Return a completely transparent color value.
 	static @property Color transparent() nothrow // getter
 	{
 		return Color.fromArgb(0, 0xFF, 0xFF, 0xFF);
 	}
-	
-	
+
+
 	deprecated alias blendColor blend;
-	
-	
+
+
 	/// Blend colors; alpha channels are ignored.
 	// Blends the color channels half way.
 	// Does not consider alpha channels and discards them.
@@ -623,16 +623,16 @@ struct Color // docmain
 			return wc;
 		if(wc == Color.empty)
 			return Dthisval(this);
-		
+
 		validateColor();
 		wc.validateColor();
-		
+
 		return Color(cast(ubyte)((cast(uint)color.red + cast(uint)wc.color.red) >> 1),
-			cast(ubyte)((cast(uint)color.green + cast(uint)wc.color.green) >> 1),
-			cast(ubyte)((cast(uint)color.blue + cast(uint)wc.color.blue) >> 1));
+                     cast(ubyte)((cast(uint)color.green + cast(uint)wc.color.green) >> 1),
+                     cast(ubyte)((cast(uint)color.blue + cast(uint)wc.color.blue) >> 1));
 	}
-	
-	
+
+
 	/// Alpha blend this color with a background color to return a solid color (100% opaque).
 	// Blends with backColor if this color has opacity to produce a solid color.
 	// Returns the new solid color, or the original color if no opacity.
@@ -650,14 +650,14 @@ struct Color // docmain
 			return Dthisval(this);
 		if(0xFF == this.color.alpha)
 			return Dthisval(this);
-		
+
 		validateColor();
 		backColor.validateColor();
-		
+
 		float fa, ba;
 		fa = cast(float)color.alpha / 255.0;
 		ba = 1.0 - fa;
-		
+
 		Color result;
 		result.color.alpha = 0xFF;
 		result.color.red = cast(ubyte)(this.color.red * fa + backColor.color.red * ba);
@@ -665,8 +665,8 @@ struct Color // docmain
 		result.color.blue = cast(ubyte)(this.color.blue * fa + backColor.color.blue * ba);
 		return result;
 	}
-	
-	
+
+
 	package static Color systemColor(int colorIndex) pure nothrow
 	{
 		Color c;
@@ -674,19 +674,19 @@ struct Color // docmain
 		c.color.alpha = 0xFF;
 		return c;
 	}
-	
-	
+
+
 	// Gets color index or INVAILD_SYSTEM_COLOR_INDEX.
 	package @property int _systemColorIndex() pure nothrow // getter
 	{
 		return sysIndex;
 	}
-	
-	
+
+
 	package enum ubyte INVAILD_SYSTEM_COLOR_INDEX = ubyte.max;
-	
-	
-	private:
+
+
+private:
 	union _color
 	{
 		COLORREF cref;
@@ -701,10 +701,10 @@ struct Color // docmain
 	}
 	static assert(_color.sizeof == uint.sizeof);
 	_color color;
-	
+
 	ubyte sysIndex = INVAILD_SYSTEM_COLOR_INDEX;
-	
-	
+
+
 	void validateColor() nothrow
 	{
 		if(sysIndex != INVAILD_SYSTEM_COLOR_INDEX)
@@ -725,160 +725,160 @@ class SystemColors // docmain
 	private this()
 	{
 	}
-	
-	
-	static:
-	
+
+
+static:
+
 	///
 	@property Color activeBorder() // getter
 	{
 		return Color.systemColor(COLOR_ACTIVEBORDER);
 	}
-	
+
 	/// ditto
 	@property Color activeCaption() // getter
 	{
 		return Color.systemColor(COLOR_ACTIVECAPTION);
 	}
-	
+
 	/// ditto
 	@property Color activeCaptionText() // getter
 	{
 		return Color.systemColor(COLOR_CAPTIONTEXT);
 	}
-	
+
 	/// ditto
 	@property Color appWorkspace() // getter
 	{
 		return Color.systemColor(COLOR_APPWORKSPACE);
 	}
-	
+
 	/// ditto
 	@property Color control() // getter
 	{
 		return Color.systemColor(COLOR_BTNFACE);
 	}
-	
+
 	/// ditto
 	@property Color controlDark() // getter
 	{
 		return Color.systemColor(COLOR_BTNSHADOW);
 	}
-	
+
 	/// ditto
 	@property Color controlDarkDark() // getter
 	{
 		return Color.systemColor(COLOR_3DDKSHADOW); // ?
 	}
-	
+
 	/// ditto
 	@property Color controlLight() // getter
 	{
 		return Color.systemColor(COLOR_3DLIGHT);
 	}
-	
+
 	/// ditto
 	@property Color controlLightLight() // getter
 	{
 		return Color.systemColor(COLOR_BTNHIGHLIGHT); // ?
 	}
-	
+
 	/// ditto
 	@property Color controlText() // getter
 	{
 		return Color.systemColor(COLOR_BTNTEXT);
 	}
-	
+
 	/// ditto
 	@property Color desktop() // getter
 	{
 		return Color.systemColor(COLOR_DESKTOP);
 	}
-	
+
 	/// ditto
 	@property Color grayText() // getter
 	{
 		return Color.systemColor(COLOR_GRAYTEXT);
 	}
-	
+
 	/// ditto
 	@property Color highlight() // getter
 	{
 		return Color.systemColor(COLOR_HIGHLIGHT);
 	}
-	
+
 	/// ditto
 	@property Color highlightText() // getter
 	{
 		return Color.systemColor(COLOR_HIGHLIGHTTEXT);
 	}
-	
+
 	/// ditto
 	@property Color hotTrack() // getter
 	{
 		return Color(0, 0, 0xFF); // ?
 	}
-	
+
 	/// ditto
 	@property Color inactiveBorder() // getter
 	{
 		return Color.systemColor(COLOR_INACTIVEBORDER);
 	}
-	
+
 	/// ditto
 	@property Color inactiveCaption() // getter
 	{
 		return Color.systemColor(COLOR_INACTIVECAPTION);
 	}
-	
+
 	/// ditto
 	@property Color inactiveCaptionText() // getter
 	{
 		return Color.systemColor(COLOR_INACTIVECAPTIONTEXT);
 	}
-	
+
 	/// ditto
 	@property Color info() // getter
 	{
 		return Color.systemColor(COLOR_INFOBK);
 	}
-	
+
 	/// ditto
 	@property Color infoText() // getter
 	{
 		return Color.systemColor(COLOR_INFOTEXT);
 	}
-	
+
 	/// ditto
 	@property Color menu() // getter
 	{
 		return Color.systemColor(COLOR_MENU);
 	}
-	
+
 	/// ditto
 	@property Color menuText() // getter
 	{
 		return Color.systemColor(COLOR_MENUTEXT);
 	}
-	
+
 	/// ditto
 	@property Color scrollBar() // getter
 	{
 		return Color.systemColor(CTLCOLOR_SCROLLBAR);
 	}
-	
+
 	/// ditto
 	@property Color window() // getter
 	{
 		return Color.systemColor(COLOR_WINDOW);
 	}
-	
+
 	/// ditto
 	@property Color windowFrame() // getter
 	{
 		return Color.systemColor(COLOR_WINDOWFRAME);
 	}
-	
+
 	/// ditto
 	@property Color windowText() // getter
 	{
@@ -893,34 +893,34 @@ class SystemIcons // docmain
 	private this()
 	{
 	}
-	
-	
-	static:
-	
+
+
+static:
+
 	///
 	@property Icon application() // getter
 	{
 		return new Icon(LoadIconW(null, IDI_APPLICATION), false);
 	}
-	
+
 	/// ditto
 	@property Icon error() // getter
 	{
 		return new Icon(LoadIconW(null, IDI_HAND), false);
 	}
-	
+
 	/// ditto
 	@property Icon question() // getter
 	{
 		return new Icon(LoadIconW(null, IDI_QUESTION), false);
 	}
-	
+
 	/// ditto
 	@property Icon warning() // getter
 	{
 		return new Icon(LoadIconW(null, IDI_EXCLAMATION), false);
 	}
-	
+
 	/// ditto
 	@property Icon information() // getter
 	{
@@ -932,32 +932,32 @@ class SystemIcons // docmain
 /+
 class ImageFormat
 {
-	/+
-	this(guid)
-	{
-		
-	}
-	
-	
-	final @property guid() // getter
-	{
-		return guid;
-	}
-	+/
-	
-	
-	static:
-	
-	@property ImageFormat bmp() // getter
-	{
-		return null;
-	}
-	
-	
-	@property ImageFormat icon() // getter
-	{
-		return null;
-	}
+/+
+this(guid)
+{
+
+}
+
+
+final @property guid() // getter
+{
+return guid;
+}
++/
+
+
+static:
+
+@property ImageFormat bmp() // getter
+{
+return null;
+}
+
+
+@property ImageFormat icon() // getter
+{
+return null;
+}
 }
 +/
 
@@ -966,51 +966,51 @@ class ImageFormat
 abstract class Image // docmain
 {
 	//flags(); // getter ???
-	
-	
+
+
 	/+
 	final @property ImageFormat rawFormat(); // getter
 	+/
-	
-	
+
+
 	static Bitmap fromHBitmap(HBITMAP hbm) // package
 	{
 		return new Bitmap(hbm, false); // Not owned. Up to caller to manage or call dispose().
 	}
-	
-	
+
+
 	/+
 	static Image fromFile(string file)
 	{
-		return new Image(LoadImageA());
+    return new Image(LoadImageA());
 	}
 	+/
-	
-	
+
+
 	///
 	void draw(Graphics g, Point pt);
 	/// ditto
 	void drawStretched(Graphics g, Rect r);
-	
-	
+
+
 	///
 	@property Size size(); // getter
-	
-	
+
+
 	///
 	@property int width() // getter
 	{
 		return size.width;
 	}
-	
-	
+
+
 	///
 	@property int height() // getter
 	{
 		return size.height;
 	}
-	
-	
+
+
 	int _imgtype(HGDIOBJ* ph) // internal
 	{
 		if(ph)
@@ -1031,29 +1031,29 @@ class Bitmap: Image // docmain
 		if(!this.hbm)
 			throw new DflException("Unable to load bitmap from file '" ~ fileName ~ "'");
 	}
-	
+
 	// Used internally.
 	this(HBITMAP hbm, bool owned = true)
 	{
 		this.hbm = hbm;
 		this.owned = owned;
 	}
-	
-	
+
+
 	///
 	final @property HBITMAP handle() // getter
 	{
 		return hbm;
 	}
-	
-	
+
+
 	private void _getInfo(BITMAP* bm)
 	{
 		if(GetObjectA(hbm, BITMAP.sizeof, bm) != BITMAP.sizeof)
 			throw new DflException("Unable to get image information");
 	}
-	
-	
+
+
 	///
 	final override @property Size size() // getter
 	{
@@ -1061,34 +1061,34 @@ class Bitmap: Image // docmain
 		_getInfo(&bm);
 		return Size(bm.bmWidth, bm.bmHeight);
 	}
-	
-	
+
+
 	///
 	final override @property int width() // getter
 	{
 		return size.width;
 	}
-	
-	
+
+
 	///
 	final override @property int height() // getter
 	{
 		return size.height;
 	}
-	
-	
+
+
 	private void _draw(Graphics g, Point pt, HDC memdc)
 	{
 		HGDIOBJ hgo;
 		Size sz;
-		
+
 		sz = size;
 		hgo = SelectObject(memdc, hbm);
 		BitBlt(g.handle, pt.x, pt.y, sz.width, sz.height, memdc, 0, 0, SRCCOPY);
 		SelectObject(memdc, hgo); // Old bitmap.
 	}
-	
-	
+
+
 	///
 	final override void draw(Graphics g, Point pt)
 	{
@@ -1103,7 +1103,7 @@ class Bitmap: Image // docmain
 			DeleteDC(memdc);
 		}
 	}
-	
+
 	/// ditto
 	// -tempMemGraphics- is used as a temporary Graphics instead of
 	// creating and destroying a temporary one for each call.
@@ -1111,14 +1111,14 @@ class Bitmap: Image // docmain
 	{
 		_draw(g, pt, tempMemGraphics.handle);
 	}
-	
-	
+
+
 	private void _drawStretched(Graphics g, Rect r, HDC memdc)
 	{
 		HGDIOBJ hgo;
 		Size sz;
 		int lstretch;
-		
+
 		sz = size;
 		hgo = SelectObject(memdc, hbm);
 		lstretch = SetStretchBltMode(g.handle, COLORONCOLOR);
@@ -1126,8 +1126,8 @@ class Bitmap: Image // docmain
 		SetStretchBltMode(g.handle, lstretch);
 		SelectObject(memdc, hgo); // Old bitmap.
 	}
-	
-	
+
+
 	///
 	final override void drawStretched(Graphics g, Rect r)
 	{
@@ -1142,7 +1142,7 @@ class Bitmap: Image // docmain
 			DeleteDC(memdc);
 		}
 	}
-	
+
 	/// ditto
 	// -tempMemGraphics- is used as a temporary Graphics instead of
 	// creating and destroying a temporary one for each call.
@@ -1150,8 +1150,8 @@ class Bitmap: Image // docmain
 	{
 		_drawStretched(g, r, tempMemGraphics.handle);
 	}
-	
-	
+
+
 	///
 	void dispose()
 	{
@@ -1159,24 +1159,24 @@ class Bitmap: Image // docmain
 		DeleteObject(hbm);
 		hbm = null;
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			dispose();
 	}
-	
-	
+
+
 	override int _imgtype(HGDIOBJ* ph) // internal
 	{
 		if(ph)
 			*ph = cast(HGDIOBJ)hbm;
 		return 1;
 	}
-	
-	
-	private:
+
+
+private:
 	HBITMAP hbm;
 	bool owned = true;
 }
@@ -1186,19 +1186,19 @@ class Bitmap: Image // docmain
 class Picture: Image // docmain
 {
 	// Note: requires OleInitialize(null).
-	
-	
+
+
 	///
 	// Throws exception on failure.
 	/*
 	this(Stream stm)
 	{
-		this.ipic = _fromDStream(stm);
-		if(!this.ipic)
-			throw new DflException("Unable to load picture from stream");
+    this.ipic = _fromDStream(stm);
+    if(!this.ipic)
+    throw new DflException("Unable to load picture from stream");
 	}
 	*/
-	
+
 	/// ditto
 	// Throws exception on failure.
 	this(string fileName)
@@ -1207,8 +1207,8 @@ class Picture: Image // docmain
 		if(!this.ipic)
 			throw new DflException("Unable to load picture from file '" ~ fileName ~ "'");
 	}
-	
-	
+
+
 	/// ditto
 	this(void[] mem)
 	{
@@ -1216,27 +1216,27 @@ class Picture: Image // docmain
 		if(!this.ipic)
 			throw new DflException("Unable to load picture from memory");
 	}
-	
-	
+
+
 	private this(IPicture ipic)
 	{
 		this.ipic = ipic;
 	}
-	
-	
+
+
 	///
 	// Returns null on failure instead of throwing exception.
 	/*
 	static Picture fromStream(Stream stm)
 	{
-		auto ipic = _fromDStream(stm);
-		if(!ipic)
-			return null;
-		return new Picture(ipic);
+    auto ipic = _fromDStream(stm);
+    if(!ipic)
+    return null;
+    return new Picture(ipic);
 	}
 	*/
-	
-	
+
+
 	///
 	// Returns null on failure instead of throwing exception.
 	static Picture fromFile(string fileName)
@@ -1246,8 +1246,8 @@ class Picture: Image // docmain
 			return null;
 		return new Picture(ipic);
 	}
-	
-	
+
+
 	///
 	static Picture fromMemory(void[] mem)
 	{
@@ -1256,8 +1256,8 @@ class Picture: Image // docmain
 			return null;
 		return new Picture(ipic);
 	}
-	
-	
+
+
 	///
 	final void draw(HDC hdc, Point pt) // package
 	{
@@ -1269,14 +1269,14 @@ class Picture: Image // docmain
 		height = MAP_LOGHIM_TO_PIX(lhy, GetDeviceCaps(hdc, LOGPIXELSY));
 		ipic.Render(hdc, pt.x, pt.y + height, width, -height, 0, 0, lhx, lhy, null);
 	}
-	
+
 	/// ditto
 	final override void draw(Graphics g, Point pt)
 	{
 		return draw(g.handle, pt);
 	}
-	
-	
+
+
 	///
 	final void drawStretched(HDC hdc, Rect r) // package
 	{
@@ -1285,14 +1285,14 @@ class Picture: Image // docmain
 		lhy = loghimY;
 		ipic.Render(hdc, r.x, r.y + r.height, r.width, -r.height, 0, 0, lhx, lhy, null);
 	}
-	
+
 	/// ditto
 	final override void drawStretched(Graphics g, Rect r)
 	{
 		return drawStretched(g.handle, r);
 	}
-	
-	
+
+
 	///
 	final @property OLE_XSIZE_HIMETRIC loghimX() // getter
 	{
@@ -1301,7 +1301,7 @@ class Picture: Image // docmain
 			return 0; // ?
 		return xsz;
 	}
-	
+
 	/// ditto
 	final @property OLE_YSIZE_HIMETRIC loghimY() // getter
 	{
@@ -1310,8 +1310,8 @@ class Picture: Image // docmain
 			return 0; // ?
 		return ysz;
 	}
-	
-	
+
+
 	///
 	final override @property int width() // getter
 	{
@@ -1322,8 +1322,8 @@ class Picture: Image // docmain
 		g.dispose();
 		return result;
 	}
-	
-	
+
+
 	///
 	final override @property int height() // getter
 	{
@@ -1334,8 +1334,8 @@ class Picture: Image // docmain
 		g.dispose();
 		return result;
 	}
-	
-	
+
+
 	///
 	final override @property Size size() // getter
 	{
@@ -1346,46 +1346,46 @@ class Picture: Image // docmain
 		g.dispose();
 		return result;
 	}
-	
-	
+
+
 	///
 	final int getWidth(HDC hdc) // package
 	{
 		return MAP_LOGHIM_TO_PIX(loghimX, GetDeviceCaps(hdc, LOGPIXELSX));
 	}
-	
+
 	/// ditto
 	final int getWidth(Graphics g)
 	{
 		return getWidth(g.handle);
 	}
-	
-	
+
+
 	///
 	final int getHeight(HDC hdc) // package
 	{
 		return MAP_LOGHIM_TO_PIX(loghimY, GetDeviceCaps(hdc, LOGPIXELSX));
 	}
-	
+
 	/// ditto
 	final int getHeight(Graphics g)
 	{
 		return getHeight(g.handle);
 	}
-	
-	
+
+
 	final Size getSize(HDC hdc) // package
 	{
 		return Size(getWidth(hdc), getHeight(hdc));
 	}
-	
+
 	///
 	final Size getSize(Graphics g)
 	{
 		return Size(getWidth(g), getHeight(g));
 	}
-	
-	
+
+
 	///
 	void dispose()
 	{
@@ -1394,21 +1394,21 @@ class Picture: Image // docmain
 			DeleteObject(_hbmimgtype);
 			_hbmimgtype = HBITMAP.init;
 		}
-		
+
 		if(ipic)
 		{
 			ipic.Release();
 			ipic = null;
 		}
 	}
-	
-	
+
+
 	~this()
 	{
 		dispose();
 	}
-	
-	
+
+
 	final HBITMAP toHBitmap(HDC hdc) // package
 	{
 		HDC memdc;
@@ -1424,7 +1424,7 @@ class Picture: Image // docmain
 			result = CreateCompatibleBitmap(hdc, sz.width, sz.height);
 			if(!result)
 			{
-				bad_bm:
+            bad_bm:
 				throw new DflException("Unable to allocate image");
 			}
 			oldbm = SelectObject(memdc, result);
@@ -1438,8 +1438,8 @@ class Picture: Image // docmain
 		}
 		return result;
 	}
-	
-	
+
+
 	final Bitmap toBitmap(HDC hdc) // package
 	{
 		HBITMAP hbm;
@@ -1448,8 +1448,8 @@ class Picture: Image // docmain
 			throw new DflException("Unable to create bitmap");
 		return new Bitmap(hbm, true); // Owned.
 	}
-	
-	
+
+
 	final Bitmap toBitmap()
 	{
 		Bitmap result;
@@ -1458,16 +1458,16 @@ class Picture: Image // docmain
 		//g.dispose(); // scope'd
 		return result;
 	}
-	
+
 	/// ditto
 	final Bitmap toBitmap(Graphics g)
 	{
 		return toBitmap(g.handle);
 	}
-	
-	
+
+
 	HBITMAP _hbmimgtype;
-	
+
 	override int _imgtype(HGDIOBJ* ph) // internal
 	{
 		if(ph)
@@ -1478,17 +1478,17 @@ class Picture: Image // docmain
 				_hbmimgtype = toHBitmap(g.handle);
 				//g.dispose(); // scope'd
 			}
-			
+
 			*ph = _hbmimgtype;
 		}
 		return 1;
 	}
-	
-	
-	private:
+
+
+private:
 	IPicture ipic = null;
-	
-	
+
+
 	static IPicture _fromIStream(IStream istm)
 	{
 		IPicture ipic;
@@ -1496,71 +1496,71 @@ class Picture: Image // docmain
 		{
 			case S_OK:
 				return ipic;
-			
-			debug(DFL_X)
-			{
-				case E_OUTOFMEMORY:
-					debug assert(0, "Picture: Out of memory");
-					break;
-				case E_NOINTERFACE:
-					debug assert(0, "Picture: The object does not support the interface");
-					break;
-				case E_UNEXPECTED:
-					debug assert(0, "Picture: Unexpected error");
-					break;
-				case E_POINTER:
-					debug assert(0, "Picture: Invalid pointer");
-					break;
-				case E_FAIL:
-					debug assert(0, "Picture: Fail");
-					break;
-			}
-			
+
+                debug(DFL_X)
+                {
+                    case E_OUTOFMEMORY:
+                        debug assert(0, "Picture: Out of memory");
+                        break;
+                    case E_NOINTERFACE:
+                        debug assert(0, "Picture: The object does not support the interface");
+                        break;
+                    case E_UNEXPECTED:
+                        debug assert(0, "Picture: Unexpected error");
+                        break;
+                    case E_POINTER:
+                        debug assert(0, "Picture: Invalid pointer");
+                        break;
+                    case E_FAIL:
+                        debug assert(0, "Picture: Fail");
+                        break;
+                }
+
 			default:
 		}
 		return null;
 	}
-	
+
 	/*
 	static IPicture _fromDStream(Stream stm)
 	in
 	{
-		assert(stm !is null);
+    assert(stm !is null);
 	}
 	do
 	{
-		scope DStreamToIStream istm = new DStreamToIStream(stm);
-		return _fromIStream(istm);
+    scope DStreamToIStream istm = new DStreamToIStream(stm);
+    return _fromIStream(istm);
 	}
 	*/
-	
-	
+
+
 	static IPicture _fromFileName(string fileName)
 	{
 		// alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
-		
+
 		HANDLE hf;
 		HANDLE hg;
 		void* pg;
 		DWORD dwsz, dw;
-		
+
 		hf = CreateFileA(fileName.ptr, GENERIC_READ, FILE_SHARE_READ, null,
-			OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null);
+                         OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null);
 		if(!hf)
 			return null;
-		
+
 		dwsz = GetFileSize(hf, null);
 		if(0xFFFFFFFF == dwsz)
 		{
-			failclose:
+        failclose:
 			CloseHandle(hf);
 			return null;
 		}
-		
+
 		hg = GlobalAlloc(GMEM_MOVEABLE, dwsz);
 		if(!hg)
 			goto failclose;
-		
+
 		pg = GlobalLock(hg);
 		if(!pg)
 		{
@@ -1568,7 +1568,7 @@ class Picture: Image // docmain
 			CloseHandle(hg);
 			return null;
 		}
-		
+
 		if(!ReadFile(hf, pg, dwsz, &dw, null) || dwsz != dw)
 		{
 			CloseHandle(hf);
@@ -1576,31 +1576,31 @@ class Picture: Image // docmain
 			CloseHandle(hg);
 			return null;
 		}
-		
+
 		CloseHandle(hf);
 		GlobalUnlock(hg);
-		
+
 		IStream istm;
 		IPicture ipic;
-		
+
 		if(S_OK != CreateStreamOnHGlobal(hg, TRUE, &istm))
 		{
 			CloseHandle(hg);
 			return null;
 		}
 		// Don't need to CloseHandle(hg) due to 2nd param being TRUE.
-		
+
 		ipic = _fromIStream(istm);
 		istm.Release();
 		return ipic;
 	}
-	
-	
+
+
 	static IPicture _fromMemory(void[] mem)
 	{
 		return _fromIStream(new MemoryIStream(mem));
 	}
-	
+
 }
 
 
@@ -1631,7 +1631,7 @@ enum TextAlignment: UINT
 	LEFT = DT_LEFT, ///
 	RIGHT = DT_RIGHT, /// ditto
 	CENTER = DT_CENTER, /// ditto
-	
+
 	TOP = DT_TOP,  /// Single line only alignment.
 	BOTTOM = DT_BOTTOM, /// ditto
 	MIDDLE = DT_VCENTER, /// ditto
@@ -1645,7 +1645,7 @@ class TextFormat
 	this()
 	{
 	}
-	
+
 	/// ditto
 	this(TextFormat tf)
 	{
@@ -1654,14 +1654,14 @@ class TextFormat
 		_align = tf._align;
 		_params = tf._params;
 	}
-	
+
 	/// ditto
 	this(TextFormatFlags flags)
 	{
 		_flags = flags;
 	}
-	
-	
+
+
 	///
 	static @property TextFormat genericDefault() // getter
 	{
@@ -1672,99 +1672,99 @@ class TextFormat
 			TextFormatFlags.NO_CLIP | TextFormatFlags.LINE_LIMIT;
 		return result;
 	}
-	
+
 	/// ditto
 	static @property TextFormat genericTypographic() // getter
 	{
 		return new TextFormat;
 	}
-	
-	
+
+
 	///
 	final @property void alignment(TextAlignment ta) // setter
 	{
 		_align = ta;
 	}
-	
+
 	/// ditto
 	final @property TextAlignment alignment() // getter
 	{
 		return _align;
 	}
-	
-	
+
+
 	///
 	final @property void formatFlags(TextFormatFlags tff) // setter
 	{
 		_flags = tff;
 	}
-	
+
 	/// ditto
 	final @property TextFormatFlags formatFlags() // getter
 	{
 		return _flags;
 	}
-	
-	
+
+
 	///
 	final @property void trimming(TextTrimming tt) // getter
 	{
 		_trim = tt;
 	}
-	
+
 	/// ditto
 	final @property TextTrimming trimming() // getter
 	{
 		return _trim;
 	}
-	
-	
+
+
 	// Units of the average character width.
-	
+
 	///
 	final @property void tabLength(int tablen) // setter
 	{
 		_params.iTabLength = tablen;
 	}
-	
+
 	/// ditto
 	final @property int tabLength() // getter
 	{
 		return _params.iTabLength;
 	}
-	
-	
+
+
 	// Units of the average character width.
-	
+
 	///
 	final @property void leftMargin(int sz) // setter
 	{
 		_params.iLeftMargin = sz;
 	}
-	
+
 	/// ditto
 	final @property int leftMargin() // getter
 	{
 		return _params.iLeftMargin;
 	}
-	
-	
+
+
 	// Units of the average character width.
-	
+
 	///
 	final @property void rightMargin(int sz) // setter
 	{
 		_params.iRightMargin = sz;
 	}
-	
+
 	/// ditto
 	final @property int rightMargin() // getter
 	{
 		return _params.iRightMargin;
 	}
-	
-	
-	private:
+
+
+private:
 	TextTrimming _trim = TextTrimming.NONE; // TextTrimming.CHARACTER.
 	TextFormatFlags _flags = TextFormatFlags.NO_PREFIX | TextFormatFlags.WORD_BREAK;
 	TextAlignment _align = TextAlignment.LEFT;
@@ -1802,8 +1802,8 @@ class Screen
 		}
 		return _ps;
 	}
-	
-	
+
+
 	///
 	@property Rect bounds() // getter
 	{
@@ -1821,8 +1821,8 @@ class Screen
 			assert(0);
 		return Rect(&area);
 	}
-	
-	
+
+
 	///
 	@property Rect workingArea() // getter
 	{
@@ -1840,11 +1840,11 @@ class Screen
 			return bounds;
 		return Rect(&area);
 	}
-	
-	
+
+
 	version(DFL_MULTIPLE_SCREENS)
 	{
-		
+
 		debug
 		{
 			static @property void fakeMultipleScreens(bool byes) // setter
@@ -1858,17 +1858,17 @@ class Screen
 					}
 				}
 			}
-			
+
 			static @property bool fakeMultipleScreens() // getter
 			{
 				return _screens.length > 1
 					&& HMFAKE == _screens[1].hmonitor;
 			}
-			
+
 			private enum HMONITOR HMFAKE = cast(HMONITOR)1969253357;
 		}
-		
-		
+
+
 		///
 		static @property Screen[] allScreens() // getter
 		{
@@ -1892,8 +1892,8 @@ class Screen
 			}
 			return _screens;
 		}
-		
-		
+
+
 		static Screen fromHandle(HWND hwnd)
 		{
 			version(DFL_MULTIPLE_SCREENS)
@@ -1905,7 +1905,7 @@ class Screen
 				else
 				{
 					auto fromWindow = cast(typeof(&MonitorFromWindow))GetProcAddress(
-						GetModuleHandleA("user32.dll"), "MonitorFromWindow");
+                                                                                     GetModuleHandleA("user32.dll"), "MonitorFromWindow");
 					if(!fromWindow)
 					{
 						//throw new DflException("Multiple screens not supported");
@@ -1916,7 +1916,7 @@ class Screen
 				debug
 				{
 					if(fakeMultipleScreens
-						&& hm == _screens[0].hmonitor)
+                       && hm == _screens[0].hmonitor)
 					{
 						RECT rect;
 						if(GetWindowRect(hwnd, &rect))
@@ -1929,18 +1929,18 @@ class Screen
 				}
 				return _findScreen(hm);
 			}
-			_def:
+        _def:
 			return primaryScreen;
 		}
-		
-		
+
+
 		///
 		static Screen fromControl(IWindow ctrl)
 		{
 			return fromHandle(ctrl.handle);
 		}
-		
-		
+
+
 		///
 		static Screen fromPoint(Point pt)
 		{
@@ -1953,7 +1953,7 @@ class Screen
 				else
 				{
 					auto fromPoint = cast(typeof(&MonitorFromPoint))GetProcAddress(
-						GetModuleHandleA("user32.dll"), "MonitorFromPoint");
+                                                                                   GetModuleHandleA("user32.dll"), "MonitorFromPoint");
 					if(!fromPoint)
 					{
 						//throw new DflException("Multiple screens not supported");
@@ -1964,7 +1964,7 @@ class Screen
 				debug
 				{
 					if(fakeMultipleScreens
-						&& hm == _screens[0].hmonitor)
+                       && hm == _screens[0].hmonitor)
 					{
 						Rect r = Rect(pt, Size(0, 0));
 						if(_withinFakeScreen(r))
@@ -1973,11 +1973,11 @@ class Screen
 				}
 				return _findScreen(hm);
 			}
-			_def:
+        _def:
 			return primaryScreen;
 		}
-		
-		
+
+
 		///
 		static Screen fromRectangle(Rect r)
 		{
@@ -1990,7 +1990,7 @@ class Screen
 				else
 				{
 					auto fromRect = cast(typeof(&MonitorFromRect))GetProcAddress(
-						GetModuleHandleA("user32.dll"), "MonitorFromRect");
+                                                                                 GetModuleHandleA("user32.dll"), "MonitorFromRect");
 					if(!fromRect)
 					{
 						//throw new DflException("Multiple screens not supported");
@@ -2003,7 +2003,7 @@ class Screen
 				debug
 				{
 					if(fakeMultipleScreens
-						&& hm == _screens[0].hmonitor)
+                       && hm == _screens[0].hmonitor)
 					{
 						if(_withinFakeScreen(r))
 							return _screens[1];
@@ -2011,15 +2011,15 @@ class Screen
 				}
 				return _findScreen(hm);
 			}
-			_def:
+        _def:
 			return primaryScreen;
 		}
-		
+
 	}
-	
-	
-	private:
-	
+
+
+private:
+
 	static void _setPs()
 	{
 		synchronized
@@ -2028,27 +2028,27 @@ class Screen
 				_ps = new Screen();
 		}
 	}
-	
+
 	this()
 	{
 	}
-	
+
 	this(HMONITOR hmonitor)
 	{
 		this.hmonitor = hmonitor;
 	}
-	
+
 	HMONITOR hmonitor;
-	
+
 	static Screen _ps; // Primary screen; might not be used.
 	static Screen[] _screens;
-	
+
 	version(DFL_MULTIPLE_SCREENS)
 	{
-		
+
 		bool foundThis = true; // Used during _getScreens callback.
-		
-		
+
+
 		static Screen _findScreen(HMONITOR hm)
 		{
 			foreach(Screen s; allScreens)
@@ -2060,8 +2060,8 @@ class Screen
 			}
 			return primaryScreen;
 		}
-		
-		
+
+
 		static void _getScreens()
 		{
 			// Note: monitors can change, so always enum,
@@ -2080,13 +2080,13 @@ class Screen
 			version(SUPPORTS_MULTIPLE_SCREENS)
 			{
 				pragma(msg, "DFL: multiple screens supported at compile time");
-				
+
 				alias EnumDisplayMonitors enumScreens;
 			}
 			else
 			{
 				auto enumScreens = cast(typeof(&EnumDisplayMonitors))GetProcAddress(
-					GetModuleHandleA("user32.dll"), "EnumDisplayMonitors");
+                                                                                    GetModuleHandleA("user32.dll"), "EnumDisplayMonitors");
 				if(!enumScreens)
 				{
 					//throw new DflException("Multiple screens not supported");
@@ -2121,8 +2121,8 @@ class Screen
 				}
 			}
 		}
-		
-		
+
+
 		debug
 		{
 			static bool _withinFakeScreen(Rect r)
@@ -2147,8 +2147,8 @@ class Screen
 				}
 			}
 		}
-		
-		
+
+
 		void _getInfo(ref MONITORINFO info)
 		{
 			version(SUPPORTS_MULTIPLE_SCREENS)
@@ -2158,7 +2158,7 @@ class Screen
 			else
 			{
 				auto getMI = cast(typeof(&GetMonitorInfoA))GetProcAddress(
-					GetModuleHandleA("user32.dll"), "GetMonitorInfoA");
+                                                                          GetModuleHandleA("user32.dll"), "GetMonitorInfoA");
 				if(!getMI)
 					throw new DflException("Error getting screen information (unable to find GetMonitorInfoA)");
 			}
@@ -2219,8 +2219,8 @@ class Screen
 				}
 			}
 		}
-		
-		
+
+
 	}
 }
 
@@ -2228,21 +2228,21 @@ class Screen
 version(DFL_MULTIPLE_SCREENS)
 {
 	private extern(Windows) BOOL _gettingScreens(HMONITOR hmonitor,
-		HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) nothrow
-	{
-		for(int i = 0; i < Screen._screens.length; i++)
-		{
-			if(hmonitor == Screen._screens[i].hmonitor)
-			{
-				Screen._screens[i].foundThis = true;
-				return TRUE; // Continue.
-			}
-		}
-		// Didn't find it from old list, so add it.
-		Screen._screens ~= new Screen(hmonitor);
-		return TRUE; // Continue.
-	}
-	
+                                                 HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData) nothrow
+                                                 {
+                                                    for(int i = 0; i < Screen._screens.length; i++)
+                                                    {
+                                                        if(hmonitor == Screen._screens[i].hmonitor)
+                                                        {
+                                                            Screen._screens[i].foundThis = true;
+                                                            return TRUE; // Continue.
+                                                        }
+                                                    }
+                                                    // Didn't find it from old list, so add it.
+                                                    Screen._screens ~= new Screen(hmonitor);
+                                                    return TRUE; // Continue.
+                                                 }
+
 }
 
 
@@ -2255,28 +2255,28 @@ class Graphics // docmain
 		this.hdc = hdc;
 		this.owned = owned;
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			dispose();
 	}
-	
-	
+
+
 	// Used internally.
 	final void drawSizeGrip(int right, int bottom) // package
 	{
 		Color light, dark;
 		int x, y;
-		
+
 		light = SystemColors.controlLightLight;
 		dark = SystemColors.controlDark;
 		scope Pen lightPen = new Pen(light);
 		scope Pen darkPen = new Pen(dark);
 		x = right;
 		y = bottom;
-		
+
 		x -= 3;
 		y -= 3;
 		drawLine(darkPen, x, bottom, right, y);
@@ -2284,7 +2284,7 @@ class Graphics // docmain
 		y--;
 		drawLine(darkPen, x, bottom, right, y);
 		drawLine(lightPen, x - 1, bottom, right, y - 1);
-		
+
 		x -= 3;
 		y -= 3;
 		drawLine(darkPen, x, bottom, right, y);
@@ -2292,7 +2292,7 @@ class Graphics // docmain
 		y--;
 		drawLine(darkPen, x, bottom, right, y);
 		drawLine(lightPen, x - 1, bottom, right, y - 1);
-		
+
 		x -= 3;
 		y -= 3;
 		drawLine(darkPen, x, bottom, right, y);
@@ -2301,8 +2301,8 @@ class Graphics // docmain
 		drawLine(darkPen, x, bottom, right, y);
 		drawLine(lightPen, x - 1, bottom, right, y - 1);
 	}
-	
-	
+
+
 	// Used internally.
 	// vSplit=true means the move grip moves left to right; false means top to bottom.
 	final void drawMoveGrip(Rect movableArea, bool vSplit = true, size_t count = 5) // package
@@ -2310,14 +2310,14 @@ class Graphics // docmain
 		enum MSPACE = 4;
 		enum MWIDTH = 3;
 		enum MHEIGHT = 3;
-		
+
 		if(!count || !movableArea.width || !movableArea.height)
 			return;
-		
+
 		Color norm, light, dark, ddark;
 		int x, y;
 		size_t iw;
-		
+
 		norm = SystemColors.control;
 		light = SystemColors.controlLightLight.blendColor(norm); // center
 		//dark = SystemColors.controlDark.blendColor(norm); // top
@@ -2328,12 +2328,12 @@ class Graphics // docmain
 		//scope Pen lightPen = new Pen(light);
 		scope Pen darkPen = new Pen(dark);
 		scope Pen ddarkPen = new Pen(ddark);
-		
-		
+
+
 		void drawSingleMoveGrip()
 		{
 			Point[3] pts;
-			
+
 			pts[0].x = x + MWIDTH - 2;
 			pts[0].y = y;
 			pts[1].x = x;
@@ -2341,7 +2341,7 @@ class Graphics // docmain
 			pts[2].x = x;
 			pts[2].y = y + MHEIGHT - 1;
 			drawLines(darkPen, pts);
-			
+
 			pts[0].x = x + MWIDTH - 1;
 			pts[0].y = y + 1;
 			pts[1].x = pts[0].x;
@@ -2349,17 +2349,17 @@ class Graphics // docmain
 			pts[2].x = x;
 			pts[2].y = pts[1].y;
 			drawLines(ddarkPen, pts);
-			
+
 			fillRectangle(light, x + 1, y + 1, 1, 1);
 		}
-		
-		
+
+
 		if(vSplit)
 		{
 			x = cast(int)(movableArea.x + (movableArea.width / 2 - MWIDTH / 2));
 			//y = movableArea.height / 2 - ((MWIDTH * count) + (MSPACE * (count - 1))) / 2;
 			y = cast(int)(movableArea.y + (movableArea.height / 2 - ((MWIDTH * count) + (MSPACE * count)) / 2));
-			
+
 			for(iw = 0; iw != count; iw++)
 			{
 				drawSingleMoveGrip();
@@ -2371,7 +2371,7 @@ class Graphics // docmain
 			//x = movableArea.width / 2 - ((MHEIGHT * count) + (MSPACE * (count - 1))) / 2;
 			x = cast(int)(movableArea.x + (movableArea.width / 2 - ((MHEIGHT * count) + (MSPACE * count)) / 2));
 			y = movableArea.y + (movableArea.height / 2 - MHEIGHT / 2);
-			
+
 			for(iw = 0; iw != count; iw++)
 			{
 				drawSingleMoveGrip();
@@ -2379,8 +2379,8 @@ class Graphics // docmain
 			}
 		}
 	}
-	
-	
+
+
 	package final TextFormat getCachedTextFormat()
 	{
 		static TextFormat fmt = null;
@@ -2388,44 +2388,44 @@ class Graphics // docmain
 			fmt = TextFormat.genericDefault;
 		return fmt;
 	}
-	
-	
+
+
 	// Windows 95/98/Me limits -text- to 8192 characters.
-	
+
 	///
 	final void drawText(string text, Font font, Color color, Rect r, TextFormat fmt)
 	{
 		// Should SaveDC/RestoreDC be used instead?
-		
+
 		COLORREF prevColor;
 		HFONT prevFont;
 		int prevBkMode;
-		
+
 		prevColor = SetTextColor(hdc, color.toRgb());
 		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
 		prevBkMode = SetBkMode(hdc, TRANSPARENT);
-		
+
 		RECT rect;
 		r.getRect(&rect);
 		DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
-			fmt._trim | fmt._flags | fmt._align, &fmt._params);
-		
+                    fmt._trim | fmt._flags | fmt._align, &fmt._params);
+
 		// Reset stuff.
 		//if(CLR_INVALID != prevColor)
-			SetTextColor(hdc, prevColor);
+        SetTextColor(hdc, prevColor);
 		//if(prevFont)
-			SelectObject(hdc, prevFont);
+        SelectObject(hdc, prevFont);
 		//if(prevBkMode)
-			SetBkMode(hdc, prevBkMode);
+        SetBkMode(hdc, prevBkMode);
 	}
-	
+
 	/// ditto
 	final void drawText(string text, Font font, Color color, Rect r)
 	{
 		return drawText(text, font, color, r, getCachedTextFormat());
 	}
-	
-	
+
+
 	///
 	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
 	{
@@ -2436,50 +2436,50 @@ class Graphics // docmain
 		r.offset(-1, -1);
 		drawText(text, font, Color(128, color).solidColor(backColor), r, fmt);
 	}
-	
+
 	/// ditto
 	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r)
 	{
 		return drawTextDisabled(text, font, color, backColor, r, getCachedTextFormat());
 	}
-	
-	
+
+
 	/+
 	final Size measureText(string text, Font font)
 	{
-		SIZE sz;
-		HFONT prevFont;
-		
-		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
-		
-		dfl.internal.utf.getTextExtentPoint32(hdc, text, &sz);
-		
-		//if(prevFont)
-			SelectObject(hdc, prevFont);
-		
-		return Size(sz.cx, sz.cy);
+    SIZE sz;
+    HFONT prevFont;
+
+    prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
+
+    dfl.internal.utf.getTextExtentPoint32(hdc, text, &sz);
+
+    //if(prevFont)
+    SelectObject(hdc, prevFont);
+
+    return Size(sz.cx, sz.cy);
 	}
 	+/
-	
-	
+
+
 	private enum int DEFAULT_MEASURE_SIZE = short.max; // Has to be smaller because it's 16-bits on win9x.
-	
-	
+
+
 	///
 	final Size measureText(string text, Font font, int maxWidth, TextFormat fmt)
 	{
 		RECT rect;
 		HFONT prevFont;
-		
+
 		rect.left = 0;
 		rect.top = 0;
 		rect.right = maxWidth;
 		rect.bottom = DEFAULT_MEASURE_SIZE;
-		
+
 		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
-		
+
 		if(!DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
-			fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_NOCLIP, &fmt._params))
+                        fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_NOCLIP, &fmt._params))
 		{
 			//throw new DflException("Text measure error");
 			rect.left = 0;
@@ -2487,88 +2487,88 @@ class Graphics // docmain
 			rect.right = 0;
 			rect.bottom = 0;
 		}
-		
+
 		//if(prevFont)
-			SelectObject(hdc, prevFont);
-		
+        SelectObject(hdc, prevFont);
+
 		return Size(rect.right - rect.left, rect.bottom - rect.top);
 	}
-	
+
 	/// ditto
 	final Size measureText(string text, Font font, TextFormat fmt)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, fmt);
 	}
-	
+
 	/// ditto
 	final Size measureText(string text, Font font, int maxWidth)
 	{
 		return measureText(text, font, maxWidth, getCachedTextFormat());
 	}
-	
+
 	/// ditto
 	final Size measureText(string text, Font font)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, getCachedTextFormat());
 	}
-	
-	
+
+
 	/+
 	// Doesn't work... dfl.internal.utf.drawTextEx uses a different buffer!
 	// ///
 	final string getTrimmedText(string text, Font font, Rect r, TextFormat fmt) // deprecated
 	{
-		switch(fmt.trimming)
-		{
-			case TextTrimming.ELLIPSIS:
-			case TextTrimming.ELLIPSIS_PATH:
-				{
-					char[] newtext;
-					RECT rect;
-					HFONT prevFont;
-					
-					newtext = text.dup;
-					r.getRect(&rect);
-					prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
-					
-					// DT_CALCRECT needs to prevent it from actually drawing.
-					if(!dfl.internal.utf.drawTextEx(hdc, newtext, &rect, DT_EXPANDTABS | DT_TABSTOP |
-						fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_MODIFYSTRING | DT_NOCLIP, &fmt._params))
-					{
-						//throw new DflException("Text trimming error");
-					}
-					
-					//if(prevFont)
-						SelectObject(hdc, prevFont);
-					
-					for(size_t iw = 0; iw != newtext.length; iw++)
-					{
-						if(!newtext[iw])
-							return newtext[0 .. iw];
-					}
-					//return newtext;
-					// There was no change, so no sense in keeping the duplicate.
-					delete newtext;
-					return text;
-				}
-				break;
-			
-			default:
-				return text;
-		}
+    switch(fmt.trimming)
+    {
+    case TextTrimming.ELLIPSIS:
+    case TextTrimming.ELLIPSIS_PATH:
+    {
+    char[] newtext;
+    RECT rect;
+    HFONT prevFont;
+
+    newtext = text.dup;
+    r.getRect(&rect);
+    prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
+
+    // DT_CALCRECT needs to prevent it from actually drawing.
+    if(!dfl.internal.utf.drawTextEx(hdc, newtext, &rect, DT_EXPANDTABS | DT_TABSTOP |
+    fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_MODIFYSTRING | DT_NOCLIP, &fmt._params))
+    {
+    //throw new DflException("Text trimming error");
+    }
+
+    //if(prevFont)
+    SelectObject(hdc, prevFont);
+
+    for(size_t iw = 0; iw != newtext.length; iw++)
+    {
+    if(!newtext[iw])
+    return newtext[0 .. iw];
+    }
+    //return newtext;
+    // There was no change, so no sense in keeping the duplicate.
+    delete newtext;
+    return text;
+    }
+    break;
+
+    default:
+    return text;
+    }
 	}
-	
+
 	// ///
 	final string getTrimmedText(string text, Font font, Rect r, TextTrimming trim)
 	{
-		scope fmt = new TextFormat(TextFormatFlags.NO_PREFIX | TextFormatFlags.WORD_BREAK |
-			TextFormatFlags.NO_CLIP | TextFormatFlags.LINE_LIMIT);
-		fmt.trimming = trim;
-		return getTrimmedText(text, font, r, fmt);
+    scope fmt = new TextFormat(TextFormatFlags.NO_PREFIX | TextFormatFlags.WORD_BREAK |
+    TextFormatFlags.NO_CLIP | TextFormatFlags.LINE_LIMIT);
+    fmt.trimming = trim;
+    return getTrimmedText(text, font, r, fmt);
 	}
 	+/
-	
-	
+
+
 	///
 	final void drawIcon(Icon icon, Rect r)
 	{
@@ -2580,23 +2580,23 @@ class Graphics // docmain
 		int height = r.height;
 		if(!height)
 			return;
-		
+
 		DrawIconEx(handle, r.x, r.y, icon.handle, width, height, 0, null, DI_NORMAL);
 	}
-	
+
 	/// ditto
 	final void drawIcon(Icon icon, int x, int y)
 	{
 		DrawIconEx(handle, x, y, icon.handle, 0, 0, 0, null, DI_NORMAL);
 	}
-	
-	
+
+
 	///
 	final void fillRectangle(Brush brush, Rect r)
 	{
 		fillRectangle(brush, r.x, r.y, r.width, r.height);
 	}
-	
+
 	/// ditto
 	final void fillRectangle(Brush brush, int x, int y, int width, int height)
 	{
@@ -2607,141 +2607,141 @@ class Graphics // docmain
 		rect.bottom = y + height;
 		FillRect(handle, &rect, brush.handle);
 	}
-	
-	
+
+
 	// Extra function.
 	final void fillRectangle(Color color, Rect r)
 	{
 		fillRectangle(color, r.x, r.y, r.width, r.height);
 	}
-	
+
 	/// ditto
 	// Extra function.
 	final void fillRectangle(Color color, int x, int y, int width, int height)
 	{
 		RECT rect;
 		int prevBkColor;
-		
+
 		prevBkColor = SetBkColor(hdc, color.toRgb());
-		
+
 		rect.left = x;
 		rect.top = y;
 		rect.right = x + width;
 		rect.bottom = y + height;
 		ExtTextOutA(hdc, x, y, ETO_OPAQUE, &rect, "", 0, null);
-		
+
 		// Reset stuff.
 		//if(CLR_INVALID != prevBkColor)
-			SetBkColor(hdc, prevBkColor);
+        SetBkColor(hdc, prevBkColor);
 	}
-	
-	
+
+
 	///
 	final void fillRegion(Brush brush, Region region)
 	{
 		FillRgn(handle, region.handle, brush.handle);
 	}
-	
-	
+
+
 	///
 	static Graphics fromHwnd(HWND hwnd)
 	{
 		return new CommonGraphics(hwnd, GetDC(hwnd));
 	}
-	
-	
+
+
 	/// Get the entire screen's Graphics for the primary monitor.
 	static Graphics getScreen()
 	{
 		return new CommonGraphics(null, GetWindowDC(null));
 	}
-	
-	
+
+
 	///
 	final void drawLine(Pen pen, Point start, Point end)
 	{
 		drawLine(pen, start.x, start.y, end.x, end.y);
 	}
-	
+
 	/// ditto
 	final void drawLine(Pen pen, int startX, int startY, int endX, int endY)
 	{
 		HPEN prevPen;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
-		
+
 		MoveToEx(hdc, startX, startY, null);
 		LineTo(hdc, endX, endY);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 	}
-	
-	
+
+
 	///
 	// First two points is the first line, the other points link a line
 	// to the previous point.
 	final void drawLines(Pen pen, Point[] points)
 	{
 		assert(points.length >= 2, "Not enough line points.");
-		
+
 		HPEN prevPen;
 		int i;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
-		
+
 		MoveToEx(hdc, points[0].x, points[0].y, null);
 		for(i = 1;;)
 		{
 			LineTo(hdc, points[i].x, points[i].y);
-			
+
 			if(++i == points.length)
 				break;
 		}
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 	}
-	
-	
+
+
 	///
 	final void drawArc(Pen pen, int x, int y, int width, int height, int arcX1, int arcY1, int arcX2, int arcY2)
 	{
 		HPEN prevPen;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
-		
+
 		Arc(hdc, x, y, x + width, y + height, arcX1, arcY1, arcX2, arcY2);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 	}
-	
+
 	/// ditto
 	final void drawArc(Pen pen, Rect r, Point arc1, Point arc2)
 	{
 		drawArc(pen, r.x, r.y, r.width, r.height, arc1.x, arc1.y, arc2.x, arc2.y);
 	}
-	
-	
+
+
 	///
 	final void drawBezier(Pen pen, Point[4] points)
 	{
 		HPEN prevPen;
 		POINT* cpts;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
-		
+
 		// This assumes a Point is laid out exactly like a POINT.
 		static assert(Point.sizeof == POINT.sizeof);
 		cpts = cast(POINT*)cast(Point*)points;
-		
+
 		PolyBezier(hdc, cpts, 4);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 	}
-	
+
 	/// ditto
 	final void drawBezier(Pen pen, Point pt1, Point pt2, Point pt3, Point pt4)
 	{
@@ -2752,8 +2752,8 @@ class Graphics // docmain
 		points[3] = pt4;
 		drawBezier(pen, points);
 	}
-	
-	
+
+
 	///
 	// First 4 points are the first bezier, each next 3 are the next
 	// beziers, using the previous last point as the starting point.
@@ -2764,52 +2764,52 @@ class Graphics // docmain
 			assert(0); // Bad number of points.
 			//return; // Let PolyBezier() do what it wants with the bad number.
 		}
-		
+
 		HPEN prevPen;
 		POINT* cpts;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
-		
+
 		// This assumes a Point is laid out exactly like a POINT.
 		static assert(Point.sizeof == POINT.sizeof);
 		cpts = cast(POINT*)cast(Point*)points;
-		
+
 		PolyBezier(hdc, cpts, cast(uint)points.length);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 	}
-	
-	
+
+
 	// TODO: drawCurve(), drawClosedCurve() ...
-	
-	
+
+
 	///
 	final void drawEllipse(Pen pen, Rect r)
 	{
 		drawEllipse(pen, r.x, r.y, r.width, r.height);
 	}
-	
+
 	/// ditto
 	final void drawEllipse(Pen pen, int x, int y, int width, int height)
 	{
 		HPEN prevPen;
 		HBRUSH prevBrush;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
 		prevBrush = SelectObject(hdc, cast(HBRUSH)GetStockObject(NULL_BRUSH)); // Don't fill it in.
-		
+
 		Ellipse(hdc, x, y, x + width, y + height);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 		SelectObject(hdc, prevBrush);
 	}
-	
-	
+
+
 	// TODO: drawPie()
-	
-	
+
+
 	///
 	final void drawPolygon(Pen pen, Point[] points)
 	{
@@ -2818,91 +2818,91 @@ class Graphics // docmain
 			assert(0); // Need at least 2 points.
 			//return;
 		}
-		
+
 		HPEN prevPen;
 		HBRUSH prevBrush;
 		POINT* cpts;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
 		prevBrush = SelectObject(hdc, cast(HBRUSH)GetStockObject(NULL_BRUSH)); // Don't fill it in.
-		
+
 		// This assumes a Point is laid out exactly like a POINT.
 		static assert(Point.sizeof == POINT.sizeof);
 		cpts = cast(POINT*)cast(Point*)points;
-		
+
 		Polygon(hdc, cpts, cast(int)points.length);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 		SelectObject(hdc, prevBrush);
 	}
-	
-	
+
+
 	///
 	final void drawRectangle(Pen pen, Rect r)
 	{
 		drawRectangle(pen, r.x, r.y, r.width, r.height);
 	}
-	
+
 	/// ditto
 	final void drawRectangle(Pen pen, int x, int y, int width, int height)
 	{
 		HPEN prevPen;
 		HBRUSH prevBrush;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
 		prevBrush = SelectObject(hdc, cast(HBRUSH)GetStockObject(NULL_BRUSH)); // Don't fill it in.
-		
+
 		Rectangle(hdc, x, y, x + width, y + height);
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 		SelectObject(hdc, prevBrush);
 	}
-	
-	
+
+
 	/+
 	final void drawRectangle(Color c, Rect r)
 	{
-		drawRectangle(c, r.x, r.y, r.width, r.height);
+    drawRectangle(c, r.x, r.y, r.width, r.height);
 	}
-	
-	
+
+
 	final void drawRectangle(Color c, int x, int y, int width, int height)
 	{
-		
+
 	}
 	+/
-	
-	
+
+
 	///
 	final void drawRectangles(Pen pen, Rect[] rs)
 	{
 		HPEN prevPen;
 		HBRUSH prevBrush;
-		
+
 		prevPen = SelectObject(hdc, pen.handle);
 		prevBrush = SelectObject(hdc, cast(HBRUSH)GetStockObject(NULL_BRUSH)); // Don't fill it in.
-		
+
 		foreach(ref Rect r; rs)
 		{
 			Rectangle(hdc, r.x, r.y, r.x + r.width, r.y + r.height);
 		}
-		
+
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
 		SelectObject(hdc, prevBrush);
 	}
-	
-	
+
+
 	///
 	// Force pending graphics operations.
 	final void flush()
 	{
 		GdiFlush();
 	}
-	
-	
+
+
 	///
 	final Color getNearestColor(Color c)
 	{
@@ -2912,8 +2912,8 @@ class Graphics // docmain
 			return Color.empty;
 		return Color.fromRgb(c.a, cref); // Preserve alpha.
 	}
-	
-	
+
+
 	///
 	final Size getScaleSize(Font f)
 	{
@@ -2936,34 +2936,34 @@ class Graphics // docmain
 		}
 		return result;
 	}
-	
-	
+
+
 	final bool copyTo(HDC dest, int destX, int destY, int width, int height, int srcX = 0, int srcY = 0, DWORD rop = SRCCOPY) // package
 	{
 		return cast(bool)BitBlt(dest, destX, destY, width, height, this.handle, srcX, srcY, rop);
 	}
-	
-	
+
+
 	///
 	final bool copyTo(Graphics destGraphics, int destX, int destY, int width, int height, int srcX = 0, int srcY = 0, DWORD rop = SRCCOPY)
 	{
 		return copyTo(destGraphics.handle, destX, destY, width, height, srcX, srcY, rop);
 	}
-	
+
 	/// ditto
 	final bool copyTo(Graphics destGraphics, Rect bounds)
 	{
 		return copyTo(destGraphics.handle, bounds.x, bounds.y, bounds.width, bounds.height);
 	}
-	
-	
+
+
 	///
 	final @property HDC handle() // getter
 	{
 		return hdc;
 	}
-	
-	
+
+
 	///
 	void dispose()
 	{
@@ -2971,9 +2971,9 @@ class Graphics // docmain
 		DeleteDC(hdc);
 		hdc = null;
 	}
-	
-	
-	private:
+
+
+private:
 	HDC hdc;
 	bool owned = true;
 }
@@ -2992,8 +2992,8 @@ class MemoryGraphics: Graphics // docmain
 			ReleaseDC(null, hdc);
 		this(width, height, hdc);
 	}
-	
-	
+
+
 	/// ditto
 	// graphicsCompatible cannot be another MemoryGraphics.
 	this(int width, int height, Graphics graphicsCompatible)
@@ -3005,14 +3005,14 @@ class MemoryGraphics: Graphics // docmain
 		}
 		this(width, height, graphicsCompatible.handle);
 	}
-	
-	
+
+
 	// Used internally.
 	this(int width, int height, HDC hdcCompatible) // package
 	{
 		_w = width;
 		_h = height;
-		
+
 		hbm = CreateCompatibleBitmap(hdcCompatible, width, height);
 		if(!hbm)
 			throw new DflException("Unable to allocate Graphics memory");
@@ -3021,49 +3021,49 @@ class MemoryGraphics: Graphics // docmain
 			DeleteObject(hbm);
 			//hbm = HBITMAP.init;
 		}
-		
+
 		HDC hdcc;
 		hdcc = CreateCompatibleDC(hdcCompatible);
 		if(!hdcc)
 			throw new DflException("Unable to allocate Graphics");
 		scope(failure)
 			DeleteDC(hdcc);
-		
+
 		hbmOld = SelectObject(hdcc, hbm);
 		scope(failure)
 			SelectObject(hdcc, hbmOld);
-		
+
 		super(hdcc);
 	}
-	
-	
+
+
 	///
 	final @property int width() // getter
 	{
 		return _w;
 	}
-	
-	
+
+
 	///
 	final @property int height() // getter
 	{
 		return _h;
 	}
-	
-	
+
+
 	final Size size() // getter
 	{
 		return Size(_w, _h);
 	}
-	
-	
+
+
 	///
 	final @property HBITMAP hbitmap() // getter // package
 	{
 		return hbm;
 	}
-	
-	
+
+
 	// Needs to copy so it can be selected into other DC`s.
 	final HBITMAP toHBitmap(HDC hdc) // package
 	{
@@ -3078,7 +3078,7 @@ class MemoryGraphics: Graphics // docmain
 			result = CreateCompatibleBitmap(hdc, width, height);
 			if(!result)
 			{
-				bad_bm:
+            bad_bm:
 				throw new DflException("Unable to allocate image");
 			}
 			oldbm = SelectObject(memdc, result);
@@ -3092,8 +3092,8 @@ class MemoryGraphics: Graphics // docmain
 		}
 		return result;
 	}
-	
-	
+
+
 	final Bitmap toBitmap(HDC hdc) // package
 	{
 		HBITMAP hbm;
@@ -3102,8 +3102,8 @@ class MemoryGraphics: Graphics // docmain
 			throw new DflException("Unable to create bitmap");
 		return new Bitmap(hbm, true); // Owned.
 	}
-	
-	
+
+
 	///
 	final Bitmap toBitmap()
 	{
@@ -3114,14 +3114,14 @@ class MemoryGraphics: Graphics // docmain
 		g.dispose();
 		return result;
 	}
-	
+
 	/// ditto
 	final Bitmap toBitmap(Graphics g)
 	{
 		return toBitmap(g.handle);
 	}
-	
-	
+
+
 	///
 	override void dispose()
 	{
@@ -3131,9 +3131,9 @@ class MemoryGraphics: Graphics // docmain
 		hbm = HBITMAP.init;
 		super.dispose();
 	}
-	
-	
-	private:
+
+
+private:
 	HGDIOBJ hbmOld;
 	HBITMAP hbm;
 	int _w, _h;
@@ -3150,16 +3150,16 @@ package class CommonGraphics: Graphics
 		super(hdc, owned);
 		this.hwnd = hwnd;
 	}
-	
-	
+
+
 	override void dispose()
 	{
 		ReleaseDC(hwnd, hdc);
 		hdc = null;
 	}
-	
-	
-	package:
+
+
+package:
 	HWND hwnd;
 }
 
@@ -3173,7 +3173,7 @@ class Icon: Image // docmain
 		this.hi = hi;
 		this.owned = owned;
 	}
-	
+
 	///
 	// Load from an ico file.
 	this(string fileName)
@@ -3182,15 +3182,15 @@ class Icon: Image // docmain
 		if(!this.hi)
 			throw new DflException("Unable to load icon from file '" ~ fileName ~ "'");
 	}
-	
-	
+
+
 	///
 	deprecated static Icon fromHandle(HICON hi)
 	{
 		return new Icon(hi, false); // Not owned. Up to caller to manage or call dispose().
 	}
-	
-	
+
+
 	// -bm- can be null.
 	// NOTE: the bitmaps in -ii- need to be deleted! _deleteBitmaps() is a shortcut.
 	private void _getInfo(ICONINFO* ii, BITMAP* bm = null)
@@ -3199,7 +3199,7 @@ class Icon: Image // docmain
 		{
 			if(!bm)
 				return;
-			
+
 			HBITMAP hbm;
 			if(ii.hbmColor)
 				hbm = ii.hbmColor;
@@ -3208,12 +3208,12 @@ class Icon: Image // docmain
 			if(GetObjectA(hbm, BITMAP.sizeof, bm) == BITMAP.sizeof)
 				return;
 		}
-		
+
 		// Fell through, failed.
 		throw new DflException("Unable to get image information");
 	}
-	
-	
+
+
 	private void _deleteBitmaps(ICONINFO* ii)
 	{
 		DeleteObject(ii.hbmColor);
@@ -3221,8 +3221,8 @@ class Icon: Image // docmain
 		DeleteObject(ii.hbmMask);
 		ii.hbmMask = null;
 	}
-	
-	
+
+
 	///
 	final Bitmap toBitmap()
 	{
@@ -3230,7 +3230,7 @@ class Icon: Image // docmain
 		BITMAP bm;
 		_getInfo(&ii, &bm);
 		// Not calling _deleteBitmaps() because I'm keeping one.
-		
+
 		HBITMAP hbm;
 		if(ii.hbmColor)
 		{
@@ -3241,25 +3241,25 @@ class Icon: Image // docmain
 		{
 			hbm = ii.hbmMask;
 		}
-		
+
 		return new Bitmap(hbm, true); // Yes owned.
 	}
-	
-	
+
+
 	///
 	final override void draw(Graphics g, Point pt)
 	{
 		g.drawIcon(this, pt.x, pt.y);
 	}
-	
-	
+
+
 	///
 	final override void drawStretched(Graphics g, Rect r)
 	{
 		g.drawIcon(this, r);
 	}
-	
-	
+
+
 	///
 	final override @property Size size() // getter
 	{
@@ -3269,37 +3269,37 @@ class Icon: Image // docmain
 		_deleteBitmaps(&ii);
 		return Size(bm.bmWidth, bm.bmHeight);
 	}
-	
-	
+
+
 	///
 	final override @property int width() // getter
 	{
 		return size.width;
 	}
-	
-	
+
+
 	///
 	final override @property int height() // getter
 	{
 		return size.height;
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			dispose();
 	}
-	
-	
+
+
 	override int _imgtype(HGDIOBJ* ph) // internal
 	{
 		if(ph)
 			*ph = cast(HGDIOBJ)hi;
 		return 2;
 	}
-	
-	
+
+
 	///
 	void dispose()
 	{
@@ -3307,16 +3307,16 @@ class Icon: Image // docmain
 		DestroyIcon(hi);
 		hi = null;
 	}
-	
-	
+
+
 	///
 	final @property HICON handle() // getter
 	{
 		return hi;
 	}
-	
-	
-	private:
+
+
+private:
 	HICON hi;
 	bool owned = true;
 }
@@ -3346,9 +3346,9 @@ enum GraphicsUnit: ubyte // docmain ?
 // TODO: check if correct implementation.
 enum GenericFontFamilies
 {
-	MONOSPACE = FF_MODERN,
-	SANS_SERIF = FF_ROMAN,
-	SERIF = FF_SWISS,
+MONOSPACE = FF_MODERN,
+SANS_SERIF = FF_ROMAN,
+SERIF = FF_SWISS,
 }
 +/
 
@@ -3356,64 +3356,64 @@ enum GenericFontFamilies
 /+
 abstract class FontCollection
 {
-	abstract @property FontFamily[] families(); // getter
+abstract @property FontFamily[] families(); // getter
 }
 
 
 class FontFamily
 {
-	/+
-	this(GenericFontFamilies genericFamily)
-	{
-		
-	}
-	+/
-	
-	
-	this(string name)
-	{
-		
-	}
-	
-	
-	this(string name, FontCollection fontCollection)
-	{
-		
-	}
-	
-	
-	final @property string name() // getter
-	{
-		
-	}
-	
-	
-	static @property FontFamily[] families() // getter
-	{
-		
-	}
-	
-	
-	/+
-	// TODO: implement.
-	
-	static @property FontFamily genericMonospace() // getter
-	{
-		
-	}
-	
-	
-	static @property FontFamily genericSansSerif() // getter
-	{
-		
-	}
-	
-	
-	static @property FontFamily genericSerif() // getter
-	{
-		
-	}
-	+/
+/+
+this(GenericFontFamilies genericFamily)
+{
+
+}
++/
+
+
+this(string name)
+{
+
+}
+
+
+this(string name, FontCollection fontCollection)
+{
+
+}
+
+
+final @property string name() // getter
+{
+
+}
+
+
+static @property FontFamily[] families() // getter
+{
+
+}
+
+
+/+
+// TODO: implement.
+
+static @property FontFamily genericMonospace() // getter
+{
+
+}
+
+
+static @property FontFamily genericSansSerif() // getter
+{
+
+}
+
+
+static @property FontFamily genericSerif() // getter
+{
+
+}
++/
 }
 +/
 
@@ -3447,75 +3447,75 @@ class Font // docmain
 	/*
 	static void LOGFONTAtoLogFont(ref LogFont lf, LOGFONTA* plfa) // package // deprecated
 	{
-		lf.lfa = *plfa;
-		lf.faceName = dfl.internal.utf.fromAnsiz(plfa.lfFaceName.ptr);
+    lf.lfa = *plfa;
+    lf.faceName = dfl.internal.utf.fromAnsiz(plfa.lfFaceName.ptr);
 	}
-	
+
 	// Used internally.
 	static void LOGFONTWtoLogFont(ref LogFont lf, LOGFONTW* plfw) // package // deprecated
 	{
-		lf.lfw = *plfw;
-		lf.faceName = dfl.internal.utf.fromUnicodez(plfw.lfFaceName.ptr);
+    lf.lfw = *plfw;
+    lf.faceName = dfl.internal.utf.fromUnicodez(plfw.lfFaceName.ptr);
 	}
 	*/
-	
-	
+
+
 	// Used internally.
 	this(HFONT hf, ref LOGFONTA lf, bool owned = true) // package // deprecated
 	{
 		this.hf = hf;
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
-		
+
 		_fstyle = _style(lf);
 		_initLf(lf);
 	}
-	
+
 	/*
 	// Used internally.
 	this(HFONT hf, ref LogFont lf, bool owned = true) // package
 	{
-		this.hf = hf;
-		this.owned = owned;
-		this._unit = GraphicsUnit.POINT;
-		
-		_fstyle = _style(lf);
-		_initLf(lf);
+    this.hf = hf;
+    this.owned = owned;
+    this._unit = GraphicsUnit.POINT;
+
+    _fstyle = _style(lf);
+    _initLf(lf);
 	}
 	*/
-	
-	
+
+
 	// Used internally.
 	this(HFONT hf, bool owned = true) // package
 	{
 		this.hf = hf;
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
-		
+
 		LOGFONTA lf;
 		_info(lf);
-		
+
 		_fstyle = _style(lf);
 		_initLf(lf);
 	}
-	
-	
+
+
 	// Used internally.
 	this(ref LOGFONTA lf, bool owned = true) // package // deprecated
 	{		
 		this(_create(lf), lf, owned);
 	}
-	
-	
+
+
 	/*
 	// Used internally.
 	this(ref LogFont lf, bool owned = true) // package
 	{
-		this(_create(lf), lf, owned);
+    this(_create(lf), lf, owned);
 	}
 	*/
-	
-	
+
+
 	package static HFONT _create(ref LOGFONTA lf)
 	{
 		HFONT result;
@@ -3524,8 +3524,8 @@ class Font // docmain
 			throw new DflException("Unable to create font");
 		return result;
 	}
-	
-	
+
+
 	private static void _style(ref LOGFONTA lf, FontStyle style)
 	{
 		lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
@@ -3533,12 +3533,12 @@ class Font // docmain
 		lf.lfUnderline = (style & FontStyle.UNDERLINE) ? TRUE : FALSE;
 		lf.lfStrikeOut = (style & FontStyle.STRIKEOUT) ? TRUE : FALSE;
 	}
-	
-	
+
+
 	private static FontStyle _style(ref LOGFONTA lf)
 	{
 		FontStyle style = FontStyle.REGULAR;
-		
+
 		if(lf.lfWeight >= FW_BOLD)
 			style |= FontStyle.BOLD;
 		if(lf.lfItalic)
@@ -3547,127 +3547,127 @@ class Font // docmain
 			style |= FontStyle.UNDERLINE;
 		if(lf.lfStrikeOut)
 			style |= FontStyle.STRIKEOUT;
-		
+
 		return style;
 	}
-	
-	
+
+
 	package void _info(LOGFONTA* lf) // deprecated
 	{
 		if(GetObjectA(hf, LOGFONTA.sizeof, lf) != LOGFONTA.sizeof)
 			throw new DflException("Unable to get font information");
 	}
-	
+
 	package void _info(LOGFONTW* lf) // deprecated
 	{
 		//auto proc = cast(GetObjectWProc)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetObjectW"); // GetObjectW exists in D's GDI - D.O
-		
+
 		if(GetObjectW(hf, LOGFONTW.sizeof, lf) != LOGFONTW.sizeof)
 			throw new DflException("Unable to get font information");
 	}
-	
-	
+
+
 	package void _info(ref LOGFONTA lf)
 	{
 		if(GetObjectA(hf, LOGFONTA.sizeof, &lf) != LOGFONTA.sizeof)
 			throw new DflException("Unable to get font information");
 	}
-	
-	
+
+
 	package static LONG getLfHeight(float emSize, GraphicsUnit unit)
 	{
 		LONG result;
 		HDC hdc;
-		
+
 		final switch(unit)
 		{
 			case GraphicsUnit.PIXEL:
 				result = cast(LONG)emSize;
 				break;
-			
+
 			case GraphicsUnit.POINT:
 				hdc = GetWindowDC(null);
 				result = MulDiv(cast(int)(emSize * 100), GetDeviceCaps(hdc, LOGPIXELSY), 72 * 100);
 				ReleaseDC(null, hdc);
 				break;
-			
+
 			case GraphicsUnit.DISPLAY:
 				hdc = GetWindowDC(null);
 				result = MulDiv(cast(int)(emSize * 100), GetDeviceCaps(hdc, LOGPIXELSY), 75 * 100);
 				ReleaseDC(null, hdc);
 				break;
-			
+
 			case GraphicsUnit.MILLIMETER:
 				hdc = GetWindowDC(null);
 				result = MulDiv(cast(int)(emSize * 100), GetDeviceCaps(hdc, LOGPIXELSY), 2540);
 				ReleaseDC(null, hdc);
 				break;
-			
+
 			case GraphicsUnit.INCH:
 				hdc = GetWindowDC(null);
 				result = cast(LONG)(emSize * cast(float)GetDeviceCaps(hdc, LOGPIXELSY));
 				ReleaseDC(null, hdc);
 				break;
-			
+
 			case GraphicsUnit.DOCUMENT:
 				hdc = GetWindowDC(null);
 				result = MulDiv(cast(int)(emSize * 100), GetDeviceCaps(hdc, LOGPIXELSY), 300 * 100);
 				ReleaseDC(null, hdc);
 				break;
-			
+
 			case GraphicsUnit.TWIP:
 				hdc = GetWindowDC(null);
 				result = MulDiv(cast(int)(emSize * 100), GetDeviceCaps(hdc, LOGPIXELSY), 1440 * 100);
 				ReleaseDC(null, hdc);
 				break;
 		}
-		
+
 		return result;
 	}
-	
-	
+
+
 	package static float getEmSize(HDC hdc, LONG lfHeight, GraphicsUnit toUnit)
 	{
 		float result;
-		
+
 		if(lfHeight < 0)
 			lfHeight = -lfHeight;
-		
+
 		final switch(toUnit)
 		{
 			case GraphicsUnit.PIXEL:
 				result = cast(float)lfHeight;
 				break;
-			
+
 			case GraphicsUnit.POINT:
 				result = cast(float)MulDiv(lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
 				break;
-			
+
 			case GraphicsUnit.DISPLAY:
 				result = cast(float)MulDiv(lfHeight, 75, GetDeviceCaps(hdc, LOGPIXELSY));
 				break;
-			
+
 			case GraphicsUnit.MILLIMETER:
 				result = cast(float)MulDiv(lfHeight, 254, GetDeviceCaps(hdc, LOGPIXELSY)) / 10.0;
 				break;
-			
+
 			case GraphicsUnit.INCH:
 				result = cast(float)lfHeight / cast(float)GetDeviceCaps(hdc, LOGPIXELSY);
 				break;
-			
+
 			case GraphicsUnit.DOCUMENT:
 				result = cast(float)MulDiv(lfHeight, 300, GetDeviceCaps(hdc, LOGPIXELSY));
 				break;
-			
+
 			case GraphicsUnit.TWIP:
 				result = cast(float)MulDiv(lfHeight, 1440, GetDeviceCaps(hdc, LOGPIXELSY));
 				break;
 		}
-		
+
 		return result;
 	}
-	
-	
+
+
 	package static float getEmSize(LONG lfHeight, GraphicsUnit toUnit)
 	{
 		if(GraphicsUnit.PIXEL == toUnit)
@@ -3682,8 +3682,8 @@ class Font // docmain
 		ReleaseDC(null, hdc);
 		return result;
 	}
-	
-	
+
+
 	///
 	this(Font font, FontStyle style)
 	{
@@ -3692,89 +3692,97 @@ class Font // docmain
 		font._info(lf);
 		_style(lf, style);
 		this(_create(lf));
-		
+
 		_fstyle = style;
 		_initLf(font, lf);
 	}
-	
+
 	/// ditto
 	this(string name, float emSize, GraphicsUnit unit)
 	{
 		this(name, emSize, FontStyle.REGULAR, unit);
 	}
-	
-	
+
+
 	/// ditto
 	this(string name, float emSize, FontStyle style = FontStyle.REGULAR,
-		GraphicsUnit unit = GraphicsUnit.POINT)
+         GraphicsUnit unit = GraphicsUnit.POINT)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, FontSmoothing.DEFAULT);
 	}
-	
-	
+
+
 	/// ditto
 	this(string name, float emSize, FontStyle style,
-		GraphicsUnit unit, FontSmoothing smoothing)
+         GraphicsUnit unit, FontSmoothing smoothing)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, smoothing);
 	}
-	
+
 	// /// ditto
 	// This is a somewhat internal function.
 	// -gdiCharSet- is one of *_CHARSET from wingdi.h
 	this(string name, float emSize, FontStyle style,
-		GraphicsUnit unit, ubyte gdiCharSet,
-		FontSmoothing smoothing = FontSmoothing.DEFAULT)
+         GraphicsUnit unit, ubyte gdiCharSet,
+         FontSmoothing smoothing = FontSmoothing.DEFAULT)
 	{
 		LOGFONTA lf;
-		
-		lf.lfFaceName = name;
+
+		char[] faceName;
+        if (name.length > 32) {
+			faceName = cast(char[])name[0..31].dup;
+        } else {
+			faceName = cast(char[])name[0..name.length-1].dup;
+        }
+        faceName.length = 32;
+
+		lf.lfFaceName = faceName;
 		lf.lfCharSet = gdiCharSet;
 		lf.lfQuality = cast(BYTE)smoothing;
 		lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
 		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 		lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-		
+
 		this(lf, emSize, style, unit);
 	}
-	
+
 	// /// ditto
 	// This is a somewhat internal function.
 	this(ref LOGFONTA lf, float emSize, FontStyle style, GraphicsUnit unit)
 	{
 		_unit = unit;
-		
+
 		lf.lfHeight = -getLfHeight(emSize, unit);
 		_style(lf, style);
-		
+
 		this(_create(lf));
-		
+
 		_fstyle = style;
 		_initLf(lf);
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			DeleteObject(hf);
 	}
-	
-	
+
+
 	///
 	final @property HFONT handle() // getter
 	{
 		return hf;
 	}
-	
-	
+
+
 	///
 	final @property GraphicsUnit unit() // getter
 	{
 		return _unit;
 	}
-	
-	
+
+
 	///
 	final @property float size() // getter
 	{
@@ -3785,8 +3793,8 @@ class Font // docmain
 		+/
 		return getEmSize(this.lfHeight, _unit);
 	}
-	
-	
+
+
 	///
 	final float getSize(GraphicsUnit unit)
 	{
@@ -3797,74 +3805,74 @@ class Font // docmain
 		+/
 		return getEmSize(this.lfHeight, unit);
 	}
-	
+
 	/// ditto
 	final float getSize(GraphicsUnit unit, Graphics g)
 	{
 		return getEmSize(g.handle, this.lfHeight, unit);
 	}
-	
-	
+
+
 	///
 	final @property FontStyle style() // getter
 	{
 		return _fstyle;
 	}
-	
-	
+
+
 	///
 	final @property string name() // getter
 	{
 		return lfName;
 	}
-	
-	
+
+
 	final @property ubyte gdiCharSet() // getter
 	{
 		return lfCharSet;
 	}
-	
-	
+
+
 	/+
 	private void _initLf(LOGFONTA* lf)
 	{
-		this.lfHeight = lf.lfHeight;
-		this.lfName = stringFromStringz(lf.lfFaceName.ptr).dup;
-		this.lfCharSet = lf.lfCharSet;
+    this.lfHeight = lf.lfHeight;
+    this.lfName = stringFromStringz(lf.lfFaceName.ptr).dup;
+    this.lfCharSet = lf.lfCharSet;
 	}
 	+/
-	
+
 	private void _initLf(ref LOGFONTA lf)
 	{
 		this.lfHeight = lf.lfHeight;
 		this.lfName = to!string(lf.lfFaceName.dup);
 		this.lfCharSet = lf.lfCharSet;
 	}
-	
-	
+
+
 	/+
 	private void _initLf(Font otherfont, LOGFONTA* lf)
 	{
-		this.lfHeight = otherfont.lfHeight;
-		this.lfName = otherfont.lfName;
-		this.lfCharSet = otherfont.lfCharSet;
+    this.lfHeight = otherfont.lfHeight;
+    this.lfName = otherfont.lfName;
+    this.lfCharSet = otherfont.lfCharSet;
 	}
 	+/
-	
+
 	private void _initLf(Font otherfont, ref LOGFONTA lf)
 	{
 		this.lfHeight = otherfont.lfHeight;
 		this.lfName = otherfont.lfName;
 		this.lfCharSet = otherfont.lfCharSet;
 	}
-	
-	
-	private:
+
+
+private:
 	HFONT hf;
 	GraphicsUnit _unit;
 	bool owned = true;
 	FontStyle _fstyle;
-	
+
 	LONG lfHeight;
 	string lfName;
 	ubyte lfCharSet;
@@ -3894,30 +3902,30 @@ class Pen // docmain
 		this.hp = hp;
 		this.owned = owned;
 	}
-	
-	
+
+
 	///
 	this(Color color, int width = 1, PenStyle ps = PenStyle.SOLID)
 	{
 		hp = CreatePen(ps, width, color.toRgb());
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			DeleteObject(hp);
 	}
-	
-	
+
+
 	///
 	final @property HPEN handle() // getter
 	{
 		return hp;
 	}
-	
-	
-	private:
+
+
+private:
 	HPEN hp;
 	bool owned = true;
 }
@@ -3932,28 +3940,28 @@ class Brush // docmain
 		this.hb = hb;
 		this.owned = owned;
 	}
-	
-	
+
+
 	protected this()
 	{
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			DeleteObject(hb);
 	}
-	
-	
+
+
 	///
 	final @property HBRUSH handle() // getter
 	{
 		return hb;
 	}
-	
-	
-	private:
+
+
+private:
 	HBRUSH hb;
 	bool owned = true;
 }
@@ -3967,28 +3975,28 @@ class SolidBrush: Brush // docmain
 	{
 		super(CreateSolidBrush(c.toRgb()));
 	}
-	
-	
+
+
 	/+
 	final @property void color(Color c) // setter
 	{
-		// delete..
-		super.hb = CreateSolidBrush(c.toRgb());
+    // delete..
+    super.hb = CreateSolidBrush(c.toRgb());
 	}
 	+/
-	
-	
+
+
 	///
 	final @property Color color() // getter
 	{
 		Color result;
 		LOGBRUSH lb;
-		
+
 		if(GetObjectA(hb, lb.sizeof, &lb))
 		{
 			result = Color.fromRgb(lb.lbColor);
 		}
-		
+
 		return result;
 	}
 }
@@ -4001,7 +4009,7 @@ class SolidBrush: Brush // docmain
 /+
 class PatternBrush: Brush
 {
-	//CreatePatternBrush() ...
+//CreatePatternBrush() ...
 }
 +/
 
@@ -4009,7 +4017,7 @@ class PatternBrush: Brush
 /+
 class TextureBrush: Brush
 {
-	// GDI+ ...
+// GDI+ ...
 }
 +/
 
@@ -4034,34 +4042,34 @@ class HatchBrush: Brush // docmain
 	{
 		super(CreateHatchBrush(hs, c.toRgb()));
 	}
-	
-	
+
+
 	///
 	final @property Color foregroundColor() // getter
 	{
 		Color result;
 		LOGBRUSH lb;
-		
+
 		if(GetObjectA(hb, lb.sizeof, &lb))
 		{
 			result = Color.fromRgb(lb.lbColor);
 		}
-		
+
 		return result;
 	}
-	
-	
+
+
 	///
 	final @property HatchStyle hatchStyle() // getter
 	{
 		HatchStyle result;
 		LOGBRUSH lb;
-		
+
 		if(GetObjectA(hb, lb.sizeof, &lb))
 		{
 			result = cast(HatchStyle)lb.lbHatch;
 		}
-		
+
 		return result;
 	}
 }
@@ -4076,22 +4084,22 @@ class Region // docmain
 		this.hrgn = hrgn;
 		this.owned = owned;
 	}
-	
-	
+
+
 	~this()
 	{
 		if(owned)
 			DeleteObject(hrgn);
 	}
-	
-	
+
+
 	///
 	final @property HRGN handle() // getter
 	{
 		return hrgn;
 	}
-	
-	
+
+
 	override bool opEquals(Object o)
 	{
 		Region rgn = cast(Region)o;
@@ -4099,15 +4107,15 @@ class Region // docmain
 			return 0; // Not equal.
 		return opEquals(rgn);
 	}
-	
-	
+
+
 	bool opEquals(Region rgn)
 	{
 		return hrgn == rgn.hrgn;
 	}
-	
-	
-	private:
+
+
+private:
 	HRGN hrgn;
 	bool owned = true;
 }
