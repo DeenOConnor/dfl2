@@ -1,19 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.fontdialog;
 
-private import dfl.base, dfl.commondialog, dfl.internal.winapi, dfl.application,
-	dfl.control, dfl.drawing, dfl.event, dfl.internal.utf,
-	dfl.internal.dlib;
+private import dfl.base;
+private import dfl.commondialog;
+private import dfl.application;
+private import dfl.control;
+private import dfl.drawing;
+private import dfl.event;
 
+import dfl.internal.utf;
 
-private extern(Windows) nothrow
-{
-	alias BOOL function(LPCHOOSEFONTW lpcf) ChooseFontWProc;
-}
+private import core.sys.windows.commdlg;
+private import core.sys.windows.windows;
 
 
 ///
@@ -334,29 +335,9 @@ class FontDialog: CommonDialog
 		BOOL result = FALSE;
 		
 		cf.hwndOwner = owner;
-		
-		if(dfl.internal.utf.useUnicode)
-		{
-			font._info(&lfw); // -font- gets default font if not set.
-			
-			enum NAME = "ChooseFontW";
-			static ChooseFontWProc proc = null;
-			
-			if(!proc)
-			{
-				proc = cast(ChooseFontWProc)GetProcAddress(GetModuleHandleA("comdlg32.dll"), NAME.ptr);
-				if(!proc)
-					throw new Exception("Unable to load procedure " ~ NAME ~ ".");
-			}
-			
-			result = proc(&cfw);
-		}
-		else
-		{
-			font._info(&lfa); // -font- gets default font if not set.
-			
-			result = ChooseFontA(&cfa);
-		}
+	
+			font._info(&lfw); // -font- gets default font if not set.			
+			result = ChooseFontW(&cfw);
 		
 		if(result)
 		{
@@ -369,13 +350,7 @@ class FontDialog: CommonDialog
 	
 	private void _update()
 	{
-		LogFont lf;
-		
-		if(dfl.internal.utf.useUnicode)
-			Font.LOGFONTWtoLogFont(lf, &lfw);
-		else
-			Font.LOGFONTAtoLogFont(lf, &lfa);
-		
+		LOGFONTA lf;		
 		_fon = new Font(Font._create(lf), true);
 	}
 	
@@ -417,8 +392,8 @@ class FontDialog: CommonDialog
 
 // WM_CHOOSEFONT_SETFLAGS to update flags after dialog creation ... ?
 
-
-private extern(Windows) UINT fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
+// TODO : Fix mismatch of ulong and LRESULT being just long
+private extern(Windows) ulong fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
 {
 	enum PROP_STR = "DFL_FontDialog";
 	FontDialog fd;
@@ -443,11 +418,11 @@ private extern(Windows) UINT fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 			result = fd.hookProc(hwnd, msg, wparam, lparam);
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}
 	
-	return cast(uint)result;
+	return cast(ulong)result;
 }
 

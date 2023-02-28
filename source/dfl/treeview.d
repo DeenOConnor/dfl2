@@ -1,14 +1,23 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.treeview;
 
-private import dfl.internal.dlib;
+private import dfl.control;
+private import dfl.application;
+private import dfl.base;
+private import dfl.event;
+private import dfl.drawing;
+private import dfl.collections;
 
-private import dfl.control, dfl.application, dfl.base, dfl.internal.winapi;
-private import dfl.event, dfl.drawing, dfl.collections, dfl.internal.utf;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
+private import std.string : icmp;
+private import std.conv : to;
+private import std.string : fromStringz;
+
 
 version(DFL_NO_IMAGELIST)
 {
@@ -108,7 +117,7 @@ class TreeViewEventArgs: EventArgs
 class NodeLabelEditEventArgs: EventArgs
 {
 	///
-	this(TreeNode node, Dstring label)
+	this(TreeNode node, string label)
 	{
 		_node = node;
 		_label = label;
@@ -129,7 +138,7 @@ class NodeLabelEditEventArgs: EventArgs
 	
 	
 	///
-	final @property Dstring label() // getter
+	final @property string label() // getter
 	{
 		return _label;
 	}
@@ -150,16 +159,16 @@ class NodeLabelEditEventArgs: EventArgs
 	
 	private:
 	TreeNode _node;
-	Dstring _label;
+	string _label;
 	bool _cancel = false;
 }
 
 
 ///
-class TreeNode: DObject
+class TreeNode: Object
 {
 	///
-	this(Dstring labelText)
+	this(string labelText)
 	{
 		this();
 		
@@ -167,7 +176,7 @@ class TreeNode: DObject
 	}
 	
 	/// ditto
-	this(Dstring labelText, TreeNode[] children)
+	this(string labelText, TreeNode[] children)
 	{
 		this();
 		
@@ -190,7 +199,7 @@ class TreeNode: DObject
 	
 	this(Object val) // package
 	{
-		this(getObjectString(val));
+		this(val.toString());
 	}
 	
 	
@@ -254,7 +263,7 @@ class TreeNode: DObject
 	
 	///
 	// Path from the root to this node.
-	final @property Dstring fullPath() // getter
+	final @property string fullPath() // getter
 	{
 		if(!tparent)
 			return ttext;
@@ -271,7 +280,7 @@ class TreeNode: DObject
 			ssep[sseplen++] = ch;
 		}
 		//return tparent.fullPath ~ ssep[0 .. sseplen] ~ ttext;
-		return tparent.fullPath ~ cast(Dstring)ssep[0 .. sseplen] ~ ttext; // Needed in D2.
+		return tparent.fullPath ~ cast(string)ssep[0 .. sseplen] ~ ttext; // Needed in D2.
 	}
 	
 	
@@ -416,7 +425,7 @@ class TreeNode: DObject
 	
 	
 	///
-	final @property void text(Dstring newText) // setter
+	final @property void text(string newText) // setter
 	{
 		ttext = newText;
 		
@@ -432,22 +441,14 @@ class TreeNode: DObject
 			//item.cchTextMax = ttext.length; // ?
 			m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
 			+/
-			if(dfl.internal.utf.useUnicode)
-			{
-				item.pszText = cast(typeof(item.pszText))dfl.internal.utf.toUnicodez(ttext);
-				m = Message(tview.handle, TVM_SETITEMW, 0, cast(LPARAM)&item);
-			}
-			else
-			{
-				item.pszText = cast(typeof(item.pszText))dfl.internal.utf.unsafeAnsiz(ttext);
-				m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
-			}
+			item.pszText = cast(typeof(item.pszText))ttext.ptr;
+			m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
 			tview.prevWndProc(m);
 		}
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		return ttext;
 	}
@@ -597,46 +598,46 @@ class TreeNode: DObject
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return ttext;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return 0 == stringICmp(ttext, getObjectString(o)); // ?
+		return 0 == icmp(ttext, o.toString()); // ?
 	}
 	
-	Dequ opEquals(TreeNode node)
+	bool opEquals(TreeNode node)
 	{
-		return 0 == stringICmp(ttext, node.ttext);
+		return 0 == icmp(ttext, node.ttext);
 	}
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
-		return 0 == stringICmp(ttext, val);
+		return 0 == icmp(ttext, val);
 	}
 	
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(ttext, getObjectString(o)); // ?
+		return icmp(ttext, o.toString()); // ?
 	}
 	
 	int opCmp(TreeNode node)
 	{
-		return stringICmp(ttext, node.ttext);
+		return icmp(ttext, node.ttext);
 	}
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
 	private:
-	Dstring ttext;
+	string ttext;
 	TreeNode tparent;
 	TreeNodeCollection tchildren;
 	Object ttag;
@@ -725,14 +726,14 @@ class TreeNodeCollection
 		insert(i, node);
 	}
 	
-	void add(Dstring text)
+	void add(string text)
 	{
 		return add(new TreeNode(text));
 	}
 	
 	void add(Object val)
 	{
-		return add(new TreeNode(getObjectString(val))); // ?
+		return add(new TreeNode(val.toString())); // ?
 	}
 	
 	
@@ -752,9 +753,9 @@ class TreeNodeCollection
 		}
 	}
 	
-	void addRange(Dstring[] range)
+	void addRange(string[] range)
 	{
-		foreach(Dstring s; range)
+		foreach(string s; range)
 		{
 			add(s);
 		}
@@ -845,18 +846,9 @@ class TreeNodeCollection
 			pszText = stringToStringz(node.text);
 			//cchTextMax = node.text.length; // ?
 			+/
-			if(dfl.internal.utf.useUnicode)
-			{
-				pszText = cast(typeof(pszText))dfl.internal.utf.toUnicodez(node.text);
-				m.hWnd = tview.handle;
-				m.msg = TVM_INSERTITEMW;
-			}
-			else
-			{
-				pszText = cast(typeof(pszText))dfl.internal.utf.unsafeAnsiz(node.text);
-				m.hWnd = tview.handle;
-				m.msg = TVM_INSERTITEMA;
-			}
+			pszText = cast(typeof(pszText))node.text.ptr;
+			m.hWnd = tview.handle;
+			m.msg = TVM_INSERTITEMA;
 		}
 	}
 	
@@ -866,7 +858,7 @@ class TreeNodeCollection
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		TV_INSERTSTRUCTA tis;
 		Message m;
@@ -1689,7 +1681,7 @@ class TreeView: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(treeviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(treeviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(treeviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -1824,14 +1816,7 @@ class TreeView: ControlSuperClass // docmain
 							break;
 						+/
 						
-						case TVN_SELCHANGINGW:
-							goto sel_changing;
-						
-						case TVN_SELCHANGINGA:
-							if(dfl.internal.utf.useUnicode)
-								break;
-							sel_changing:
-							
+						case TVN_SELCHANGINGW, TVN_SELCHANGINGA:
 							nmtv = cast(NM_TREEVIEW*)nmh;
 							switch(nmtv.action)
 							{
@@ -1858,14 +1843,7 @@ class TreeView: ControlSuperClass // docmain
 							}
 							break;
 						
-						case TVN_SELCHANGEDW:
-							goto sel_changed;
-						
-						case TVN_SELCHANGEDA:
-							if(dfl.internal.utf.useUnicode)
-								break;
-							sel_changed:
-							
+						case TVN_SELCHANGEDW, TVN_SELCHANGEDA:
 							nmtv = cast(NM_TREEVIEW*)nmh;
 							switch(nmtv.action)
 							{
@@ -1886,14 +1864,7 @@ class TreeView: ControlSuperClass // docmain
 							}
 							break;
 						
-						case TVN_ITEMEXPANDINGW:
-							goto item_expanding;
-						
-						case TVN_ITEMEXPANDINGA:
-							if(dfl.internal.utf.useUnicode)
-								break;
-							item_expanding:
-							
+						case TVN_ITEMEXPANDINGW, TVN_ITEMEXPANDINGA:
 							nmtv = cast(NM_TREEVIEW*)nmh;
 							switch(nmtv.action)
 							{
@@ -1915,14 +1886,7 @@ class TreeView: ControlSuperClass // docmain
 							}
 							break;
 						
-						case TVN_ITEMEXPANDEDW:
-							goto item_expanded;
-						
-						case TVN_ITEMEXPANDEDA:
-							if(dfl.internal.utf.useUnicode)
-								break;
-							item_expanded:
-							
+						case TVN_ITEMEXPANDEDW, TVN_ITEMEXPANDEDA:
 							nmtv = cast(NM_TREEVIEW*)nmh;
 							switch(nmtv.action)
 							{
@@ -1948,14 +1912,7 @@ class TreeView: ControlSuperClass // docmain
 							}
 							break;
 						
-						case TVN_BEGINLABELEDITW:
-							goto begin_label_edit;
-						
-						case TVN_BEGINLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-								break;
-							begin_label_edit:
-							
+						case TVN_BEGINLABELEDITW, TVN_BEGINLABELEDITA:
 							{
 								TV_DISPINFOA* nmdi;
 								nmdi = cast(TV_DISPINFOA*)nmh;
@@ -1969,14 +1926,14 @@ class TreeView: ControlSuperClass // docmain
 						
 						case TVN_ENDLABELEDITW:
 							{
-								Dstring label;
+								string label;
 								TV_DISPINFOW* nmdi;
 								nmdi = cast(TV_DISPINFOW*)nmh;
 								if(nmdi.item.pszText)
 								{
 									TreeNode node;
 									node = cast(TreeNode)cast(void*)nmdi.item.lParam;
-									label = fromUnicodez(nmdi.item.pszText);
+									label = to!string(fromStringz(nmdi.item.pszText));
 									scope NodeLabelEditEventArgs nleea = new NodeLabelEditEventArgs(node, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -1996,20 +1953,14 @@ class TreeView: ControlSuperClass // docmain
 							break;
 						
 						case TVN_ENDLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-							{
-								break;
-							}
-							else
-							{
-								Dstring label;
+								string label;
 								TV_DISPINFOA* nmdi;
 								nmdi = cast(TV_DISPINFOA*)nmh;
 								if(nmdi.item.pszText)
 								{
 									TreeNode node;
 									node = cast(TreeNode)cast(void*)nmdi.item.lParam;
-									label = fromAnsiz(nmdi.item.pszText);
+									label = to!string(fromStringz(nmdi.item.pszText));
 									scope NodeLabelEditEventArgs nleea = new NodeLabelEditEventArgs(node, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2026,7 +1977,6 @@ class TreeView: ControlSuperClass // docmain
 									}
 								}
 								break;
-							}
 						
 						default:
 					}
@@ -2071,7 +2021,7 @@ class TreeView: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(treeviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(treeviewPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(treeviewPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

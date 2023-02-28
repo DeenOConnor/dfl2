@@ -1,38 +1,31 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.control;
 
-private import dfl.internal.dlib, dfl.internal.clib;
-	
-private import dfl.base, dfl.form, dfl.drawing;
-private import dfl.internal.winapi, dfl.application, dfl.event, dfl.label;
-private import dfl.internal.wincom, dfl.internal.utf, dfl.collections, dfl.internal.com;
+private import dfl.internal.com;
+
+private import dfl.base;
+private import dfl.form;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+private import dfl.label;
+private import dfl.collections;
+private import dfl.data;
+private import dfl.menu;
+
+private import core.sys.windows.com;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.objidl;
+private import core.sys.windows.windows;
+
 private import core.memory;
-
-version(NO_DRAG_DROP)
-	version = DFL_NO_DRAG_DROP;
-
-version(DFL_NO_DRAG_DROP)
-{
-}
-else
-{
-	private import dfl.data;
-}
-
-version(DFL_NO_MENUS)
-{
-}
-else
-{
-	private import dfl.menu;
-}
-
-//version = RADIO_GROUP_LAYOUT;
-version = DFL_NO_ZOMBIE_FORM;
+private import core.exception : OutOfMemoryError;
+private import core.stdc.stdlib;
+private import std.string;
+private import std.conv : to;
 
 
 ///
@@ -185,8 +178,8 @@ enum ControlStyles: uint
 /// Control creation parameters.
 struct CreateParams
 {
-	Dstring className; ///
-	Dstring caption; /// ditto
+	string className; ///
+	string caption; /// ditto
 	void* param; /// ditto
 	HWND parent; /// ditto
 	HMENU menu; /// ditto
@@ -399,7 +392,7 @@ version(DFL_NO_DRAG_DROP) {} else
 	class DragEventArgs: EventArgs
 	{
 		///
-		this(dfl.data.IDataObject dataObj, int keyState, int x, int y,
+		this(IDflDataObject dataObj, int keyState, int x, int y,
 			DragDropEffects allowedEffect, DragDropEffects effect)
 		{
 			_dobj = dataObj;
@@ -433,7 +426,7 @@ version(DFL_NO_DRAG_DROP) {} else
 		
 		
 		///
-		final @property dfl.data.IDataObject data() // getter
+		final @property IDflDataObject data() // getter
 		{
 			return _dobj;
 		}
@@ -462,7 +455,7 @@ version(DFL_NO_DRAG_DROP) {} else
 		
 		
 		private:
-		dfl.data.IDataObject _dobj;
+		IDflDataObject _dobj;
 		int _keyState;
 		int _x, _y;
 		DragDropEffects _allowedEffect, _effect;
@@ -574,7 +567,7 @@ version(_DFL_WINDOWS_HUNG_WORKAROUND)
 {
 	class WindowsHungDflException: DflException
 	{
-		this(Dstring msg)
+		this(string msg)
 		{
 			super(msg);
 		}
@@ -585,7 +578,7 @@ alias BOOL delegate(HWND) EnumWindowsCallback;
 package struct EnumWindowsCallbackData
 {
 	EnumWindowsCallback callback;
-	DThrowable exception;
+	Throwable exception;
 }
 
 
@@ -597,7 +590,7 @@ private extern(Windows) BOOL enumingWindows(HWND hwnd, LPARAM lparam) nothrow
 	{
 		return cbd.callback(hwnd);
 	}
-	catch (DThrowable e)
+	catch (Throwable e)
 	{
 		cbd.exception = e;
 		return FALSE;
@@ -623,7 +616,7 @@ private extern(Windows) BOOL enumingFirstWindows(HWND hwnd, LPARAM lparam) nothr
 		{
 			return efi.cbd.callback(hwnd);
 		}
-		catch (DThrowable e)
+		catch (Throwable e)
 		{
 			efi.cbd.exception = e;
 			return FALSE;
@@ -680,7 +673,7 @@ debug
 
 
 /// Control class.
-class Control: DObject, IWindow // docmain
+class Control: Object, IWindow // docmain
 {
 	///
 	static class ControlCollection
@@ -777,10 +770,10 @@ class Control: DObject, IWindow // docmain
 			}
 			else
 			{
-				foreach(int i, Control onCtrl; children)
+				foreach(size_t i, Control onCtrl; children)
 				{
 					if(onCtrl == ctrl)
-						return i;
+						return to!int(i);
 				}
 				return -1;
 			}
@@ -1073,8 +1066,7 @@ class Control: DObject, IWindow // docmain
 			}
 			else
 			{
-				delete droptarget;
-				droptarget = null;
+				droptarget.destroy();
 				RevokeDragDrop(hwnd);
 			}
 		}
@@ -1301,7 +1293,7 @@ class Control: DObject, IWindow // docmain
 			assert(isHandleCreated);
 		}
 	}
-	body
+	do
 	{
 		// All parent controls need to be visible and enabled, too.
 		// Don't need to check -isHandleCreated- because IsWindowVisible() will fail from a null HWND.
@@ -1600,7 +1592,7 @@ class Control: DObject, IWindow // docmain
 				result = new Font("MS Shell Dlg 2", result.getSize(GraphicsUnit.POINT), GraphicsUnit.POINT);
 			}
 		}
-		catch
+		catch (Exception ex)
 		{
 		}
 		
@@ -1715,7 +1707,7 @@ class Control: DObject, IWindow // docmain
 			synchronized
 			{
 				if(!def)
-					def = new SafeCursor(LoadCursorA(HINSTANCE.init, IDC_ARROW));
+					def = new SafeCursor(LoadCursorW(HINSTANCE.init, IDC_ARROW));
 			}
 		}
 		
@@ -2151,13 +2143,13 @@ class Control: DObject, IWindow // docmain
 	
 	
 	/// Property: get or set the name of this control used in code.
-	final @property void name(Dstring txt) // setter
+	final @property void name(string txt) // setter
 	{
 		_ctrlname = txt;
 	}
 	
 	/// ditto
-	final @property Dstring name() // getter
+	final @property string name() // getter
 	{
 		return _ctrlname;
 	}
@@ -2623,7 +2615,7 @@ class Control: DObject, IWindow // docmain
 	{
 		assert(result >= 0);
 	}
-	body
+	do
 	{
 		if(!parent)
 			return 0;
@@ -2694,14 +2686,16 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	
-	private final Dstring _fetchText()
+	private final string _fetchText()
 	{
-		return dfl.internal.utf.getWindowText(hwnd);
+		char[] buf;
+		GetWindowTextA(hwnd, buf.ptr, GetWindowTextLengthA(hwnd));
+		return to!string(fromStringz(buf));
 	}
 	
 	
 	///
-	@property void text(Dstring txt) // setter
+	@property void text(string txt) // setter
 	{
 		if(isHandleCreated)
 		{
@@ -2712,7 +2706,7 @@ class Control: DObject, IWindow // docmain
 				wtext = txt;
 			}
 			
-			dfl.internal.utf.setWindowText(hwnd, txt);
+			SetWindowTextA(hwnd, txt.ptr);
 		}
 		else
 		{
@@ -2721,7 +2715,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	/// ditto
-	@property Dstring text() // getter
+	@property string text() // getter
 	{
 		if(isHandleCreated)
 		{
@@ -2973,13 +2967,13 @@ class Control: DObject, IWindow // docmain
 			extern(Windows):
 			override HRESULT QueryInterface(IID* riid, void** ppv)
 			{
-				if(*riid == _IID_IDropTarget)
+				if(*riid == IID_IDropTarget)
 				{
 					*ppv = cast(void*)cast(IDropTarget)this;
 					AddRef();
 					return S_OK;
 				}
-				else if(*riid == _IID_IUnknown)
+				else if(*riid == IID_IUnknown)
 				{
 					*ppv = cast(void*)cast(IUnknown)this;
 					AddRef();
@@ -2993,7 +2987,7 @@ class Control: DObject, IWindow // docmain
 			}
 			
 			
-			HRESULT DragEnter(dfl.internal.wincom.IDataObject pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+			HRESULT DragEnter(IDataObject pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 			{
 				HRESULT result;
 				
@@ -3009,7 +3003,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = S_OK;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3035,7 +3029,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = S_OK;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3058,7 +3052,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = S_OK;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3069,7 +3063,7 @@ class Control: DObject, IWindow // docmain
 			}
 			
 			
-			HRESULT Drop(dfl.internal.wincom.IDataObject pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
+			HRESULT Drop(IDataObject pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 			{
 				HRESULT result;
 				
@@ -3085,7 +3079,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = S_OK;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3103,7 +3097,7 @@ class Control: DObject, IWindow // docmain
 			ComToDdataObject dataObj;
 			
 			
-			void ensureDataObj(dfl.internal.wincom.IDataObject pDataObject)
+			void ensureDataObj(IDataObject pDataObject)
 			{
 				if(!dataObj)
 				{
@@ -3168,13 +3162,13 @@ class Control: DObject, IWindow // docmain
 			extern(Windows):
 			override HRESULT QueryInterface(IID* riid, void** ppv)
 			{
-				if(*riid == _IID_IDropSource)
+				if(*riid == IID_IDropSource)
 				{
 					*ppv = cast(void*)cast(IDropSource)this;
 					AddRef();
 					return S_OK;
 				}
-				else if(*riid == _IID_IUnknown)
+				else if(*riid == IID_IUnknown)
 				{
 					*ppv = cast(void*)cast(IUnknown)this;
 					AddRef();
@@ -3261,7 +3255,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = cast(HRESULT)ea.action;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3283,7 +3277,7 @@ class Control: DObject, IWindow // docmain
 					
 					result = ea.useDefaultCursors ? DRAGDROP_S_USEDEFAULTCURSORS : S_OK;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 					
@@ -3315,13 +3309,13 @@ class Control: DObject, IWindow // docmain
 		
 		
 		/// Perform a drag/drop operation.
-		final DragDropEffects doDragDrop(dfl.data.IDataObject dataObj, DragDropEffects allowedEffects)
+		final DragDropEffects doDragDrop(IDflDataObject dataObj, DragDropEffects allowedEffects)
 		{
 			Object foo = cast(Object)dataObj; // Hold a reference to the Object...
 			
 			DWORD effect;
 			DropSource dropsrc;
-			dfl.internal.wincom.IDataObject dropdata;
+			IDataObject dropdata;
 			
 			dropsrc = new DropSource(this);
 			dropdata = new DtoComDataObject(dataObj);
@@ -3345,7 +3339,7 @@ class Control: DObject, IWindow // docmain
 		/// ditto
 		final DragDropEffects doDragDrop(Data obj, DragDropEffects allowedEffects)
 		{
-			dfl.data.IDataObject dd;
+			IDflDataObject dd;
 			dd = new DataObject;
 			dd.setData(obj);
 			return doDragDrop(dd, allowedEffects);
@@ -3353,7 +3347,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
 		Control ctrl = cast(Control)o;
 		if(!ctrl)
@@ -3362,7 +3356,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	
-	Dequ opEquals(Control ctrl)
+	bool opEquals(Control ctrl)
 	{
 		if(!isHandleCreated)
 			return super.opEquals(ctrl);
@@ -3563,17 +3557,21 @@ class Control: DObject, IWindow // docmain
 	// Exceptions are propagated back to the caller of invoke().
 	final Object invoke(Object delegate(Object[]) dg, Object[] args ...)
 	{
-		if(!hwnd)
+		if(!hwnd) {
 			badInvokeHandle();
+        }
 		
 		InvokeData inv;
 		inv.dg = dg;
 		inv.args = args;
 		
-		if(LRESULT_DFL_INVOKE != SendMessageA(hwnd, wmDfl, WPARAM_DFL_INVOKE, cast(LRESULT)&inv))
+		if(LRESULT_DFL_INVOKE != SendMessageA(hwnd, wmDfl, WPARAM_DFL_INVOKE, cast(LRESULT)&inv)) {
 			throw new DflException("Invoke failure");
-		if(inv.exception)
-			throw inv.exception;
+        }
+		if(inv.exception !is null) {
+			// I don't know if this is the correct way, IntelliSense kept saying that "throw inv.exception" is bad, despite it being a Throwable - D.O
+			throw inv.exception.next;
+        }
 		
 		return inv.result;
 	}
@@ -3628,11 +3626,11 @@ class Control: DObject, IWindow // docmain
 		static assert((DflInvokeParam*).sizeof <= LPARAM.sizeof);
 		
 		DflInvokeParam* p;
-		p = cast(DflInvokeParam*)dfl.internal.clib.malloc(
+		p = cast(DflInvokeParam*)malloc(
 			(DflInvokeParam.sizeof - size_t.sizeof)
 				+ params.length * size_t.sizeof);
 		if(!p)
-			throw new OomException();
+			throw new OutOfMemoryError();
 		
 		p.fp = fn;
 		p.nparams = params.length;
@@ -3645,7 +3643,7 @@ class Control: DObject, IWindow // docmain
 	
 	
 	///
-	static bool isMnemonic(dchar charCode, string text) //Dstring text
+	static bool isMnemonic(dchar charCode, string text) //string text
 	{
 		size_t ui;
 		for(ui = 0; ui != text.length; ui++)
@@ -3657,8 +3655,8 @@ class Control: DObject, IWindow // docmain
 				if('&' == text[ui]) // && means literal & so skip it.
 					continue;
 				dchar dch;
-				dch = utf8stringGetUtf32char(text,ui);
-				return utf32charToLower(charCode) == utf32charToLower(dch);
+				dch = to!dchar(text[ui]);
+				return toLower(charCode) == toLower(dch);
 			}
 		}
 		return false;
@@ -4090,7 +4088,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
@@ -4111,7 +4109,7 @@ class Control: DObject, IWindow // docmain
 	// Returns true on Windows 95 with IE 5.5, Windows 98+ or Windows NT 4.0+.
 	static @property bool supportsMouseTracking() // getter
 	{
-		return trackMouseEvent != null;
+		return &TrackMouseEvent != null;
 	}
 	
 	
@@ -4778,7 +4776,7 @@ class Control: DObject, IWindow // docmain
 						_clicking = false;
 				}
 				
-				if(trackMouseEvent) // Requires Windows 95 with IE 5.5, 98 or NT4.
+				if(&TrackMouseEvent !is null) // Requires Windows 95 with IE 5.5, 98 or NT4.
 				{
 					if(!menter)
 					{
@@ -4795,7 +4793,7 @@ class Control: DObject, IWindow // docmain
 						tme.dwFlags = TME_HOVER | TME_LEAVE;
 						tme.hwndTrack = msg.hWnd;
 						tme.dwHoverTime = HOVER_DEFAULT;
-						trackMouseEvent(&tme);
+						TrackMouseEvent(&tme);
 					}
 				}
 				
@@ -5470,36 +5468,16 @@ class Control: DObject, IWindow // docmain
 							{
 								try
 								{
-									if(osver.dwPlatformId <= VER_PLATFORM_WIN32_WINDOWS)
-									{
-										version(DFL_UNICODE)
-										{
-										}
-										else
-										{
-											// ANSI.
-											Dstring ansi;
-											ansi = dfl.internal.utf.toAnsi(this.name);
-											if(msg.wParam <= ansi.length)
-												ansi = ansi[0 .. msg.wParam - 1];
-											(cast(char*)msg.lParam)[0 .. ansi.length] = ansi[];
-											(cast(char*)msg.lParam)[ansi.length] = 0;
-											msg.result = ansi.length + 1;
-										}
-									}
-									else
-									{
-										// Unicode.
-										Dwstring uni;
-										uni = dfl.internal.utf.toUnicode(this.name);
-										if(msg.wParam <= uni.length)
-											uni = uni[0 .. msg.wParam - 1];
-										(cast(wchar*)msg.lParam)[0 .. uni.length] = uni[];
-										(cast(wchar*)msg.lParam)[uni.length] = 0;
-										msg.result = uni.length + 1;
-									}
+									wstring uni;
+									uni = to!wstring(this.name);
+									if(msg.wParam <= uni.length) {
+										uni = uni[0 .. msg.wParam - 1];
+                                    }
+									(cast(wchar*)msg.lParam)[0 .. uni.length] = uni[];
+									(cast(wchar*)msg.lParam)[uni.length] = 0;
+									msg.result = uni.length + 1;
 								}
-								catch
+								catch (Exception ex)
 								{
 								}
 								return;
@@ -5557,7 +5535,7 @@ class Control: DObject, IWindow // docmain
 	protected void defWndProc(ref Message msg)
 	{
 		//msg.result = DefWindowProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.defWindowProc(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = DefWindowProcA(msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -5680,7 +5658,7 @@ class Control: DObject, IWindow // docmain
 								{
 									createChildren(); // Might throw.
 								}
-								catch(DThrowable e)
+								catch(Throwable e)
 								{
 									Application.onThreadException(e);
 								}
@@ -5800,7 +5778,7 @@ class Control: DObject, IWindow // docmain
 						delayInvoke(function(Control cthis, size_t[] params){ cthis.cbits &= ~CBits.RECREATING; });
 					}
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 				}
@@ -5987,7 +5965,7 @@ class Control: DObject, IWindow // docmain
 	/// Construct a new Control instance.
 	this()
 	{
-		//name = DObject.toString(); // ?
+		//name = Object.toString(); // ?
 		
 		wrect.size = defaultSize;
 		//oldwrect = wrect;
@@ -6007,7 +5985,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Dstring text)
+	this(string text)
 	{
 		this();
 		wtext = text;
@@ -6016,7 +5994,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Control cparent, Dstring text)
+	this(Control cparent, string text)
 	{
 		this();
 		wtext = text;
@@ -6026,7 +6004,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Dstring text, int left, int top, int width, int height)
+	this(string text, int left, int top, int width, int height)
 	{
 		this();
 		wtext = text;
@@ -6036,7 +6014,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Control cparent, Dstring text, int left, int top, int width, int height)
+	this(Control cparent, string text, int left, int top, int width, int height)
 	{
 		this();
 		wtext = text;
@@ -6223,13 +6201,15 @@ class Control: DObject, IWindow // docmain
 	
 	package final void _disableVisualStyle()
 	{
+		// I couldn't find SetWindowTheme in D's WinAPI bindings, so this is here for now - D.O
+		alias void* function(void* hWnd, const(wchar*) pszSubAppName, const(wchar*) pszSubIdList) f_SetWindowTheme;
 		assert(isHandleCreated);
-		
+
 		HMODULE hmuxt;
 		hmuxt = GetModuleHandleA("uxtheme.dll");
 		if(hmuxt)
 		{
-			auto setWinTheme = cast(typeof(&SetWindowTheme))GetProcAddress(hmuxt, "SetWindowTheme");
+			auto setWinTheme = cast(f_SetWindowTheme)GetProcAddress(hmuxt, "SetWindowTheme");
 			if(setWinTheme)
 			{
 				setWinTheme(hwnd, " "w.ptr, " "w.ptr); // Clear the theme.
@@ -6276,7 +6256,7 @@ class Control: DObject, IWindow // docmain
 	}
 	
 	
-	deprecated package final void createClassHandle(Dstring className)
+	deprecated package final void createClassHandle(string className)
 	{
 		if(!wparent || !wparent.handle || killing)
 		{
@@ -6290,7 +6270,7 @@ class Control: DObject, IWindow // docmain
 			return;
 		
 		Application.creatingControl(this);
-		hwnd = dfl.internal.utf.createWindowEx(wexstyle, className, wtext, wstyle, wrect.x, wrect.y,
+		hwnd = CreateWindowExA(wexstyle, className.ptr, wtext.ptr, wstyle, wrect.x, wrect.y,
 			wrect.width, wrect.height, wparent.handle, HMENU.init, Application.getInstance(), null);
 		if(!hwnd)
 			goto create_err;
@@ -6346,7 +6326,7 @@ class Control: DObject, IWindow // docmain
 		
 		debug
 		{
-			Dstring er;
+			string er;
 		}
 		if(killing)
 		{
@@ -6361,7 +6341,7 @@ class Control: DObject, IWindow // docmain
 			}
 			
 			create_err:
-			Dstring kmsg = "Control creation failure";
+			string kmsg = "Control creation failure";
 			if(name.length)
 				kmsg ~= " (" ~ name ~ ")";
 			debug
@@ -6409,14 +6389,15 @@ class Control: DObject, IWindow // docmain
 			
 			Application.creatingControl(this);
 				
-			hwnd = dfl.internal.utf.createWindowEx(exStyle, className, caption, (style & ~WS_VISIBLE), x, y,
+			hwnd = CreateWindowExA(exStyle, className.ptr, caption.ptr, (style & ~WS_VISIBLE), x, y,
 				width, height, parent, menu, inst, param);
 			if(!hwnd)
 			{
 				debug(APP_PRINT)
 				{
-					cprintf("CreateWindowEx failed."
-						" (exStyle=0x%X, className=`%.*s`, caption=`%.*s`, style=0x%X, x=%d, y=%d, width=%d, height=%d,"
+                    import std.stdio : writef;
+					writef("CreateWindowEx failed." ~
+						" (exStyle=0x%X, className=`%.*s`, caption=`%.*s`, style=0x%X, x=%d, y=%d, width=%d, height=%d," ~
 						" parent=0x%X, menu=0x%X, inst=0x%X, param=0x%X)\n",
 						exStyle, className, caption, style, x, y, width, height,
 						parent, menu, inst, param);
@@ -6424,7 +6405,8 @@ class Control: DObject, IWindow // docmain
 				
 				debug
 				{
-					er = std.string.format("CreateWindowEx failed {className=%s;exStyle=0x%X;style=0x%X;parent=0x%X;menu=0x%X;inst=0x%X;}",
+                    import std.string : format;
+					er = format("CreateWindowEx failed {className=%s;exStyle=0x%X;style=0x%X;parent=0x%X;menu=0x%X;inst=0x%X;}",
 						className, exStyle, style, cast(void*)parent, cast(void*)menu, cast(void*)inst);
 				}
 				
@@ -6470,7 +6452,7 @@ class Control: DObject, IWindow // docmain
 	{
 		assert(!recreatingHandle);
 	}
-	body
+	do
 	{
 		if(!isHandleCreated)
 			return;
@@ -6963,7 +6945,7 @@ class Control: DObject, IWindow // docmain
 		ContextMenu cmenu;
 	}
 	DockStyle sdock = DockStyle.NONE;
-	Dstring _ctrlname;
+	string _ctrlname;
 	Object otag;
 	Color backc, forec;
 	Rect wrect;
@@ -6974,7 +6956,9 @@ class Control: DObject, IWindow // docmain
 	Control wparent;
 	Region wregion;
 	ControlCollection ccollection;
-	Dstring wtext; // After creation, this isn't used unless ControlStyles.CACHE_TEXT.
+
+	// TODO : Remove or rename, because this.wtext conflicts with import std.conv : wtext
+	string wtext; // After creation, this isn't used unless ControlStyles.CACHE_TEXT.
 	ControlStyles ctrlStyle = ControlStyles.STANDARD_CLICK | ControlStyles.STANDARD_DOUBLE_CLICK /+ | ControlStyles.RESIZE_REDRAW +/ ;
 	HBRUSH _hbrBg;
 	RightToLeft rtol = RightToLeft.INHERIT;
@@ -7139,7 +7123,7 @@ class Control: DObject, IWindow // docmain
 			assert(!_hbrBg);
 		}
 	}
-	body
+	do
 	{
 		_hbrBg = hbr;
 		ownedbg = true;
@@ -7160,7 +7144,7 @@ class Control: DObject, IWindow // docmain
 	LRESULT defwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return DefWindowProcA(hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.defWindowProc(hwnd, msg, wparam, lparam);
+		return DefWindowProcA(hwnd, msg, wparam, lparam);
 	}
 	
 	
@@ -7399,7 +7383,7 @@ class ScrollableControl: Control // docmain
 		assert(newSize.width > 0);
 		assert(newSize.height > 0);
 	}
-	body
+	do
 	{
 		autossz = newSize;
 	}
@@ -7433,7 +7417,7 @@ class ScrollableControl: Control // docmain
 		assert(fromScale.width);
 		assert(fromScale.height);
 	}
-	body
+	do
 	{
 		area.width = cast(int)(cast(float)area.width / cast(float)fromScale.width * cast(float)toScale.width);
 		area.height = cast(int)(cast(float)area.height / cast(float)fromScale.height * cast(float)toScale.height);
@@ -7504,7 +7488,7 @@ class ScrollableControl: Control // docmain
 	
 	final void _scale() // package
 	{
-		return _scale(getAutoScaleSize());
+		/* return */ _scale(getAutoScaleSize());
 	}
 	
 	
@@ -8260,13 +8244,11 @@ private:
 	LPARAM makeParamNoneArgs(void function(Control) fn)
 	{
 		static assert((DflInvokeParam*).sizeof <= LPARAM.sizeof);
-		alias dfl.internal.clib.malloc malloc;
-		alias dfl.internal.clib.free free;
 		
 		auto p = cast(DflInvokeParam*)malloc(DflInvokeParam.sizeof);
 		
 		if (!p)
-			throw new OomException();
+			throw new OutOfMemoryError();
 		
 		static void fnentry(Control c, size_t[] p)
 		{

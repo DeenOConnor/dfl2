@@ -21,29 +21,15 @@
 
 module dfl.internal.utf;
 
-private import dfl.internal.dlib, dfl.internal.clib;
- 
-private import dfl.internal.winapi;
-
+private import dfl.internal.dlib;
+// private import dfl.internal.clib;
 
 private import std.windows.charset;
 
+private import core.sys.windows.richedit;
+private import core.sys.windows.windows;
 
-version(DFL_NO_D2_AND_ABOVE)
-{
-}
-else
-{
-	version(D_Version2)
-	{
-		version = DFL_D2_AND_ABOVE;
-	}
-	else version(D_Version3)
-	{
-		version = DFL_D3_AND_ABOVE;
-		version = DFL_D2_AND_ABOVE;
-	}
-}
+version = DFL_D2_AND_ABOVE;
 
 
 // Determine if using the "W" functions on Windows NT.
@@ -53,6 +39,7 @@ version(DFL_UNICODE)
 }
 else version(DFL_ANSI)
 {
+	// TODO : Replace all this with W functions only
 	enum useUnicode = false;
 }
 else
@@ -163,7 +150,7 @@ template _getlen(T)
 	{
 		assert(tz);
 	}
-	body
+	do
 	{
 		T* p;
 		for(p = tz; *p; p++)

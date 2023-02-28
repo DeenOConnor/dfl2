@@ -1,9 +1,23 @@
 ///
+
+// I suppose Mr. Christopher E. Miller forgot to add copyright information here? - D.O
+
+///
 module dfl.toolbar;
 
-private import dfl.base, dfl.control, dfl.drawing, dfl.application,
-	dfl.event, dfl.collections;
-private import dfl.internal.winapi, dfl.internal.dlib;
+private import dfl.base;
+private import dfl.control;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+private import dfl.collections;
+//private static import dfl.internal.utf;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
+private import std.string : icmp;
+
 
 version(DFL_NO_IMAGELIST)
 {
@@ -46,7 +60,7 @@ class ToolBarButton
 	}
 	
 	///
-	this(Dstring text)
+	this(string text)
 	{
 		this();
 		
@@ -77,7 +91,7 @@ class ToolBarButton
 	
 	
 	///
-	@property void text(Dstring newText) // setter
+	@property void text(string newText) // setter
 	{
 		_text = newText;
 		
@@ -86,7 +100,7 @@ class ToolBarButton
 	}
 	
 	/// ditto
-	@property Dstring text() // getter
+	@property string text() // getter
 	{
 		return _text;
 	}
@@ -108,19 +122,19 @@ class ToolBarButton
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 	
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return text == val;
 	}
@@ -128,13 +142,13 @@ class ToolBarButton
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 	
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
@@ -278,7 +292,7 @@ class ToolBarButton
 	private:
 	ToolBar tbar;
 	int _id = 0;
-	Dstring _text;
+	string _text;
 	Object _tag;
 	ToolBarButtonStyle _style = ToolBarButtonStyle.PUSH_BUTTON;
 	BYTE _state = TBSTATE_ENABLED;
@@ -568,7 +582,10 @@ class ToolBar: ControlSuperClass // docmain
 	{
 		super.onHandleCreated(ea);
 		
-		static assert(TBBUTTON.sizeof == 20);
+		// What even is this here for? Making sure we're always 32-bit?
+		// static assert(TBBUTTON.sizeof == 20);
+		// Especially since TB_BUTTONSTRUCTSIZE is equal to 32, not 20
+		// Someone please enlighten me
 		prevwproc(TB_BUTTONSTRUCTSIZE, TBBUTTON.sizeof, 0);
 		
 		//prevwproc(TB_SETPADDING, 0, MAKELPARAM(0, 0));
@@ -594,7 +611,7 @@ class ToolBar: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(toolbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -630,20 +647,10 @@ class ToolBar: ControlSuperClass // docmain
 		xtb.fsStyle = TBSTYLE_AUTOSIZE | tbb._style; // TBSTYLE_AUTOSIZE factors in the text's width instead of default button size.
 		LRESULT lresult;
 		// MSDN says iString can be either an int offset or pointer to a string buffer.
-		if(dfl.internal.utf.useUnicode)
-		{
-			if(tbb._text.length)
-				xtb.iString = cast(typeof(xtb.iString))dfl.internal.utf.toUnicodez(tbb._text);
-			//prevwproc(TB_ADDBUTTONSW, 1, cast(LPARAM)&xtb);
-			lresult = prevwproc(TB_INSERTBUTTONW, idx, cast(LPARAM)&xtb);
-		}
-		else
-		{
-			if(tbb._text.length)
-				xtb.iString = cast(typeof(xtb.iString))dfl.internal.utf.toAnsiz(tbb._text);
-			//prevwproc(TB_ADDBUTTONSA, 1, cast(LPARAM)&xtb);
-			lresult = prevwproc(TB_INSERTBUTTONA, idx, cast(LPARAM)&xtb);
-		}
+		if(tbb._text.length)
+			xtb.iString = cast(typeof(xtb.iString))tbb._text.ptr;
+		//prevwproc(TB_ADDBUTTONSA, 1, cast(LPARAM)&xtb);
+		lresult = prevwproc(TB_INSERTBUTTONA, idx, cast(LPARAM)&xtb);
 		//if(!lresult)
 		//	throw new DflException("Unable to add ToolBarButton");
 	}
@@ -654,7 +661,7 @@ class ToolBar: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcW(toolbarPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 
@@ -673,11 +680,11 @@ private
 		{
 			_initCommonControls(ICC_BAR_CLASSES);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			toolbarPrevWndProc = superClass(HINSTANCE.init, "ToolbarWindow32", TOOLBAR_CLASSNAME, info);
 			if(!toolbarPrevWndProc)
 				_unableToInit(TOOLBAR_CLASSNAME);
-			toolbarClassStyle = info.wc.style;
+			toolbarClassStyle = info.style;
 		}
 	}
 }

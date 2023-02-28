@@ -1,35 +1,35 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.application;
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.base;
+private import dfl.form;
+private import dfl.event;
+private import dfl.control;
+private import dfl.drawing;
+private import dfl.label;
+private import dfl.button;
+private import dfl.textbox;
+private import dfl.environment;
+private import dfl.resources;
+private import dfl.menu;
 
-private import dfl.base, dfl.form, dfl.internal.winapi, dfl.event;
-private import dfl.control, dfl.drawing, dfl.label;
-private import dfl.button, dfl.textbox, dfl.internal.wincom, dfl.environment;
-private import dfl.internal.utf;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.ole2;
+private import core.sys.windows.windef;
+private import core.sys.windows.windows;
 
-version(DFL_NO_RESOURCES)
-{
-}
-else
-{
-	private import dfl.resources;
-}
+private import core.stdc.stdlib : abort;
+private import core.memory;
 
-version(DFL_NO_MENUS)
-{
-}
-else
-{
-	private import dfl.menu;
-}
+private import std.string;
+private import std.conv;
+private import std.file : thisExePath;
+private import std.path : dirName;
+private import std.stdio : writef, writefln, writeln;
 
-
-version = DFL_NO_ZOMBIE_FORM;
 
 //debug = APP_PRINT;
 //debug = SHOW_MESSAGE_INFO; // Slow.
@@ -41,9 +41,6 @@ debug(APP_PRINT)
 	version(DFL_LIB)
 		static assert(0);
 }
-
-
-private extern(C) void abort();
 
 
 ///
@@ -61,7 +58,7 @@ class ApplicationContext // docmain
 	this(Form mainForm)
 	{
 		mform = mainForm;
-		mainForm.closed ~= &onMainFormClosed;
+		mainForm.closed.addHandler(&onMainFormClosed);
 	}
 	
 	
@@ -69,12 +66,12 @@ class ApplicationContext // docmain
 	final @property void mainForm(Form mainForm) // setter
 	{
 		if(mform)
-			mform.closed.removeHandler(&onMainFormClosed);
+			mform.closed.addHandler(&onMainFormClosed);
 		
 		mform = mainForm;
 		
 		if(mainForm)
-			mainForm.closed ~= &onMainFormClosed;
+			mainForm.closed.addHandler(&onMainFormClosed);
 	}
 	
 	/// ditto
@@ -177,39 +174,39 @@ final class Application // docmain
 	void enableVisualStyles()
 	{
 		//string str64 = is64 ? "x64":"X86",strType = is64 ? "win32":"x64" ;
-		enum MANIFEST32 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` "\r\n"
-			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` "\r\n"
-				`<description>DFL manifest</description>` "\r\n"
-				`<dependency>` "\r\n"
-					`<dependentAssembly>` "\r\n"
-						`<assemblyIdentity `
-							`type="win32" ` 
-							`name="Microsoft.Windows.Common-Controls" `
-							`version="6.0.0.0" `
-							`processorArchitecture="X86" `
-							`publicKeyToken="6595b64144ccf1df" `
-							`language="*" `
-						`/>` "\r\n"
-					`</dependentAssembly>` "\r\n"
-				`</dependency>` "\r\n"
-			`</assembly>` "\r\n";
+		enum MANIFEST32 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` ~ "\r\n" ~
+			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` ~ "\r\n" ~
+				`<description>DFL manifest</description>` ~ "\r\n" ~
+				`<dependency>` ~ "\r\n" ~
+					`<dependentAssembly>` ~ "\r\n" ~
+						`<assemblyIdentity ` ~
+							`type="win32" ` ~
+							`name="Microsoft.Windows.Common-Controls" ` ~
+							`version="6.0.0.0" ` ~
+							`processorArchitecture="X86" ` ~
+							`publicKeyToken="6595b64144ccf1df" ` ~
+							`language="*" ` ~
+						`/>` ~ "\r\n" ~
+					`</dependentAssembly>` ~ "\r\n" ~
+				`</dependency>` ~ "\r\n" ~
+			`</assembly>` ~ "\r\n";
 			
-			enum MANIFEST64 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` "\r\n"
-			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` "\r\n"
-				`<description>DFL manifest</description>` "\r\n"
-				`<dependency>` "\r\n"
-					`<dependentAssembly>` "\r\n"
-						`<assemblyIdentity `
-							`type="x64" ` 
-							`name="Microsoft.Windows.Common-Controls" `
-							`version="7.0.0.0" `
-							`processorArchitecture="x64" `
-							`publicKeyToken="6595b64144ccf1df" `
-							`language="*" `
-						`/>` "\r\n"
-					`</dependentAssembly>` "\r\n"
-				`</dependency>` "\r\n"
-			`</assembly>` "\r\n";
+			enum MANIFEST64 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` ~ "\r\n" ~
+			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` ~ "\r\n" ~
+				`<description>DFL manifest</description>` ~ "\r\n" ~
+				`<dependency>` ~ "\r\n" ~
+					`<dependentAssembly>` ~ "\r\n" ~
+						`<assemblyIdentity ` ~
+							`type="x64" ` ~
+							`name="Microsoft.Windows.Common-Controls" ` ~
+							`version="7.0.0.0" ` ~
+							`processorArchitecture="x64" ` ~
+							`publicKeyToken="6595b64144ccf1df" ` ~
+							`language="*" ` ~
+						`/>` ~ "\r\n" ~
+					`</dependentAssembly>` ~ "\r\n" ~
+				`</dependency>` ~ "\r\n" ~
+			`</assembly>` ~ "\r\n";
 		enum MANIFEST =  MANIFEST32;//is64 ? MANIFEST64:
 		HMODULE kernel32;
 		kernel32 = GetModuleHandleA("kernel32.dll");
@@ -313,41 +310,46 @@ final class Application // docmain
 	
 	
 	/// Path of the executable including its file name.
-	@property Dstring executablePath() // getter
+	@property string executablePath() // getter
 	{
-		return dfl.internal.utf.getModuleFileName(HMODULE.init);
+		return thisExePath();
 	}
 	
 	
 	/// Directory containing the executable.
-	@property Dstring startupPath() // getter
+	@property string startupPath() // getter
 	{
-		return pathGetDirName(dfl.internal.utf.getModuleFileName(HMODULE.init));
+		return dirName(thisExePath());
 	}
 	
 	
 	// Used internally.
-	Dstring getSpecialPath(Dstring name) // package
+	string getSpecialPath(string name) // package
 	{
 		HKEY hk;
 		if(ERROR_SUCCESS != RegOpenKeyA(HKEY_CURRENT_USER,
 			r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders".ptr, &hk))
 		{
-			bad_path:
 			throw new DflException("Unable to obtain " ~ name ~ " directory information");
 		}
 		scope(exit)
 			RegCloseKey(hk);
-		Dstring result;
-		result = regQueryValueString(hk, name);
-		if(!result.length)
-			goto bad_path;
-		return result;
+
+		uint type, sz;
+		RegQueryValueExA(hk, name.ptr, null, &type, null, &sz);
+		if(!sz || (REG_SZ != type && REG_EXPAND_SZ != type))
+			throw new DflException("Unable to obtain " ~ name ~ " directory information");
+
+		char[] s = new char[sz];
+		if(ERROR_SUCCESS != RegQueryValueExA(hk, name.ptr, null, null, cast(LPBYTE)s.ptr, &sz))
+			throw new DflException("Unable to obtain " ~ name ~ " directory information");
+
+		return to!string(fromStringz(s));
 	}
 	
 	
 	/// Application data base directory path, usually `C:\Documents and Settings\<user>\Application Data`; this directory might not exist yet.
-	@property Dstring userAppDataBasePath() // getter
+	@property string userAppDataBasePath() // getter
 	{
 		return getSpecialPath("AppData");
 	}
@@ -400,7 +402,7 @@ final class Application // docmain
 			Message msg;
 			
 			//while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
-			while(dfl.internal.utf.peekMessage(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
+			while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
 			{
 				gotMessage(msg);
 				
@@ -421,7 +423,7 @@ final class Application // docmain
 			
 			// Execution continues after this so it's not idle.
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			onThreadException(e);
 		}
@@ -446,7 +448,8 @@ final class Application // docmain
 		scope tmr = new TMR.Timer();
 		bool keep = true;
 		tmr.interval = msDelay;
-		tmr.tick ~= (TMR.Timer sender, EventArgs ea) { sender.stop(); keep = false; };
+		auto callback = (TMR.Timer sender, EventArgs ea) { sender.stop(); keep = false; };
+		tmr.tick.addHandler(callback);
 		tmr.start();
 		while(keep)
 		{
@@ -515,7 +518,7 @@ final class Application // docmain
 		
 		
 		ctx = appcon;
-		ctx.threadExit ~= &threadJustExited;
+		ctx.threadExit.addHandler(&threadJustExited);
 		try
 		{
 			threadFlags = threadFlags | TF.RUNNING;
@@ -536,7 +539,7 @@ final class Application // docmain
 						Message msg;
 						
 						//while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
-						while(dfl.internal.utf.peekMessage(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
+						while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
 						{
 							gotMessage(msg);
 							
@@ -558,7 +561,7 @@ final class Application // docmain
 					threadFlags = threadFlags & ~(TF.RUNNING | TF.STOP_RUNNING);
 					return;
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					onThreadException(e);
 				}
@@ -686,7 +689,7 @@ final class Application // docmain
 		}
 		
 		
-		this(Dstring errmsg)
+		this(string errmsg)
 		{
 			text = "Error";
 			clientSize = Size(340, 150);
@@ -700,7 +703,7 @@ final class Application // docmain
 			with(label = new Label)
 			{
 				bounds = Rect(PADDING, PADDING, this.clientSize.width - PADDING * 2, 40);
-				label.text = "An application exception has occured. Click Continue to allow "
+				label.text = "An application exception has occured. Click Continue to allow " ~
 					"the application to ignore this error and attempt to continue.";
 				parent = this;
 			}
@@ -722,7 +725,7 @@ final class Application // docmain
 					this.clientSize.height - height - PADDING);
 				text = "&Continue";
 				parent = this;
-				click ~= &onOkClick;
+				click.addHandler(&onOkClick);
 			}
 			acceptButton = okBtn;
 			
@@ -733,7 +736,7 @@ final class Application // docmain
 					this.clientSize.height - height - PADDING);
 				text = "&Quit";
 				parent = this;
-				click ~= &onCancelClick;
+				click.addHandler(&onCancelClick);
 			}
 			
 			autoScale = true;
@@ -754,14 +757,14 @@ final class Application // docmain
 				assert(isHandleCreated);
 				// Using the unicode stuf here messes up the redrawing for some reason.
 				while(GetMessageA(&msg, HWND.init, 0, 0)) // TODO: unicode ?
-				//while(dfl.internal.utf.getMessage(&msg, HWND.init, 0, 0))
+				//while(getMessage(&msg, HWND.init, 0, 0))
 				{
 					if(!IsDialogMessageA(handle, &msg))
-					//if(!dfl.internal.utf.isDialogMessage(handle, &msg))
+					//if(!isDialogMessage(handle, &msg))
 					{
 						TranslateMessage(&msg);
 						DispatchMessageA(&msg);
-						//dfl.internal.utf.dispatchMessage(&msg);
+						//dispatchMessage(&msg);
 					}
 					
 					if(!isHandleCreated)
@@ -835,7 +838,7 @@ final class Application // docmain
 		}
 		
 		
-		override Dstring toString()
+		override string toString()
 		{
 			return errBox.text;
 		}
@@ -867,7 +870,7 @@ final class Application // docmain
 		
 		//try
 		{
-			if((new ErrForm(getObjectString(e))).doContinue())
+			if((new ErrForm(e.toString())).doContinue())
 			{
 				return true;
 			}
@@ -884,7 +887,7 @@ final class Application // docmain
 	
 	
 	///
-	void onThreadException(DThrowable e) nothrow
+	void onThreadException(Throwable e) nothrow
 	{
 		try
 		{
@@ -904,7 +907,7 @@ final class Application // docmain
 			
 			if(except)
 			{
-				cprintf("Error: %.*s\n", cast(int)getObjectString(e).length, getObjectString(e).ptr);
+				writef("Error: %s\n", e.toString());
 				
 				abort();
 				return;
@@ -930,11 +933,11 @@ final class Application // docmain
 			//except = false;
 			
 			//throw e;
-			cprintf("Error: %.*s\n", cast(int)getObjectString(e).length, getObjectString(e).ptr);
+			writefln("Error: %*s", e.toString());
 			//exitThread();
-			Environment.exit(EXIT_FAILURE);
+			Environment.exit(1);
 		}
-		catch (DThrowable e)
+		catch (Throwable e)
 		{
 		}
 	}
@@ -954,7 +957,7 @@ final class Application // docmain
 		if (auto pkid = k in hotkeyId)
 		{
 			immutable kid = *pkid;
-			hotkeyHandler[kid] ~= dg;
+			hotkeyHandler[kid].addHandler(dg);
 		}
 		else
 		{
@@ -975,12 +978,12 @@ final class Application // docmain
 				hotkeyId[k] = kid;
 				if (auto h = kid in hotkeyHandler)
 				{
-					*h ~= dg;
+					(*h).addHandler(dg);
 				}
 				else
 				{
 					typeof(hotkeyHandler[kid]) e;
-					e ~= dg;
+					e.addHandler(dg);
 					hotkeyHandler[kid] = e;
 				}
 			}
@@ -1132,7 +1135,7 @@ final class Application // docmain
 			assert(c.isHandleCreated);
 			assert(lookupHwnd(c.handle));
 		}
-		body
+		do
 		{
 			SetPropA(c.handle, ZOMBIE_PROP.ptr, cast(HANDLE)cast(void*)c);
 			removeHwnd(c.handle);
@@ -1146,7 +1149,7 @@ final class Application // docmain
 			assert(c.isHandleCreated);
 			assert(!lookupHwnd(c.handle));
 		}
-		body
+		do
 		{
 			RemovePropA(c.handle, ZOMBIE_PROP.ptr);
 			controls[c.handle] = c;
@@ -1159,7 +1162,7 @@ final class Application // docmain
 		{
 			assert(c !is null);
 		}
-		body
+		do
 		{
 			if(c.isHandleCreated)
 			{
@@ -1207,7 +1210,7 @@ final class Application // docmain
 					break;
 				}
 			}
-			tempmenus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * (nmenus + 1));
+			tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * (nmenus + 1));
 			if(!tempmenus)
 			{
 				//throw new OutOfMemory;
@@ -1231,7 +1234,7 @@ final class Application // docmain
 			
 			idx = nmenus;
 			nmenus++;
-			tempmenus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * nmenus);
+			tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
 			if(!tempmenus)
 			{
 				nmenus--;
@@ -1260,7 +1263,7 @@ final class Application // docmain
 			found:
 			if(nmenus == 1)
 			{
-				dfl.internal.clib.free(menus);
+				GC.free(menus);
 				menus = null;
 				nmenus--;
 			}
@@ -1270,7 +1273,7 @@ final class Application // docmain
 					menus[idx] = menus[nmenus - 1]; // Move last one in its place
 				
 				nmenus--;
-				menus = cast(Menu*)dfl.internal.clib.realloc(menus, Menu.sizeof * nmenus);
+				menus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
 				assert(menus != null); // Memory shrink shouldn't be a problem.
 			}
 		}
@@ -1395,7 +1398,7 @@ final class Application // docmain
 		{
 			gcinfo = gcinfo.max;
 			assert(!gctimer);
-			gctimer = SetTimer(HWND.init, 0, 200, &_gcTimeout);
+			gctimer = to!int(SetTimer(HWND.init, 0, 200, &_gcTimeout));
 		}
 		
 		_waitMsg();
@@ -1489,13 +1492,15 @@ final class Application // docmain
 	
 	package void ppin(void* p)
 	{
-		dfl.internal.dlib.gcPin(p);
+		// TODO : Figure out what this is supposed to do
+		//gcPin(p);
 	}
 	
 	
 	package void punpin(void* p)
 	{
-		dfl.internal.dlib.gcUnpin(p);
+		// TODO : Figure out what this is supposed to do
+		//gcUnpin(p);
 	}
 	
 	
@@ -1544,7 +1549,7 @@ final class Application // docmain
 				DestroyMenu(m.handle);
 			}
 			nmenus = 0;
-			dfl.internal.clib.free(menus);
+			GC.free(menus);
 			menus = null;
 		}
 	}
@@ -1664,7 +1669,7 @@ final class Application // docmain
 					}
 				}
 			}
-			catch(DThrowable o)
+			catch(Throwable o)
 			{
 				Control ctrl;
 				ctrl = lookupHwnd(msg.hWnd);
@@ -1679,7 +1684,7 @@ final class Application // docmain
 		}
 		TranslateMessage(&msg._winMsg);
 		//DispatchMessageA(&msg._winMsg);
-		dfl.internal.utf.dispatchMessage(&msg._winMsg);
+		DispatchMessageA(&msg._winMsg);
 	}
 }
 
@@ -1692,8 +1697,14 @@ extern(Windows) void _gcTimeout(HWND hwnd, UINT uMsg, size_t idEvent, DWORD dwTi
 	KillTimer(hwnd, Application.gctimer);
 	Application.gctimer = 0;
 	
-	//cprintf("Auto-collecting\n");
-	dfl.internal.dlib.gcFullCollect();
+	debug {
+		writeln("Auto-collecting");
+    }
+	try {
+		GC.collect();
+    } catch (Exception ex) {
+		// Do nothing
+    }
 	
 	Application.gcinfo = GetTickCount() + 4000;
 }
@@ -1707,7 +1718,7 @@ debug(SHOW_MESSAGE_INFO)
 	
 	void showMessageInfo(ref Message m)
 	{
-		void writeWm(Dstring wmName)
+		void writeWm(string wmName)
 		{
 			writef("Message %s=%d(0x%X)\n", wmName, m.msg, m.msg);
 		}
@@ -1892,14 +1903,14 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					{
 						pinv.result = pinv.dg(pinv.args);
 					}
-					catch(DThrowable e)
+					catch(Throwable e)
 					{
 						//Application.onThreadException(e);
 						try
 						{
 							pinv.exception = e;
 						}
-						catch(DThrowable e2)
+						catch(Throwable e2)
 						{
 							Application.onThreadException(e2);
 						}
@@ -1915,14 +1926,14 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					{
 						pinv.dg();
 					}
-					catch(DThrowable e)
+					catch(Throwable e)
 					{
 						//Application.onThreadException(e);
 						try
 						{
 							pinv.exception = e;
 						}
-						catch(DThrowable e2)
+						catch(Throwable e2)
 						{
 							Application.onThreadException(e2);
 						}
@@ -1935,7 +1946,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 				{
 					(cast(void function())lparam)();
 				}
-				catch(DThrowable e)
+				catch(Throwable e)
 				{
 					Application.onThreadException(e);
 				}
@@ -1949,11 +1960,11 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					{
 						p.fp(Application.lookupHwnd(hwnd), p.params.ptr[0 .. p.nparams]);
 					}
-					catch(DThrowable e)
+					catch(Throwable e)
 					{
 						Application.onThreadException(e);
 					}
-					dfl.internal.clib.free(p);
+					GC.free(p);
 				}
 				break;
 			
@@ -2000,8 +2011,13 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 		else
 		{
 			ctrl = cast(Control)cast(void*)GetPropA(hwnd, Application.ZOMBIE_PROP.ptr);
-			if(ctrl)
-				ctrl.mustWndProc(dm);
+			if(ctrl) {
+				try {
+				    ctrl.mustWndProc(dm);
+                } catch (Exception ex) {
+					assert(0, "Exception thrown in window proc!");
+                }
+            }
 		}
 		return dm.result;
 	}
@@ -2015,7 +2031,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 			if(!ctrl.preProcessMessage(dm))
 				ctrl._wndProc(dm);
 		}
-		catch (DThrowable e)
+		catch (Throwable e)
 		{
 			Application.onThreadException(e);
 		}
@@ -2068,14 +2084,14 @@ struct InvokeData
 	Object delegate(Object[]) dg;
 	Object[] args;
 	Object result;
-	DThrowable exception = null;
+	Throwable exception = null;
 }
 
 
 struct InvokeSimpleData
 {
 	void delegate() dg;
-	DThrowable exception = null;
+	Throwable exception = null;
 }
 
 
@@ -2106,10 +2122,12 @@ else
 }
 
 
+alias HANDLE HTHEME;
+
 extern(Windows)
 {
-	alias BOOL function(LPTRACKMOUSEEVENT lpEventTrack) TrackMouseEventProc;
-	alias BOOL function(HWND, COLORREF, BYTE, DWORD) SetLayeredWindowAttributesProc;
+	// alias BOOL function(LPTRACKMOUSEEVENT lpEventTrack) TrackMouseEventProc; // Exists in core.sys.windows.winuser
+	// alias BOOL function(HWND, COLORREF, BYTE, DWORD) SetLayeredWindowAttributesProc; // Same as above
 	
 	alias HTHEME function(HWND) GetWindowThemeProc;
 	alias BOOL function(HTHEME hTheme, int iPartId, int iStateId) IsThemeBackgroundPartiallyTransparentProc;
@@ -2119,10 +2137,10 @@ extern(Windows)
 
 
 // Set version = SUPPORTS_MOUSE_TRACKING if it is guaranteed to be supported.
-TrackMouseEventProc trackMouseEvent;
+// TrackMouseEventProc trackMouseEvent;
 
 // Set version = SUPPORTS_OPACITY if it is guaranteed to be supported.
-SetLayeredWindowAttributesProc setLayeredWindowAttributes;
+// SetLayeredWindowAttributesProc setLayeredWindowAttributes;
 
 /+
 GetWindowThemeProc getWindowTheme;
@@ -2247,7 +2265,8 @@ extern(C)
 
 static this()
 {
-	dfl.internal.utf._utfinit();
+	// Not needed, modules will be already loaded through the use of pragmas - D.O
+	//_utfinit();
 	
 	Application.tlsThreadFlags = TlsAlloc();
 	Application.tlsControl = TlsAlloc();
@@ -2280,9 +2299,11 @@ static this()
 	}
 	else
 	{
+		/* TrackMouseEvent exists in core.sys.windows.winuser
 		trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(user32, "TrackMouseEvent");
 		if(!trackMouseEvent) // Must be Windows 95; check if common controls has it (IE 5.5).
 			trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(GetModuleHandleA("comctl32.dll"), "_TrackMouseEvent");
+		*/
 	}
 	
 	version(SUPPORTS_OPACITY)
@@ -2293,7 +2314,8 @@ static this()
 	}
 	else
 	{
-		setLayeredWindowAttributes = cast(SetLayeredWindowAttributesProc)GetProcAddress(user32, "SetLayeredWindowAttributes");
+		// Exists in core.sys.windows.winuser
+		// setLayeredWindowAttributes = cast(SetLayeredWindowAttributesProc)GetProcAddress(user32, "SetLayeredWindowAttributes");
 	}
 }
 
@@ -2313,7 +2335,7 @@ static ~this()
 }
 
 
-void _unableToInit(Dstring what)
+void _unableToInit(string what)
 {
 	/+if(what.length > 4
 		&& what[0] == 'D' && what[1] == 'F'
@@ -2335,24 +2357,24 @@ in
 	assert(!Application.hinst);
 	assert(inst);
 }
-body
+do
 {
 	Application.hinst = inst;
 	
-	dfl.internal.utf.WndClass wc;
-	wc.wc.style = WNDCLASS_STYLE;
-	wc.wc.hInstance = inst;
-	wc.wc.lpfnWndProc = &dflWndProc;
+	WNDCLASSA wc;
+	wc.style = WNDCLASS_STYLE;
+	wc.hInstance = inst;
+	wc.lpfnWndProc = &dflWndProc;
 	
 	// Control wndclass.
-	wc.className = CONTROL_CLASSNAME;
-	if(!dfl.internal.utf.registerClass(wc))
+	wc.lpszClassName = CONTROL_CLASSNAME.ptr;
+	if(!RegisterClassA(&wc))
 		_unableToInit(CONTROL_CLASSNAME);
 	
 	// Form wndclass.
-	wc.wc.cbWndExtra = DLGWINDOWEXTRA;
-	wc.className = FORM_CLASSNAME;
-	if(!dfl.internal.utf.registerClass(wc))
+	wc.cbWndExtra = DLGWINDOWEXTRA;
+	wc.lpszClassName = FORM_CLASSNAME.ptr;
+	if(!RegisterClassA(&wc))
 		_unableToInit(FORM_CLASSNAME);
 }
 
@@ -2363,11 +2385,11 @@ extern(Windows)
 	{
 		if(!textBoxPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			textBoxPrevWndProc = superClass(HINSTANCE.init, "EDIT", TEXTBOX_CLASSNAME, info);
 			if(!textBoxPrevWndProc)
 				_unableToInit(TEXTBOX_CLASSNAME);
-			textBoxClassStyle = info.wc.style;
+			textBoxClassStyle = info.style;
 		}
 	}
 	
@@ -2376,11 +2398,11 @@ extern(Windows)
 	{
 		if(!listboxPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			listboxPrevWndProc = superClass(HINSTANCE.init, "LISTBOX", LISTBOX_CLASSNAME, info);
 			if(!listboxPrevWndProc)
 				_unableToInit(LISTBOX_CLASSNAME);
-			listboxClassStyle = info.wc.style;
+			listboxClassStyle = info.style;
 		}
 	}
 	
@@ -2390,7 +2412,7 @@ extern(Windows)
 	{
 		if(!labelPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			labelPrevWndProc = superClass(HINSTANCE.init, "STATIC", LABEL_CLASSNAME, info);
 			if(!labelPrevWndProc)
 				_unableToInit(LABEL_CLASSNAME);
@@ -2404,11 +2426,11 @@ extern(Windows)
 	{
 		if(!buttonPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			buttonPrevWndProc = superClass(HINSTANCE.init, "BUTTON", BUTTON_CLASSNAME, info);
 			if(!buttonPrevWndProc)
 				_unableToInit(BUTTON_CLASSNAME);
-			buttonClassStyle = info.wc.style;
+			buttonClassStyle = info.style;
 		}
 	}
 	
@@ -2417,11 +2439,11 @@ extern(Windows)
 	{
 		if(!mdiclientPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			mdiclientPrevWndProc = superClass(HINSTANCE.init, "MDICLIENT", MDICLIENT_CLASSNAME, info);
 			if(!mdiclientPrevWndProc)
 				_unableToInit(MDICLIENT_CLASSNAME);
-			mdiclientClassStyle = info.wc.style;
+			mdiclientClassStyle = info.style;
 		}
 	}
 	
@@ -2437,17 +2459,17 @@ extern(Windows)
 					throw new DflException("Unable to load 'riched20.dll'");
 			}
 			
-			Dstring classname;
-			if(dfl.internal.utf.useUnicode)
-				classname = "RichEdit20W";
-			else
+			string classname;
+			//if(useUnicode)
+				//classname = "RichEdit20W";
+			//else
 				classname = "RichEdit20A";
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			richtextboxPrevWndProc = superClass(HINSTANCE.init, classname, RICHTEXTBOX_CLASSNAME, info);
 			if(!richtextboxPrevWndProc)
 				_unableToInit(RICHTEXTBOX_CLASSNAME);
-			richtextboxClassStyle = info.wc.style;
+			richtextboxClassStyle = info.style;
 		}
 	}
 	
@@ -2456,11 +2478,11 @@ extern(Windows)
 	{
 		if(!comboboxPrevWndProc)
 		{
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			comboboxPrevWndProc = superClass(HINSTANCE.init, "COMBOBOX", COMBOBOX_CLASSNAME, info);
 			if(!comboboxPrevWndProc)
 				_unableToInit(COMBOBOX_CLASSNAME);
-			comboboxClassStyle = info.wc.style;
+			comboboxClassStyle = info.style;
 		}
 	}
 	
@@ -2471,11 +2493,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_TREEVIEW_CLASSES);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			treeviewPrevWndProc = superClass(HINSTANCE.init, "SysTreeView32", TREEVIEW_CLASSNAME, info);
 			if(!treeviewPrevWndProc)
 				_unableToInit(TREEVIEW_CLASSNAME);
-			treeviewClassStyle = info.wc.style;
+			treeviewClassStyle = info.style;
 		}
 	}
 	
@@ -2486,11 +2508,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_TAB_CLASSES);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			tabcontrolPrevWndProc = superClass(HINSTANCE.init, "SysTabControl32", TABCONTROL_CLASSNAME, info);
 			if(!tabcontrolPrevWndProc)
 				_unableToInit(TABCONTROL_CLASSNAME);
-			tabcontrolClassStyle = info.wc.style;
+			tabcontrolClassStyle = info.style;
 		}
 	}
 	
@@ -2501,11 +2523,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_LISTVIEW_CLASSES);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			listviewPrevWndProc = superClass(HINSTANCE.init, "SysListView32", LISTVIEW_CLASSNAME, info);
 			if(!listviewPrevWndProc)
 				_unableToInit(LISTVIEW_CLASSNAME);
-			listviewClassStyle = info.wc.style;
+			listviewClassStyle = info.style;
 		}
 	}
 	
@@ -2516,11 +2538,11 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_WIN95_CLASSES);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			statusbarPrevWndProc = superClass(HINSTANCE.init, "msctls_statusbar32", STATUSBAR_CLASSNAME, info);
 			if(!statusbarPrevWndProc)
 				_unableToInit(STATUSBAR_CLASSNAME);
-			statusbarClassStyle = info.wc.style;
+			statusbarClassStyle = info.style;
 		}
 	}
 	
@@ -2531,21 +2553,21 @@ extern(Windows)
 		{
 			_initCommonControls(ICC_PROGRESS_CLASS);
 			
-			dfl.internal.utf.WndClass info;
+			WNDCLASSA info;
 			progressbarPrevWndProc = superClass(HINSTANCE.init, "msctls_progress32", PROGRESSBAR_CLASSNAME, info);
 			if(!progressbarPrevWndProc)
 				_unableToInit(PROGRESSBAR_CLASSNAME);
-			progressbarClassStyle = info.wc.style;
+			progressbarClassStyle = info.style;
 		}
 	}
 }
 
-
-WNDPROC _superClass(HINSTANCE hinst, Dstring className, Dstring newClassName, out WNDCLASSA getInfo) // deprecated
+/*
+WNDPROC _superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // deprecated
 {
 	WNDPROC wndProc;
 	
-	if(!GetClassInfoA(hinst, unsafeStringz(className), &getInfo)) // TODO: unicode.
+	if(!GetClassInfoA(hinst, className.ptr, &getInfo)) // TODO: unicode.
 		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
 	
 	wndProc = getInfo.lpfnWndProc;
@@ -2553,7 +2575,7 @@ WNDPROC _superClass(HINSTANCE hinst, Dstring className, Dstring newClassName, ou
 	
 	getInfo.style &= ~CS_GLOBALCLASS;
 	getInfo.hCursor = HCURSOR.init;
-	getInfo.lpszClassName = unsafeStringz(newClassName);
+	getInfo.lpszClassName = newClassName.ptr;
 	getInfo.hInstance = Application.getInstance();
 	
 	if(!RegisterClassA(&getInfo)) // TODO: unicode.
@@ -2561,42 +2583,43 @@ WNDPROC _superClass(HINSTANCE hinst, Dstring className, Dstring newClassName, ou
 		//return null;
 	return wndProc;
 }
+*/
 
 
 public:
-
+/*
 // Returns the old wndProc.
 // This is the old, unsafe, unicode-unfriendly function for superclassing.
-deprecated WNDPROC superClass(HINSTANCE hinst, Dstring className, Dstring newClassName, out WNDCLASSA getInfo) // package
+deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
 {
 	return _superClass(hinst, className, newClassName, getInfo);
 }
 
 
-deprecated WNDPROC superClass(HINSTANCE hinst, Dstring className, Dstring newClassName) // package
+deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClassName) // package
 {
 	WNDCLASSA info;
 	return _superClass(hinst, className, newClassName, info);
 }
-
+*/
 
 // Returns the old wndProc.
-WNDPROC superClass(HINSTANCE hinst, Dstring className, Dstring newClassName, out dfl.internal.utf.WndClass getInfo) // package
+WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
 {
 	WNDPROC wndProc;
 	
-	if(!dfl.internal.utf.getClassInfo(hinst, className, getInfo))
+	if(!GetClassInfoA(hinst, className.ptr, &getInfo))
 		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
 	
-	wndProc = getInfo.wc.lpfnWndProc;
-	getInfo.wc.lpfnWndProc = &dflWndProc;
+	wndProc = getInfo.lpfnWndProc;
+	getInfo.lpfnWndProc = &dflWndProc;
 	
-	getInfo.wc.style &= ~CS_GLOBALCLASS;
-	getInfo.wc.hCursor = HCURSOR.init;
-	getInfo.className = newClassName;
-	getInfo.wc.hInstance = Application.getInstance();
+	getInfo.style &= ~CS_GLOBALCLASS;
+	getInfo.hCursor = HCURSOR.init;
+	getInfo.lpszClassName = newClassName.ptr;
+	getInfo.hInstance = Application.getInstance();
 	
-	if(!dfl.internal.utf.registerClass(getInfo))
+	if(RegisterClassA(&getInfo) == 0)
 		//throw new DflException("Unable to register window class '" ~ newClassName ~ "'");
 		return null;
 	return wndProc;

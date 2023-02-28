@@ -1,14 +1,18 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.base;
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.drawing;
+private import dfl.event;
 
-private import dfl.internal.winapi, dfl.drawing, dfl.event;
+private import core.sys.windows.windows;
 
+private import std.string : icmp;
+private import core.stdc.string : strcpy;
+private import core.stdc.stdlib : alloca;
+private import core.memory;
 
 alias HWND HWindow;
 
@@ -27,7 +31,7 @@ alias IWindow IWin32Window; // deprecated
 class DflException: Exception // docmain
 {
 	///
-	this(Dstring msg, string file = __FILE__, size_t line = __LINE__)
+	this(string msg, string file = __FILE__, size_t line = __LINE__)
 	{
 		super(msg, file, line);
 	}
@@ -35,36 +39,36 @@ class DflException: Exception // docmain
 
 
 ///
-alias DThrowable DflThrowable;
+alias Throwable DflThrowable;
 
 
 ///
-class StringObject: DObject
+class StringObject: Object
 {
 	///
-	Dstring value;
+	string value;
 	
 	
 	///
-	this(Dstring str) pure nothrow
+	this(string str) pure nothrow
 	{
 		this.value = str;
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return value;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return value == getObjectString(o); // ?
+		return value == o.toString(); // ?
 	}
 	
 	
-	Dequ opEquals(StringObject s)
+	bool opEquals(StringObject s)
 	{
 		return value == s.value;
 	}
@@ -72,13 +76,13 @@ class StringObject: DObject
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(value, getObjectString(o)); // ?
+		return icmp(value, o.toString()); // ?
 	}
 	
 	
 	int opCmp(StringObject s)
 	{
-		return stringICmp(value, s.value);
+		return icmp(value, s.value);
 	}
 }
 
@@ -351,7 +355,7 @@ interface IMessageFilter // docmain
 
 abstract class WaitHandle
 {
-	enum WAIT_TIMEOUT = dfl.internal.winapi.WAIT_TIMEOUT; // DMD 1.028: needs fqn, otherwise conflicts with std.thread
+	enum WAIT_TIMEOUT = 258; // dfl.internal.winapi.WAIT_TIMEOUT; // DMD 1.028: needs fqn, otherwise conflicts with std.thread
 	enum INVALID_HANDLE = .INVALID_HANDLE_VALUE;
 	
 	
@@ -866,15 +870,12 @@ class KeyPressEventArgs: KeyEventArgs
 	{
 		assert((modifiers & Keys.MODIFIERS) == modifiers, "modifiers parameter can only contain modifiers");
 	}
-	body
+	do
 	{
 		_keych = ch;
 		
 		int vk;
-		if(dfl.internal.utf.useUnicode)
-			vk = 0xFF & VkKeyScanW(cast(WCHAR)ch);
-		else
-			vk = 0xFF & VkKeyScanA(cast(char)ch);
+		vk = 0xFF & VkKeyScanA(cast(char)ch);
 		
 		super(cast(Keys)(vk | modifiers));
 	}
@@ -961,7 +962,7 @@ class LabelEditEventArgs: EventArgs
 	}
 	
 	/// ditto
-	this(int index, Dstring labelText)
+	this(int index, string labelText)
 	{
 		this.idx = index;
 		this.ltxt = labelText;
@@ -983,7 +984,7 @@ class LabelEditEventArgs: EventArgs
 	
 	///
 	// The text of the label's edit.
-	final @property Dstring label() // getter
+	final @property string label() // getter
 	{
 		return ltxt;
 	}
@@ -999,7 +1000,7 @@ class LabelEditEventArgs: EventArgs
 	
 	private:
 	int idx;
-	Dstring ltxt;
+	string ltxt;
 	bool cancl = false;
 }
 +/
@@ -1327,7 +1328,7 @@ class Cursor // docmain
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
 		Cursor cur = cast(Cursor)o;
 		if(!cur)
@@ -1336,7 +1337,7 @@ class Cursor // docmain
 	}
 	
 	
-	Dequ opEquals(Cursor cur)
+	bool opEquals(Cursor cur)
 	{
 		return hcur == cur.hcur;
 	}
@@ -1388,15 +1389,15 @@ class Cursors // docmain
 	
 	///
 	@property Cursor appStarting() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_APPSTARTING), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_APPSTARTING), false); }
 	
 	///
 	@property Cursor arrow() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_ARROW), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_ARROW), false); }
 	
 	///
 	@property Cursor cross() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_CROSS), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_CROSS), false); }
 	
 	///
 	//@property Cursor default() // getter
@@ -1416,7 +1417,7 @@ class Cursors // docmain
 			
 			if(!hcurHand)
 			{
-				hcurHand = LoadCursorA(HINSTANCE.init, IDC_HAND);
+				hcurHand = LoadCursorW(HINSTANCE.init, IDC_HAND);
 				if(!hcurHand) // Must be Windows 95, so load the cursor from winhlp32.exe.
 				{
 					UINT len;
@@ -1464,7 +1465,7 @@ class Cursors // docmain
 	@property Cursor help() // getter
 	{
 		HCURSOR hcur;
-		hcur = LoadCursorA(HINSTANCE.init, IDC_HELP);
+		hcur = LoadCursorW(HINSTANCE.init, IDC_HELP);
 		if(!hcur) // IDC_HELP might not be supported on Windows 95, so fall back to a normal arrow.
 			return arrow;
 		return new Cursor(hcur);
@@ -1487,32 +1488,32 @@ class Cursors // docmain
 	
 	///
 	@property Cursor iBeam() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_IBEAM), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_IBEAM), false); }
 	
 	///
 	@property Cursor no() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_NO), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_NO), false); }
 	
 	
 	///
 	@property Cursor sizeAll() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_SIZEALL), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZEALL), false); }
 	
 	/// ditto
 	@property Cursor sizeNESW() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_SIZENESW), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENESW), false); }
 	
 	/// ditto
 	@property Cursor sizeNS() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_SIZENS), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENS), false); }
 	
 	/// ditto
 	@property Cursor sizeNWSE() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_SIZENWSE), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENWSE), false); }
 	
 	/// ditto
 	@property Cursor sizeWE() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_SIZEWE), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZEWE), false); }
 	
 	
 	/+
@@ -1526,6 +1527,6 @@ class Cursors // docmain
 	
 	///
 	@property Cursor waitCursor() // getter
-	{ return new Cursor(LoadCursorA(HINSTANCE.init, IDC_WAIT), false); }
+	{ return new Cursor(LoadCursorW(HINSTANCE.init, IDC_WAIT), false); }
 }
 

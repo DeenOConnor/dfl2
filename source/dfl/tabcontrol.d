@@ -1,14 +1,21 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.tabcontrol;
 
-private import dfl.internal.dlib;
+private import dfl.control;
+private import dfl.panel;
+private import dfl.drawing;
+private import dfl.application;
+private import dfl.event;
+private import dfl.base;
+private import dfl.collections;
 
-private import dfl.control, dfl.panel, dfl.internal.winapi, dfl.drawing;
-private import dfl.application, dfl.event, dfl.base, dfl.collections;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
+private import std.string : icmp;
 
 
 private extern(Windows) void _initTabcontrol();
@@ -18,7 +25,7 @@ private extern(Windows) void _initTabcontrol();
 class TabPage: Panel
 {
 	///
-	this(Dstring tabText)
+	this(string tabText)
 	{
 		this();
 		
@@ -45,7 +52,7 @@ class TabPage: Panel
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
@@ -54,13 +61,13 @@ class TabPage: Panel
 	alias Control.opEquals opEquals;
 
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return text == val;
 	}
@@ -71,20 +78,20 @@ class TabPage: Panel
 
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 
 
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
 	// imageIndex
 	
 	
-	override @property void text(Dstring newText) // setter
+	override @property void text(string newText) // setter
 	{
 		// Note: this probably causes toStringz() to be called twice,
 		// allocating 2 of the same string.
@@ -104,13 +111,13 @@ class TabPage: Panel
 	
 	
 	/+
-	final @property void toolTipText(Dstring ttt) // setter
+	final @property void toolTipText(string ttt) // setter
 	{
 		// TODO: ...
 	}
 	
 	
-	final @property Dstring toolTipText() // getter
+	final @property string toolTipText() // getter
 	{
 		// TODO: ...
 		return null;
@@ -180,7 +187,7 @@ class TabPageCollection
 	{
 		assert(owner.tchildren is null);
 	}
-	body
+	do
 	{
 		tc = owner;
 	}
@@ -197,7 +204,7 @@ class TabPageCollection
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		Rect area;
 		area = tc.displayRectangle;
@@ -207,40 +214,20 @@ class TabPageCollection
 		
 		// Note: duplicate code.
 		//TC_ITEMA tci;
-		TcItem tci;
-		if(dfl.internal.utf.useUnicode)
+		TC_ITEMA tci;
+		m.msg = TCM_INSERTITEMA; // <--
+		foreach(size_t i, TabPage page; _pages)
 		{
-			m.msg = TCM_INSERTITEMW; // <--
-			foreach(int i, TabPage page; _pages)
-			{
-				// TODO: TCIF_RTLREADING flag based on rightToLeft property.
-				tci.mask = TCIF_TEXT | TCIF_PARAM;
-				tci.tciw.pszText = cast(typeof(tci.tciw.pszText))dfl.internal.utf.toUnicodez(page.text); // <--
-				static assert(tci.lParam.sizeof >= (void*).sizeof);
-				tci.lParam = cast(LPARAM)cast(void*)page;
-				
-				m.wParam = i;
-				m.lParam = cast(LPARAM)&tci.tciw;
-				tc.prevWndProc(m);
-				assert(cast(int)m.result != -1);
-			}
-		}
-		else
-		{
-			m.msg = TCM_INSERTITEMA; // <--
-			foreach(int i, TabPage page; _pages)
-			{
-				// TODO: TCIF_RTLREADING flag based on rightToLeft property.
-				tci.mask = TCIF_TEXT | TCIF_PARAM;
-				tci.tcia.pszText = cast(typeof(tci.tcia.pszText))dfl.internal.utf.toAnsiz(page.text); // <--
-				static assert(tci.lParam.sizeof >= (void*).sizeof);
-				tci.lParam = cast(LPARAM)cast(void*)page;
-				
-				m.wParam = i;
-				m.lParam = cast(LPARAM)&tci.tcia;
-				tc.prevWndProc(m);
-				assert(cast(int)m.result != -1);
-			}
+			// TODO: TCIF_RTLREADING flag based on rightToLeft property.
+			tci.mask = TCIF_TEXT | TCIF_PARAM;
+			tci.pszText = cast(typeof(tci.pszText))page.text.ptr; // <--
+			static assert(tci.lParam.sizeof >= (void*).sizeof);
+			tci.lParam = cast(LPARAM)cast(void*)page;
+
+			m.wParam = i;
+			m.lParam = cast(LPARAM)&tci;
+			tc.prevWndProc(m);
+			assert(cast(int)m.result != -1);
 		}
 	}
 	
@@ -275,16 +262,8 @@ class TabPageCollection
 			tci.mask = TCIF_TEXT | TCIF_PARAM;
 			static assert(tci.lParam.sizeof >= (void*).sizeof);
 			tci.lParam = cast(LPARAM)cast(void*)val;
-			if(dfl.internal.utf.useUnicode)
-			{
-				tci.tciw.pszText = cast(typeof(tci.tciw.pszText))dfl.internal.utf.toUnicodez(val.text);
-				m = Message(tc.handle, TCM_INSERTITEMW, idx, cast(LPARAM)&tci.tciw);
-			}
-			else
-			{
-				tci.tcia.pszText = cast(typeof(tci.tcia.pszText))dfl.internal.utf.toAnsiz(val.text);
-				m = Message(tc.handle, TCM_INSERTITEMA, idx, cast(LPARAM)&tci.tcia);
-			}
+			tci.tcia.pszText = cast(typeof(tci.tcia.pszText))val.text.ptr;
+			m = Message(tc.handle, TCM_INSERTITEMA, idx, cast(LPARAM)&tci.tcia);
 			tc.prevWndProc(m);
 			assert(cast(int)m.result != -1);
 			
@@ -499,7 +478,7 @@ class TabControlBase: ControlSuperClass
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -981,31 +960,23 @@ class TabControl: TabControlBase // docmain
 	}
 	
 	
-	void updateTabText(TabPage page, Dstring newText)
+	void updateTabText(TabPage page, string newText)
 	in
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		int i;
 		i = tabPages.indexOf(page);
 		assert(-1 != i);
 		
 		//TC_ITEMA tci;
-		TcItem tci;
+		TC_ITEMA tci;
 		tci.mask = TCIF_TEXT;
 		Message m;
-		if(dfl.internal.utf.useUnicode)
-		{
-			tci.tciw.pszText = cast(typeof(tci.tciw.pszText))dfl.internal.utf.toUnicodez(newText);
-			m = Message(hwnd, TCM_SETITEMW, cast(WPARAM)i, cast(LPARAM)&tci.tciw);
-		}
-		else
-		{
-			tci.tcia.pszText = cast(typeof(tci.tcia.pszText))dfl.internal.utf.toAnsiz(newText);
-			m = Message(hwnd, TCM_SETITEMA, cast(WPARAM)i, cast(LPARAM)&tci.tcia);
-		}
+		tci.pszText = cast(typeof(tci.pszText))newText.ptr;
+		m = Message(hwnd, TCM_SETITEMA, cast(WPARAM)i, cast(LPARAM)&tci);
 		prevWndProc(m);
 		
 		// Updating a tab's text could cause tab rows to be adjusted,

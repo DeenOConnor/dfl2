@@ -1,16 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.statusbar;
 
 
-private import dfl.control, dfl.base, dfl.internal.winapi, dfl.event,
-	dfl.collections, dfl.internal.utf, dfl.internal.dlib, dfl.application;
+private import dfl.control;
+private import dfl.base;
+private import dfl.event;
+private import dfl.collections;
+private import dfl.application;
 
-private import dfl.internal.dlib;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
+private import std.string : icmp;
 
 private extern(Windows) void _initStatusbar();
 
@@ -35,16 +39,16 @@ enum StatusBarPanelBorderStyle: ubyte
 
 
 ///
-class StatusBarPanel: DObject
+class StatusBarPanel: Object
 {
 	///
-	this(Dstring text)
+	this(string text)
 	{
 		this._txt = text;
 	}
 	
 	/// ditto
-	this(Dstring text, int width)
+	this(string text, int width)
 	{
 		this._txt = text;
 		this._width = width;
@@ -56,23 +60,23 @@ class StatusBarPanel: DObject
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return _txt;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return _txt == getObjectString(o); // ?
+		return _txt == o.toString(); // ?
 	}
 	
-	Dequ opEquals(StatusBarPanel pnl)
+	bool opEquals(StatusBarPanel pnl)
 	{
 		return _txt == pnl._txt;
 	}
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return _txt == val;
 	}
@@ -80,17 +84,17 @@ class StatusBarPanel: DObject
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(_txt, getObjectString(o)); // ?
+		return icmp(_txt, o.toString()); // ?
 	}
 	
 	int opCmp(StatusBarPanel pnl)
 	{
-		return stringICmp(_txt, pnl._txt);
+		return icmp(_txt, pnl._txt);
 	}
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(_txt, val);
+		return icmp(_txt, val);
 	}
 	
 	
@@ -196,7 +200,7 @@ class StatusBarPanel: DObject
 	
 	
 	///
-	final @property void text(Dstring txt) // setter
+	final @property void text(string txt) // setter
 	{
 		if(_parent && _parent.isHandleCreated)
 		{
@@ -209,7 +213,7 @@ class StatusBarPanel: DObject
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		return _txt;
 	}
@@ -217,13 +221,13 @@ class StatusBarPanel: DObject
 	
 	/+
 	///
-	final @property void toolTipText(Dstring txt) // setter
+	final @property void toolTipText(string txt) // setter
 	{
 		
 	}
 	
 	/// ditto
-	final @property Dstring toolTipText() // getter
+	final @property string toolTipText() // getter
 	{
 		//null
 	}
@@ -250,7 +254,7 @@ class StatusBarPanel: DObject
 	
 	private:
 	
-	Dstring _txt = null;
+	string _txt = null;
 	int _width = 100;
 	StatusBar _parent = null;
 	WPARAM _utype = 0; // StatusBarPanelBorderStyle.SUNKEN.
@@ -286,7 +290,7 @@ class StatusBar: ControlSuperClass // docmain
 		{
 			assert(sb.lpanels is null);
 		}
-		body
+		do
 		{
 			this.sb = sb;
 		}
@@ -327,19 +331,9 @@ class StatusBar: ControlSuperClass // docmain
 		{
 			assert(isHandleCreated);
 			
-			if(dfl.internal.utf.useUnicode)
+			foreach(idx, pnl; _panels)
 			{
-				foreach(idx, pnl; _panels)
-				{
-					sb.prevwproc(SB_SETTEXTW, cast(WPARAM)idx | pnl._utype, cast(LPARAM)dfl.internal.utf.toUnicodez(pnl._txt));
-				}
-			}
-			else
-			{
-				foreach(idx, pnl; _panels)
-				{
-					sb.prevwproc(SB_SETTEXTA, cast(WPARAM)idx | pnl._utype, cast(LPARAM)dfl.internal.utf.toAnsiz(pnl._txt));
-				}
+				sb.prevwproc(SB_SETTEXTA, cast(WPARAM)idx | pnl._utype, cast(LPARAM)pnl._txt.ptr);
 			}
 		}
 		
@@ -499,7 +493,7 @@ class StatusBar: ControlSuperClass // docmain
 	}
 	
 	
-	override @property void text(Dstring txt) // setter
+	override @property void text(string txt) // setter
 	{
 		if(isHandleCreated && !showPanels)
 		{
@@ -512,7 +506,7 @@ class StatusBar: ControlSuperClass // docmain
 	}
 	
 	/// ditto
-	override @property Dstring text() // getter
+	override @property string text() // getter
 	{
 		return this._simpletext;
 	}
@@ -548,7 +542,7 @@ class StatusBar: ControlSuperClass // docmain
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(statusbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(statusbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(statusbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -581,7 +575,7 @@ class StatusBar: ControlSuperClass // docmain
 	private:
 	
 	StatusBarPanelCollection lpanels;
-	Dstring _simpletext = null;
+	string _simpletext = null;
 	bool _issimple = true;
 	
 	
@@ -591,18 +585,15 @@ class StatusBar: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(statusbarPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(statusbarPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(statusbarPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 	
 	
-	void _sendidxtext(int idx, WPARAM utype, Dstring txt)
+	void _sendidxtext(int idx, WPARAM utype, string txt)
 	{
 		assert(isHandleCreated);
 		
-		if(dfl.internal.utf.useUnicode)
-			prevwproc(SB_SETTEXTW, cast(WPARAM)idx | utype, cast(LPARAM)dfl.internal.utf.toUnicodez(txt));
-		else
-			prevwproc(SB_SETTEXTA, cast(WPARAM)idx | utype, cast(LPARAM)dfl.internal.utf.toAnsiz(txt));
+		prevwproc(SB_SETTEXTA, cast(WPARAM)idx | utype, cast(LPARAM)txt.ptr);
 	}
 }
 

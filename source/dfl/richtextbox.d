@@ -1,13 +1,22 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.richtextbox;
 
-private import dfl.textbox, dfl.internal.winapi, dfl.event, dfl.application;
-private import dfl.base, dfl.drawing, dfl.data;
-private import dfl.control, dfl.internal.utf, dfl.internal.dlib;
+private import dfl.textbox;
+private import dfl.event;
+private import dfl.application;
+private import dfl.base;
+private import dfl.drawing;
+private import dfl.data;
+private import dfl.control;
+
+private import core.sys.windows.richedit;
+private import core.sys.windows.windows;
+
+private import core.stdc.string : strcpy;
+private import std.conv : to;
 
 version(DFL_NO_MENUS)
 {
@@ -18,31 +27,40 @@ else
 }
 
 
-private extern(C) char* strcpy(char*, char*);
+//private extern(C) char* strcpy(char*, char*); // Unnecessary, available in core.stdc
 
 
 private extern(Windows) void _initRichtextbox();
+
+private {
+	// Magic numbers because for some reason they are not in core.sys.windows.richedit
+	enum CFM_BACKCOLOR = 0x04000000;
+    enum CFE_AUTOBACKCOLOR = CFM_BACKCOLOR;
+    enum CFM_UNDERLINETYPE = 0x00800000;
+	enum CFM_WEIGHT = 0x00400000;
+    enum CFU_UNDERLINE = 1;
+}
 
 
 ///
 class LinkClickedEventArgs: EventArgs
 {
 	///
-	this(Dstring linkText)
+	this(string linkText)
 	{
 		_linktxt = linkText;
 	}
 	
 	
 	///
-	final @property Dstring linkText() // getter
+	final @property string linkText() // getter
 	{
 		return _linktxt;
 	}
 	
 	
 	private:
-	Dstring _linktxt;
+	string _linktxt;
 }
 
 
@@ -80,11 +98,11 @@ class RichTextBox: TextBoxBase // docmain
 			with(miredo = new MenuItem)
 			{
 				text = "&Redo";
-				click ~= &menuRedo;
+				click.addHandler(&menuRedo);
 				contextMenu.menuItems.insert(1, miredo);
 			}
 			
-			contextMenu.popup ~= &menuPopup2;
+			contextMenu.popup.addHandler(&menuPopup2);
 		}
 	}
 	
@@ -121,19 +139,20 @@ class RichTextBox: TextBoxBase // docmain
 	alias TextBoxBase.cursor cursor; // Overload.
 	
 	
-	override @property Dstring selectedText() // getter
+	override @property string selectedText() // getter
 	{
 		if(created)
 		{
 			/+
 			uint len = selectionLength + 1;
-			Dstring result = new char[len];
+			string result = new char[len];
 			len = SendMessageA(handle, EM_GETSELTEXT, 0, cast(LPARAM)cast(char*)result);
 			assert(!result[len]);
 			return result[0 .. len];
 			+/
-			
-			return dfl.internal.utf.emGetSelText(hwnd, selectionLength + 1);
+			char[] buf = new char[selectionLength];
+			SendMessageA(hwnd, EM_GETSELTEXT, 0, cast(long)buf.ptr);
+			return to!string(buf);
 		}
 		return null;
 	}
@@ -585,8 +604,7 @@ class RichTextBox: TextBoxBase // docmain
 					lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 				}
 				//return new Font(Font._create(&lf));
-				LogFont _lf;
-				Font.LOGFONTAtoLogFont(_lf, &lf);
+				LOGFONTA _lf;
 				return new Font(Font._create(_lf));
 			}
 		}
@@ -748,11 +766,11 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		//SendMessageA(handle, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
 		//CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
-		dfl.internal.utf.callWindowProc(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
+		CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
 	}
 	
 	
@@ -761,7 +779,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		/+
 		//if(!SendMessageA(handle, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
@@ -769,25 +787,25 @@ class RichTextBox: TextBoxBase // docmain
 		if(!dfl.internal.utf.callWindowProc(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
 			throw new DflException("Unable to set text formatting");
 		+/
-		dfl.internal.utf.callWindowProc(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf);
+		CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf);
 	}
 	
 	
 	private struct _StreamStr
 	{
-		Dstring str;
+		string str;
 	}
 	
 	
 	// Note: RTF should only be ASCII so no conversions are necessary.
 	// TODO: verify this; I'm not certain.
 	
-	private void _streamIn(UINT fmt, Dstring str)
+	private void _streamIn(UINT fmt, string str)
 	in
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		_StreamStr si;
 		EDITSTREAM es;
@@ -803,12 +821,12 @@ class RichTextBox: TextBoxBase // docmain
 	}
 	
 	
-	private Dstring _streamOut(UINT fmt)
+	private string _streamOut(UINT fmt)
 	in
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		_StreamStr so;
 		EDITSTREAM es;
@@ -823,26 +841,26 @@ class RichTextBox: TextBoxBase // docmain
 	
 	
 	///
-	final @property void selectedRtf(Dstring rtf) // setter
+	final @property void selectedRtf(string rtf) // setter
 	{
 		_streamIn(SF_RTF | SFF_SELECTION, rtf);
 	}
 	
 	/// ditto
-	final @property Dstring selectedRtf() // getter
+	final @property string selectedRtf() // getter
 	{
 		return _streamOut(SF_RTF | SFF_SELECTION);
 	}
 	
 	
 	///
-	final @property void rtf(Dstring newRtf) // setter
+	final @property void rtf(string newRtf) // setter
 	{
 		_streamIn(SF_RTF, rtf);
 	}
 	
 	/// ditto
-	final @property Dstring rtf() // getter
+	final @property string rtf() // getter
 	{
 		return _streamOut(SF_RTF);
 	}
@@ -885,7 +903,7 @@ class RichTextBox: TextBoxBase // docmain
 		/+ // TextBoxBase.createHandle() does this.
 		if(!isHandleCreated)
 		{
-			Dstring txt;
+			string txt;
 			txt = wtext;
 			
 			super.createHandle();
@@ -920,14 +938,14 @@ class RichTextBox: TextBoxBase // docmain
 	}
 	
 	
-	private Dstring _getRange(LONG min, LONG max)
+	private string _getRange(LONG min, LONG max)
 	in
 	{
 		assert(created);
 		assert(max >= 0);
 		assert(max >= min);
 	}
-	body
+	do
 	{
 		if(min == max)
 			return null;
@@ -938,19 +956,12 @@ class RichTextBox: TextBoxBase // docmain
 		tr.chrg.cpMin = min;
 		tr.chrg.cpMax = max;
 		max = max - min + 1;
-		if(dfl.internal.utf.useUnicode)
-			max = cast(uint)max << 1;
 		s = new char[max];
 		tr.lpstrText = s.ptr;
 		
 		//max = SendMessageA(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
-		max = cast(int)dfl.internal.utf.sendMessage(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
-		Dstring result;
-		if(dfl.internal.utf.useUnicode)
-			result = fromUnicode(cast(wchar*)s.ptr, max);
-		else
-			result = fromAnsi(s.ptr, max);
-		return result;
+		max = cast(int)SendMessageA(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
+		return to!string(s.dup);
 	}
 	
 	
@@ -1018,8 +1029,8 @@ class RichTextBox: TextBoxBase // docmain
 	bool autoUrl = true;
 }
 
-
-private extern(Windows) DWORD _streamingInStr(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) nothrow
+// Notice: since we're only minding x64 right now, ulong would be fine, but it's probably better to make it size_t
+private extern(Windows) DWORD _streamingInStr(size_t dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) nothrow
 {
 	RichTextBox._StreamStr* si;
 	si = cast(typeof(si))dwCookie;
@@ -1045,13 +1056,12 @@ private extern(Windows) DWORD _streamingInStr(DWORD dwCookie, LPBYTE pbBuff, LON
 	return 0;
 }
 
-
-private extern(Windows) DWORD _streamingOutStr(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) nothrow
+private extern(Windows) DWORD _streamingOutStr(size_t dwCookie, LPBYTE pbBuff, LONG cb, LONG* pcb) nothrow
 {
 	RichTextBox._StreamStr* so;
 	so = cast(typeof(so))dwCookie;
 	
-	so.str ~= cast(Dstring)pbBuff[0 .. cb];
+	so.str ~= cast(string)pbBuff[0 .. cb];
 	*pcb = cb;
 	
 	return 0;

@@ -21,6 +21,7 @@
 
 module dfl.internal.dlib;
 
+private static import std.algorithm;
 
 alias typeof(""c[]) Dstring;
 alias typeof(""c.ptr) Dstringz;
@@ -38,94 +39,6 @@ version(D_Version2)
 	version = DFL_D2;
 	version = DFL_D2_AND_ABOVE;
 }
-else version(D_Version3)
-{
-	version = DFL_D3;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else version(D_Version4)
-{
-	version = DFL_D4;
-	version = DFL_D4_AND_ABOVE;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else
-{
-	version = DFL_D1;
-}
-//version = DFL_D1_AND_ABOVE;
-
-
-version(DFL_D1)
-{
-	public import dfl.internal.d1;
-}
-else
-{
-	public import dfl.internal.d2;
-}
-
-
-version(DFL_D1)
-{
-	version(DFL_USE_CORE_MEMORY)
-	{
-	}
-	else
-	{
-		version = DFL_NO_USE_CORE_MEMORY;
-		version = _DFL_NO_USE_CORE_EXCEPTION_OUTOFMEMORY_EXCEPTION;
-	}
-	
-	version(DFL_CONV_TO_TEMPLATE)
-	{
-	}
-	else
-	{
-		version = DFL_NO_CONV_TO_TEMPLATE;
-	}
-}
-
-
-version(DFL_D2_AND_ABOVE)
-{
-	version(DFL_beforeDMD2020)
-	{
-		version = DFL_NO_USE_CORE_MEMORY;
-		version = _DFL_NO_USE_CORE_EXCEPTION_OUTOFMEMORY_EXCEPTION;
-		version = _DFL_NO_USE_CORE_EXCEPTION_OUTOFMEMORY_ERROR;
-		
-		version = DFL_beforeDMD2021;
-		version = DFL_beforeDMD2029;
-	}
-	
-	version(DFL_beforeDMD2021)
-	{
-		version = _DFL_NO_USE_CORE_EXCEPTION_OUTOFMEMORY_ERROR;
-		
-		version = DFL_beforeDMD2029;
-	}
-	
-	version(DFL_beforeDMD2029)
-	{
-		version(DFL_CONV_TO_TEMPLATE)
-		{
-		}
-		else
-		{
-			version = DFL_NO_CONV_TO_TEMPLATE;
-		}
-	}
-}
-
-
-version(DFL_NO_USE_CORE_MEMORY)
-{
-	version = _DFL_NO_USE_CORE_EXCEPTION_OUTOFMEMORY_EXCEPTION;
-}
-
 
 public import std.traits;
 
@@ -138,20 +51,6 @@ Dstring getObjectString(Object o)
 	return o.toString();
 }
 
-
-version(DFL_NO_USE_CORE_MEMORY)
-{
-	private import std.gc; // If you get "module gc cannot read file 'core\memory.d'" then use -version=DFL_NO_USE_CORE_MEMORY <http://wiki.dprogramming.com/Dfl/CompileVersions>
-	
-	void gcPin(void* p) { }
-	void gcUnpin(void* p) { }
-	
-	deprecated alias std.gc.genCollect gcGenCollect;
-	
-	alias std.gc.fullCollect gcFullCollect;
-}
-else
-{
 	private import core.memory; // If you get "module gc cannot read file 'std\gc.d'" then use -version=DFL_USE_CORE_MEMORY <http://wiki.dprogramming.com/Dfl/CompileVersions>
 	
 	void gcPin(void* p) { }
@@ -172,7 +71,6 @@ else
 			{
 			}
 		}
-	}
 
 
 private import std.string;
@@ -329,13 +227,13 @@ private import std.ascii;
 alias std.ascii.isHexDigit charIsHexDigit;
 
 
-private import std.stream;
+private import undead.stream;
 
-alias std.stream.Stream DStream;
+alias undead.stream.Stream DStream;
 
-alias std.stream.OutputStream DOutputStream;
+alias undead.stream.OutputStream DOutputStream;
 
-alias std.stream.StreamException DStreamException;
+alias undead.stream.StreamException DStreamException;
 
 
 alias Object DObject;

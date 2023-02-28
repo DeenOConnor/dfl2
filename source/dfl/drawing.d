@@ -1,14 +1,23 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.drawing;
 
-private import dfl.internal.dlib;
+private import dfl.base;
+private import dfl.internal.com;
 
-private import dfl.internal.winapi, dfl.base, dfl.internal.utf, dfl.internal.com,
-	dfl.internal.wincom;
+// Need to fix all errors about LogFont
+// private import dfl.internal.utf;
+
+private import core.sys.windows.com;
+private import core.sys.windows.objidl;
+private import core.sys.windows.ocidl;
+private import core.sys.windows.olectl;
+private import core.sys.windows.windows;
+private import core.sys.windows.wingdi;
+
+private import std.conv : to;
 
 
 version(D_Version2)
@@ -35,6 +44,9 @@ else
 }
 //version = DFL_D1_AND_ABOVE;
 
+private int MAP_LOGHIM_TO_PIX(int x, int longpixels) {
+	return MulDiv(x, longpixels, 2540);
+}
 
 /// X and Y coordinate.
 struct Point // docmain
@@ -61,13 +73,13 @@ struct Point // docmain
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
-		const Dequ opEquals(ref ConstType!(Point) pt)
+		const bool opEquals(ref const(Point) pt)
 		{
 			return x == pt.x && y == pt.y;
 		}
 		
 		/// ditto
-		const Dequ opEquals(Point pt)
+		const bool opEquals(Point pt)
 		{
 			return x == pt.x && y == pt.y;
 		}
@@ -75,7 +87,7 @@ struct Point // docmain
 	else
 	{
 		///
-		Dequ opEquals(Point pt)
+		bool opEquals(Point pt)
 		{
 			return x == pt.x && y == pt.y;
 		}
@@ -160,13 +172,13 @@ struct Size // docmain
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
-		const Dequ opEquals(ref ConstType!(Size) sz)
+		const bool opEquals(ref const(Size) sz)
 		{
 			return width == sz.width && height == sz.height;
 		}
 		
 		/// ditto
-		const Dequ opEquals(Size sz)
+		const bool opEquals(Size sz)
 		{
 			return width == sz.width && height == sz.height;
 		}
@@ -174,7 +186,7 @@ struct Size // docmain
 	else
 	{
 		///
-		Dequ opEquals(Size sz)
+		bool opEquals(Size sz)
 		{
 			return width == sz.width && height == sz.height;
 		}
@@ -332,14 +344,14 @@ struct Rect // docmain
 	version(DFL_D2_AND_ABOVE)
 	{
 		///
-		const Dequ opEquals(ref ConstType!(Rect) r)
+		const bool opEquals(ref const(Rect) r)
 		{
 			return x == r.x && y == r.y &&
 				width == r.width && height == r.height;
 		}
 		
 		/// ditto
-		const Dequ opEquals(Rect r)
+		const bool opEquals(Rect r)
 		{
 			return x == r.x && y == r.y &&
 				width == r.width && height == r.height;
@@ -348,7 +360,7 @@ struct Rect // docmain
 	else
 	{
 		///
-		Dequ opEquals(Rect r)
+		bool opEquals(Rect r)
 		{
 			return x == r.x && y == r.y &&
 				width == r.width && height == r.height;
@@ -526,7 +538,7 @@ struct Color // docmain
 	
 	
 	Color* Dthisptr(Color* t) pure nothrow { return t; }
-	Color* Dthisptr(ref Color t) pure nothrow { return &t; }
+	Color* Dthisptr(ref return Color t) pure nothrow { return &t; }
 	Color Dthisval(Color* t) pure nothrow { return *t; }
 	Color Dthisval(Color t) pure nothrow { return t; }
 	
@@ -888,31 +900,31 @@ class SystemIcons // docmain
 	///
 	@property Icon application() // getter
 	{
-		return new Icon(LoadIconA(null, IDI_APPLICATION), false);
+		return new Icon(LoadIconW(null, IDI_APPLICATION), false);
 	}
 	
 	/// ditto
 	@property Icon error() // getter
 	{
-		return new Icon(LoadIconA(null, IDI_HAND), false);
+		return new Icon(LoadIconW(null, IDI_HAND), false);
 	}
 	
 	/// ditto
 	@property Icon question() // getter
 	{
-		return new Icon(LoadIconA(null, IDI_QUESTION), false);
+		return new Icon(LoadIconW(null, IDI_QUESTION), false);
 	}
 	
 	/// ditto
 	@property Icon warning() // getter
 	{
-		return new Icon(LoadIconA(null, IDI_EXCLAMATION), false);
+		return new Icon(LoadIconW(null, IDI_EXCLAMATION), false);
 	}
 	
 	/// ditto
 	@property Icon information() // getter
 	{
-		return new Icon(LoadIconA(null, IDI_INFORMATION), false);
+		return new Icon(LoadIconW(null, IDI_INFORMATION), false);
 	}
 }
 
@@ -968,7 +980,7 @@ abstract class Image // docmain
 	
 	
 	/+
-	static Image fromFile(Dstring file)
+	static Image fromFile(string file)
 	{
 		return new Image(LoadImageA());
 	}
@@ -1013,9 +1025,9 @@ class Bitmap: Image // docmain
 {
 	///
 	// Load from a bmp file.
-	this(Dstring fileName)
+	this(string fileName)
 	{
-		this.hbm = cast(HBITMAP)dfl.internal.utf.loadImage(null, fileName, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		this.hbm = cast(HBITMAP)LoadImageA(null, fileName.ptr, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 		if(!this.hbm)
 			throw new DflException("Unable to load bitmap from file '" ~ fileName ~ "'");
 	}
@@ -1178,16 +1190,18 @@ class Picture: Image // docmain
 	
 	///
 	// Throws exception on failure.
-	this(DStream stm)
+	/*
+	this(Stream stm)
 	{
 		this.ipic = _fromDStream(stm);
 		if(!this.ipic)
 			throw new DflException("Unable to load picture from stream");
 	}
+	*/
 	
 	/// ditto
 	// Throws exception on failure.
-	this(Dstring fileName)
+	this(string fileName)
 	{
 		this.ipic = _fromFileName(fileName);
 		if(!this.ipic)
@@ -1204,7 +1218,7 @@ class Picture: Image // docmain
 	}
 	
 	
-	private this(dfl.internal.wincom.IPicture ipic)
+	private this(IPicture ipic)
 	{
 		this.ipic = ipic;
 	}
@@ -1212,18 +1226,20 @@ class Picture: Image // docmain
 	
 	///
 	// Returns null on failure instead of throwing exception.
-	static Picture fromStream(DStream stm)
+	/*
+	static Picture fromStream(Stream stm)
 	{
 		auto ipic = _fromDStream(stm);
 		if(!ipic)
 			return null;
 		return new Picture(ipic);
 	}
+	*/
 	
 	
 	///
 	// Returns null on failure instead of throwing exception.
-	static Picture fromFile(Dstring fileName)
+	static Picture fromFile(string fileName)
 	{
 		auto ipic = _fromFileName(fileName);
 		if(!ipic)
@@ -1470,13 +1486,13 @@ class Picture: Image // docmain
 	
 	
 	private:
-	dfl.internal.wincom.IPicture ipic = null;
+	IPicture ipic = null;
 	
 	
-	static dfl.internal.wincom.IPicture _fromIStream(dfl.internal.wincom.IStream istm)
+	static IPicture _fromIStream(IStream istm)
 	{
-		dfl.internal.wincom.IPicture ipic;
-		switch(OleLoadPicture(istm, 0, FALSE, &_IID_IPicture, cast(void**)&ipic))
+		IPicture ipic;
+		switch(OleLoadPicture(istm, 0, FALSE, &IID_IPicture, cast(void**)&ipic))
 		{
 			case S_OK:
 				return ipic;
@@ -1505,29 +1521,30 @@ class Picture: Image // docmain
 		return null;
 	}
 	
-	
-	static dfl.internal.wincom.IPicture _fromDStream(DStream stm)
+	/*
+	static IPicture _fromDStream(Stream stm)
 	in
 	{
 		assert(stm !is null);
 	}
-	body
+	do
 	{
 		scope DStreamToIStream istm = new DStreamToIStream(stm);
 		return _fromIStream(istm);
 	}
+	*/
 	
 	
-	static dfl.internal.wincom.IPicture _fromFileName(Dstring fileName)
+	static IPicture _fromFileName(string fileName)
 	{
-		alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
+		// alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
 		
 		HANDLE hf;
 		HANDLE hg;
 		void* pg;
 		DWORD dwsz, dw;
 		
-		hf = dfl.internal.utf.createFile(fileName, GENERIC_READ, FILE_SHARE_READ, null,
+		hf = CreateFileA(fileName.ptr, GENERIC_READ, FILE_SHARE_READ, null,
 			OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null);
 		if(!hf)
 			return null;
@@ -1564,7 +1581,7 @@ class Picture: Image // docmain
 		GlobalUnlock(hg);
 		
 		IStream istm;
-		dfl.internal.wincom.IPicture ipic;
+		IPicture ipic;
 		
 		if(S_OK != CreateStreamOnHGlobal(hg, TRUE, &istm))
 		{
@@ -1579,7 +1596,7 @@ class Picture: Image // docmain
 	}
 	
 	
-	static dfl.internal.wincom.IPicture _fromMemory(void[] mem)
+	static IPicture _fromMemory(void[] mem)
 	{
 		return _fromIStream(new MemoryIStream(mem));
 	}
@@ -2376,7 +2393,7 @@ class Graphics // docmain
 	// Windows 95/98/Me limits -text- to 8192 characters.
 	
 	///
-	final void drawText(Dstring text, Font font, Color color, Rect r, TextFormat fmt)
+	final void drawText(string text, Font font, Color color, Rect r, TextFormat fmt)
 	{
 		// Should SaveDC/RestoreDC be used instead?
 		
@@ -2390,7 +2407,7 @@ class Graphics // docmain
 		
 		RECT rect;
 		r.getRect(&rect);
-		dfl.internal.utf.drawTextEx(hdc, text, &rect, DT_EXPANDTABS | DT_TABSTOP |
+		DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
 			fmt._trim | fmt._flags | fmt._align, &fmt._params);
 		
 		// Reset stuff.
@@ -2403,14 +2420,14 @@ class Graphics // docmain
 	}
 	
 	/// ditto
-	final void drawText(Dstring text, Font font, Color color, Rect r)
+	final void drawText(string text, Font font, Color color, Rect r)
 	{
 		return drawText(text, font, color, r, getCachedTextFormat());
 	}
 	
 	
 	///
-	final void drawTextDisabled(Dstring text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
+	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
 	{
 		r.offset(1, 1);
 		//drawText(text, font, Color(24, color).solidColor(backColor), r, fmt); // Lighter, lower one.
@@ -2421,14 +2438,14 @@ class Graphics // docmain
 	}
 	
 	/// ditto
-	final void drawTextDisabled(Dstring text, Font font, Color color, Color backColor, Rect r)
+	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r)
 	{
 		return drawTextDisabled(text, font, color, backColor, r, getCachedTextFormat());
 	}
 	
 	
 	/+
-	final Size measureText(Dstring text, Font font)
+	final Size measureText(string text, Font font)
 	{
 		SIZE sz;
 		HFONT prevFont;
@@ -2449,7 +2466,7 @@ class Graphics // docmain
 	
 	
 	///
-	final Size measureText(Dstring text, Font font, int maxWidth, TextFormat fmt)
+	final Size measureText(string text, Font font, int maxWidth, TextFormat fmt)
 	{
 		RECT rect;
 		HFONT prevFont;
@@ -2461,7 +2478,7 @@ class Graphics // docmain
 		
 		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
 		
-		if(!dfl.internal.utf.drawTextEx(hdc, text, &rect, DT_EXPANDTABS | DT_TABSTOP |
+		if(!DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
 			fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_NOCLIP, &fmt._params))
 		{
 			//throw new DflException("Text measure error");
@@ -2478,19 +2495,19 @@ class Graphics // docmain
 	}
 	
 	/// ditto
-	final Size measureText(Dstring text, Font font, TextFormat fmt)
+	final Size measureText(string text, Font font, TextFormat fmt)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, fmt);
 	}
 	
 	/// ditto
-	final Size measureText(Dstring text, Font font, int maxWidth)
+	final Size measureText(string text, Font font, int maxWidth)
 	{
 		return measureText(text, font, maxWidth, getCachedTextFormat());
 	}
 	
 	/// ditto
-	final Size measureText(Dstring text, Font font)
+	final Size measureText(string text, Font font)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, getCachedTextFormat());
 	}
@@ -2499,7 +2516,7 @@ class Graphics // docmain
 	/+
 	// Doesn't work... dfl.internal.utf.drawTextEx uses a different buffer!
 	// ///
-	final Dstring getTrimmedText(Dstring text, Font font, Rect r, TextFormat fmt) // deprecated
+	final string getTrimmedText(string text, Font font, Rect r, TextFormat fmt) // deprecated
 	{
 		switch(fmt.trimming)
 		{
@@ -2542,7 +2559,7 @@ class Graphics // docmain
 	}
 	
 	// ///
-	final Dstring getTrimmedText(Dstring text, Font font, Rect r, TextTrimming trim)
+	final string getTrimmedText(string text, Font font, Rect r, TextTrimming trim)
 	{
 		scope fmt = new TextFormat(TextFormatFlags.NO_PREFIX | TextFormatFlags.WORD_BREAK |
 			TextFormatFlags.NO_CLIP | TextFormatFlags.LINE_LIMIT);
@@ -2836,7 +2853,7 @@ class Graphics // docmain
 		prevPen = SelectObject(hdc, pen.handle);
 		prevBrush = SelectObject(hdc, cast(HBRUSH)GetStockObject(NULL_BRUSH)); // Don't fill it in.
 		
-		dfl.internal.winapi.Rectangle(hdc, x, y, x + width, y + height);
+		Rectangle(hdc, x, y, x + width, y + height);
 		
 		// Reset stuff.
 		SelectObject(hdc, prevPen);
@@ -2869,7 +2886,7 @@ class Graphics // docmain
 		
 		foreach(ref Rect r; rs)
 		{
-			dfl.internal.winapi.Rectangle(hdc, r.x, r.y, r.x + r.width, r.y + r.height);
+			Rectangle(hdc, r.x, r.y, r.x + r.width, r.y + r.height);
 		}
 		
 		// Reset stuff.
@@ -2923,7 +2940,7 @@ class Graphics // docmain
 	
 	final bool copyTo(HDC dest, int destX, int destY, int width, int height, int srcX = 0, int srcY = 0, DWORD rop = SRCCOPY) // package
 	{
-		return cast(bool)dfl.internal.winapi.BitBlt(dest, destX, destY, width, height, this.handle, srcX, srcY, rop);
+		return cast(bool)BitBlt(dest, destX, destY, width, height, this.handle, srcX, srcY, rop);
 	}
 	
 	
@@ -3159,9 +3176,9 @@ class Icon: Image // docmain
 	
 	///
 	// Load from an ico file.
-	this(Dstring fileName)
+	this(string fileName)
 	{
-		this.hi = cast(HICON)dfl.internal.utf.loadImage(null, fileName, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+		this.hi = cast(HICON)LoadImageA(null, fileName.ptr, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
 		if(!this.hi)
 			throw new DflException("Unable to load icon from file '" ~ fileName ~ "'");
 	}
@@ -3353,19 +3370,19 @@ class FontFamily
 	+/
 	
 	
-	this(Dstring name)
+	this(string name)
 	{
 		
 	}
 	
 	
-	this(Dstring name, FontCollection fontCollection)
+	this(string name, FontCollection fontCollection)
 	{
 		
 	}
 	
 	
-	final @property Dstring name() // getter
+	final @property string name() // getter
 	{
 		
 	}
@@ -3425,7 +3442,9 @@ enum FontSmoothing
 ///
 class Font // docmain
 {
+	// TODO : Get rid of this wrapper stuff and leave only LOGFONTW
 	// Used internally.
+	/*
 	static void LOGFONTAtoLogFont(ref LogFont lf, LOGFONTA* plfa) // package // deprecated
 	{
 		lf.lfa = *plfa;
@@ -3438,14 +3457,12 @@ class Font // docmain
 		lf.lfw = *plfw;
 		lf.faceName = dfl.internal.utf.fromUnicodez(plfw.lfFaceName.ptr);
 	}
+	*/
 	
 	
 	// Used internally.
-	this(HFONT hf, LOGFONTA* plfa, bool owned = true) // package // deprecated
+	this(HFONT hf, ref LOGFONTA lf, bool owned = true) // package // deprecated
 	{
-		LogFont lf;
-		LOGFONTAtoLogFont(lf, plfa);
-		
 		this.hf = hf;
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
@@ -3454,7 +3471,7 @@ class Font // docmain
 		_initLf(lf);
 	}
 	
-	
+	/*
 	// Used internally.
 	this(HFONT hf, ref LogFont lf, bool owned = true) // package
 	{
@@ -3465,6 +3482,7 @@ class Font // docmain
 		_fstyle = _style(lf);
 		_initLf(lf);
 	}
+	*/
 	
 	
 	// Used internally.
@@ -3474,7 +3492,7 @@ class Font // docmain
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
 		
-		LogFont lf;
+		LOGFONTA lf;
 		_info(lf);
 		
 		_fstyle = _style(lf);
@@ -3483,52 +3501,51 @@ class Font // docmain
 	
 	
 	// Used internally.
-	this(LOGFONTA* plfa, bool owned = true) // package // deprecated
-	{
-		LogFont lf;
-		LOGFONTAtoLogFont(lf, plfa);
-		
+	this(ref LOGFONTA lf, bool owned = true) // package // deprecated
+	{		
 		this(_create(lf), lf, owned);
 	}
 	
 	
+	/*
 	// Used internally.
 	this(ref LogFont lf, bool owned = true) // package
 	{
 		this(_create(lf), lf, owned);
 	}
+	*/
 	
 	
-	package static HFONT _create(ref LogFont lf)
+	package static HFONT _create(ref LOGFONTA lf)
 	{
 		HFONT result;
-		result = dfl.internal.utf.createFontIndirect(lf);
+		result = CreateFontIndirectA(&lf);
 		if(!result)
 			throw new DflException("Unable to create font");
 		return result;
 	}
 	
 	
-	private static void _style(ref LogFont lf, FontStyle style)
+	private static void _style(ref LOGFONTA lf, FontStyle style)
 	{
-		lf.lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
-		lf.lf.lfItalic = (style & FontStyle.ITALIC) ? TRUE : FALSE;
-		lf.lf.lfUnderline = (style & FontStyle.UNDERLINE) ? TRUE : FALSE;
-		lf.lf.lfStrikeOut = (style & FontStyle.STRIKEOUT) ? TRUE : FALSE;
+		lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
+		lf.lfItalic = (style & FontStyle.ITALIC) ? TRUE : FALSE;
+		lf.lfUnderline = (style & FontStyle.UNDERLINE) ? TRUE : FALSE;
+		lf.lfStrikeOut = (style & FontStyle.STRIKEOUT) ? TRUE : FALSE;
 	}
 	
 	
-	private static FontStyle _style(ref LogFont lf)
+	private static FontStyle _style(ref LOGFONTA lf)
 	{
 		FontStyle style = FontStyle.REGULAR;
 		
-		if(lf.lf.lfWeight >= FW_BOLD)
+		if(lf.lfWeight >= FW_BOLD)
 			style |= FontStyle.BOLD;
-		if(lf.lf.lfItalic)
+		if(lf.lfItalic)
 			style |= FontStyle.ITALIC;
-		if(lf.lf.lfUnderline)
+		if(lf.lfUnderline)
 			style |= FontStyle.UNDERLINE;
-		if(lf.lf.lfStrikeOut)
+		if(lf.lfStrikeOut)
 			style |= FontStyle.STRIKEOUT;
 		
 		return style;
@@ -3543,16 +3560,16 @@ class Font // docmain
 	
 	package void _info(LOGFONTW* lf) // deprecated
 	{
-		auto proc = cast(GetObjectWProc)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetObjectW");
+		//auto proc = cast(GetObjectWProc)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetObjectW"); // GetObjectW exists in D's GDI - D.O
 		
-		if(!proc || proc(hf, LOGFONTW.sizeof, lf) != LOGFONTW.sizeof)
+		if(GetObjectW(hf, LOGFONTW.sizeof, lf) != LOGFONTW.sizeof)
 			throw new DflException("Unable to get font information");
 	}
 	
 	
-	package void _info(ref LogFont lf)
+	package void _info(ref LOGFONTA lf)
 	{
-		if(!dfl.internal.utf.getLogFont(hf, lf))
+		if(GetObjectA(hf, LOGFONTA.sizeof, &lf) != LOGFONTA.sizeof)
 			throw new DflException("Unable to get font information");
 	}
 	
@@ -3670,7 +3687,7 @@ class Font // docmain
 	///
 	this(Font font, FontStyle style)
 	{
-		LogFont lf;
+		LOGFONTA lf;
 		_unit = font._unit;
 		font._info(lf);
 		_style(lf, style);
@@ -3681,14 +3698,14 @@ class Font // docmain
 	}
 	
 	/// ditto
-	this(Dstring name, float emSize, GraphicsUnit unit)
+	this(string name, float emSize, GraphicsUnit unit)
 	{
 		this(name, emSize, FontStyle.REGULAR, unit);
 	}
 	
 	
 	/// ditto
-	this(Dstring name, float emSize, FontStyle style = FontStyle.REGULAR,
+	this(string name, float emSize, FontStyle style = FontStyle.REGULAR,
 		GraphicsUnit unit = GraphicsUnit.POINT)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, FontSmoothing.DEFAULT);
@@ -3696,7 +3713,7 @@ class Font // docmain
 	
 	
 	/// ditto
-	this(Dstring name, float emSize, FontStyle style,
+	this(string name, float emSize, FontStyle style,
 		GraphicsUnit unit, FontSmoothing smoothing)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, smoothing);
@@ -3705,29 +3722,29 @@ class Font // docmain
 	// /// ditto
 	// This is a somewhat internal function.
 	// -gdiCharSet- is one of *_CHARSET from wingdi.h
-	this(Dstring name, float emSize, FontStyle style,
+	this(string name, float emSize, FontStyle style,
 		GraphicsUnit unit, ubyte gdiCharSet,
 		FontSmoothing smoothing = FontSmoothing.DEFAULT)
 	{
-		LogFont lf;
+		LOGFONTA lf;
 		
-		lf.faceName = name;
-		lf.lf.lfCharSet = gdiCharSet;
-		lf.lf.lfQuality = cast(BYTE)smoothing;
-		lf.lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-		lf.lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-		lf.lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+		lf.lfFaceName = name;
+		lf.lfCharSet = gdiCharSet;
+		lf.lfQuality = cast(BYTE)smoothing;
+		lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+		lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 		
 		this(lf, emSize, style, unit);
 	}
 	
 	// /// ditto
 	// This is a somewhat internal function.
-	this(ref LogFont lf, float emSize, FontStyle style, GraphicsUnit unit)
+	this(ref LOGFONTA lf, float emSize, FontStyle style, GraphicsUnit unit)
 	{
 		_unit = unit;
 		
-		lf.lf.lfHeight = -getLfHeight(emSize, unit);
+		lf.lfHeight = -getLfHeight(emSize, unit);
 		_style(lf, style);
 		
 		this(_create(lf));
@@ -3796,7 +3813,7 @@ class Font // docmain
 	
 	
 	///
-	final @property Dstring name() // getter
+	final @property string name() // getter
 	{
 		return lfName;
 	}
@@ -3817,11 +3834,11 @@ class Font // docmain
 	}
 	+/
 	
-	private void _initLf(ref LogFont lf)
+	private void _initLf(ref LOGFONTA lf)
 	{
-		this.lfHeight = lf.lf.lfHeight;
-		this.lfName = lf.faceName;
-		this.lfCharSet = lf.lf.lfCharSet;
+		this.lfHeight = lf.lfHeight;
+		this.lfName = to!string(lf.lfFaceName.dup);
+		this.lfCharSet = lf.lfCharSet;
 	}
 	
 	
@@ -3834,7 +3851,7 @@ class Font // docmain
 	}
 	+/
 	
-	private void _initLf(Font otherfont, ref LogFont lf)
+	private void _initLf(Font otherfont, ref LOGFONTA lf)
 	{
 		this.lfHeight = otherfont.lfHeight;
 		this.lfName = otherfont.lfName;
@@ -3849,7 +3866,7 @@ class Font // docmain
 	FontStyle _fstyle;
 	
 	LONG lfHeight;
-	Dstring lfName;
+	string lfName;
 	ubyte lfCharSet;
 }
 
@@ -4075,7 +4092,7 @@ class Region // docmain
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
 		Region rgn = cast(Region)o;
 		if(!rgn)
@@ -4084,7 +4101,7 @@ class Region // docmain
 	}
 	
 	
-	Dequ opEquals(Region rgn)
+	bool opEquals(Region rgn)
 	{
 		return hrgn == rgn.hrgn;
 	}

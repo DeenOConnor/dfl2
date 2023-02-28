@@ -1,15 +1,21 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.commondialog;
 
-private import dfl.control, dfl.internal.winapi, dfl.base, dfl.drawing,
-	dfl.event;
+private import dfl.control;
+private import dfl.base;
+private import dfl.drawing;
+private import dfl.event;
 private import dfl.application;
 
-public import dfl.filedialog, dfl.folderdialog, dfl.colordialog, dfl.fontdialog;
+private import core.sys.windows.windows;
+
+public import dfl.filedialog;
+public import dfl.folderdialog;
+public import dfl.colordialog;
+public import dfl.fontdialog;
 
 
 ///
@@ -28,9 +34,6 @@ abstract class CommonDialog // docmain
 	
 	///
 	Event!(CommonDialog, HelpEventArgs) helpRequest;
-	
-	
-	protected:
 	
 	///
 	// See the CDN_* Windows notification messages.
@@ -62,6 +65,9 @@ abstract class CommonDialog // docmain
 		
 		return 0;
 	}
+	
+	
+	protected:
 	
 	
 	// TODO: implement.

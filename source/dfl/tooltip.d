@@ -1,15 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.tooltip;
 
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.control;
+private import dfl.base;
+private import dfl.application;
+private import dfl.internal.utf;
 
-private import dfl.control, dfl.base, dfl.application, dfl.internal.winapi,
-	dfl.internal.utf;
+private import core.memory : GC;
+private import core.exception : OutOfMemoryError;
+
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
 
 
 ///
@@ -160,9 +165,9 @@ class ToolTip // docmain
 	
 	///
 	// WARNING: possible buffer overflow.
-	final Dstring getToolTip(Control ctrl)
+	final string getToolTip(Control ctrl)
 	{
-		Dstring result;
+		string result;
 		TOOLINFOA tool;
 		tool.cbSize = TOOLINFOA.sizeof;
 		tool.uFlags = TTF_IDISHWND;
@@ -171,11 +176,11 @@ class ToolTip // docmain
 		
 		if(dfl.internal.utf.useUnicode)
 		{
-			tool.lpszText = cast(typeof(tool.lpszText))dfl.internal.clib.malloc((MAX_TIP_TEXT_LENGTH + 1) * wchar.sizeof);
+			tool.lpszText = cast(typeof(tool.lpszText))GC.malloc((MAX_TIP_TEXT_LENGTH + 1) * wchar.sizeof);
 			if(!tool.lpszText)
-				throw new OomException;
+				throw new OutOfMemoryError();
 			scope(exit)
-				dfl.internal.clib.free(tool.lpszText);
+				GC.free(tool.lpszText);
 			tool.lpszText[0 .. 2] = 0;
 			SendMessageA(hwtt, TTM_GETTEXTW, 0, cast(LPARAM)&tool);
 			if(!(cast(wchar*)tool.lpszText)[0])
@@ -185,11 +190,11 @@ class ToolTip // docmain
 		}
 		else
 		{
-			tool.lpszText = cast(typeof(tool.lpszText))dfl.internal.clib.malloc(MAX_TIP_TEXT_LENGTH + 1);
+			tool.lpszText = cast(typeof(tool.lpszText))GC.malloc(MAX_TIP_TEXT_LENGTH + 1);
 			if(!tool.lpszText)
-				throw new OomException;
+				throw new OutOfMemoryError();
 			scope(exit)
-				dfl.internal.clib.free(tool.lpszText);
+				GC.free(tool.lpszText);
 			tool.lpszText[0] = 0;
 			SendMessageA(hwtt, TTM_GETTEXTA, 0, cast(LPARAM)&tool);
 			if(!tool.lpszText[0])
@@ -201,20 +206,20 @@ class ToolTip // docmain
 	}
 	
 	/// ditto
-	final void setToolTip(Control ctrl, Dstring text)
+	final void setToolTip(Control ctrl, string text)
 	in
 	{
 		try
 		{
 			ctrl.createControl();
 		}
-		catch(DThrowable o)
+		catch(Throwable o)
 		{
 			assert(0); // If -ctrl- is a child, make sure the parent is set before setting tool tip text.
 			//throw o;
 		}
 	}
-	body
+	do
 	{
 		TOOLINFOA tool;
 		tool.cbSize = TOOLINFOA.sizeof;

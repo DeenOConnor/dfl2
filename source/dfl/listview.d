@@ -1,14 +1,21 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.listview;
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.base;
+private import dfl.control;
+private import dfl.application;
+private import dfl.event;
+private import dfl.drawing;
+private import dfl.collections;
 
-private import dfl.base, dfl.control, dfl.internal.winapi, dfl.application;
-private import dfl.event, dfl.drawing, dfl.collections, dfl.internal.utf;
+private import core.sys.windows.commctrl;
+private import core.sys.windows.windows;
+
+private import std.conv : to;
+private import std.string : icmp, fromStringz;
 
 version(DFL_NO_IMAGELIST)
 {
@@ -34,27 +41,23 @@ enum ListViewAlignment: ubyte
 
 private union CallText
 {
-	Dstringz ansi;
-	Dwstringz unicode;
+	immutable(char)* ansi;
+	immutable(wchar)* unicode;
 }
 
 
-private CallText getCallText(Dstring text)
+private CallText getCallText(string text)
 {
 	CallText result;
 	if(text is null)
 	{
-		if(useUnicode)
-			result.unicode = null;
-		else
-			result.ansi = null;
+		result.unicode = null;
+		result.ansi = null;
 	}
 	else
 	{
-		if(useUnicode)
-			result.unicode = toUnicodez(text);
-		else
-			result.ansi = toAnsiz(text);
+		result.unicode = to!wstring(text).ptr;
+		result.ansi = text.ptr;
 	}
 	return result;
 }
@@ -77,7 +80,7 @@ package union LvColumn
 
 
 ///
-class ListViewSubItem: DObject
+class ListViewSubItem: Object
 {
 	///
 	this()
@@ -86,7 +89,7 @@ class ListViewSubItem: DObject
 	}
 	
 	/// ditto
-	this(Dstring thisSubItemText)
+	this(string thisSubItemText)
 	{
 		this();
 		
@@ -94,7 +97,7 @@ class ListViewSubItem: DObject
 	}
 	
 	/// ditto
-	this(ListViewItem owner, Dstring thisSubItemText)
+	this(ListViewItem owner, string thisSubItemText)
 	{
 		this();
 		
@@ -114,26 +117,26 @@ class ListViewSubItem: DObject
 	+/
 	
 	
-	package final void settextin(Dstring newText)
+	package final void settextin(string newText)
 	{
 		calltxt = getCallText(newText);
 		_txt = newText;
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 	
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return text == val;
 	}
@@ -141,18 +144,18 @@ class ListViewSubItem: DObject
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 	
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
 	///
-	final @property void text(Dstring newText) // setter
+	final @property void text(string newText) // setter
 	{
 		settextin(newText);
 		
@@ -168,7 +171,7 @@ class ListViewSubItem: DObject
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		return _txt;
 	}
@@ -176,13 +179,13 @@ class ListViewSubItem: DObject
 	
 	private:
 	package ListViewItem _item;
-	Dstring _txt;
+	string _txt;
 	package CallText calltxt;
 }
 
 
 ///
-class ListViewItem: DObject
+class ListViewItem: Object
 {
 	///
 	static class ListViewSubItemCollection
@@ -192,7 +195,7 @@ class ListViewItem: DObject
 		{
 			assert(!owner.isubs);
 		}
-		body
+		do
 		{
 			_item = owner;
 		}
@@ -229,7 +232,7 @@ class ListViewItem: DObject
 	}
 	
 	/// ditto
-	this(Dstring text)
+	this(string text)
 	{
 		this();
 		
@@ -273,26 +276,26 @@ class ListViewItem: DObject
 	}
 	
 	
-	package final void settextin(Dstring newText)
+	package final void settextin(string newText)
 	{
 		calltxt = getCallText(newText);
 		_txt = newText;
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 	
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return text == val;
 	}
@@ -300,13 +303,13 @@ class ListViewItem: DObject
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 	
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
@@ -333,7 +336,7 @@ class ListViewItem: DObject
 	
 	
 	///
-	final @property void text(Dstring newText) // setter
+	final @property void text(string newText) // setter
 	{
 		settextin(newText);
 		
@@ -342,7 +345,7 @@ class ListViewItem: DObject
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		return _txt;
 	}
@@ -397,14 +400,7 @@ class ListViewItem: DObject
 	{
 		if(lview && lview.created)
 		{
-			if(dfl.internal.utf.useUnicode)
-			{
-				lview.prevwproc(LVM_EDITLABELW, index, 0);
-			}
-			else
-			{
-				lview.prevwproc(LVM_EDITLABELA, index, 0);
-			}
+			lview.prevwproc(LVM_EDITLABELA, index, 0);
 		}
 	}
 	
@@ -449,16 +445,16 @@ class ListViewItem: DObject
 	{
 		int _imgidx = -1;
 	}
-	Dstring _txt;
+	string _txt;
 	package CallText calltxt;
 }
 
 
 ///
-class ColumnHeader: DObject
+class ColumnHeader: Object
 {
 	///
-	this(Dstring text)
+	this(string text)
 	{
 		this();
 		
@@ -480,7 +476,7 @@ class ColumnHeader: DObject
 	
 	
 	///
-	final @property void text(Dstring newText) // setter
+	final @property void text(string newText) // setter
 	{
 		_txt = newText;
 		
@@ -491,25 +487,25 @@ class ColumnHeader: DObject
 	}
 	
 	/// ditto
-	final @property Dstring text() // getter
+	final @property string text() // getter
 	{
 		return _txt;
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text;
 	}
 	
 	
-	override Dequ opEquals(Object o)
+	override bool opEquals(Object o)
 	{
-		return text == getObjectString(o);
+		return text == o.toString();
 	}
 	
 	
-	Dequ opEquals(Dstring val)
+	bool opEquals(string val)
 	{
 		return text == val;
 	}
@@ -517,13 +513,13 @@ class ColumnHeader: DObject
 	
 	override int opCmp(Object o)
 	{
-		return stringICmp(text, getObjectString(o));
+		return icmp(text, o.toString());
 	}
 	
 	
-	int opCmp(Dstring val)
+	int opCmp(string val)
 	{
-		return stringICmp(text, val);
+		return icmp(text, val);
 	}
 	
 	
@@ -581,7 +577,7 @@ class ColumnHeader: DObject
 	
 	private:
 	package ListView lview;
-	Dstring _txt;
+	string _txt;
 	int _width;
 	HorizontalAlignment _align;
 }
@@ -591,7 +587,7 @@ class ColumnHeader: DObject
 class LabelEditEventArgs: EventArgs
 {
 	///
-	this(ListViewItem item, Dstring label)
+	this(ListViewItem item, string label)
 	{
 		_item = item;
 		_label = label;
@@ -612,7 +608,7 @@ class LabelEditEventArgs: EventArgs
 	
 	
 	///
-	final @property Dstring label() // getter
+	final @property string label() // getter
 	{
 		return _label;
 	}
@@ -633,7 +629,7 @@ class LabelEditEventArgs: EventArgs
 	
 	private:
 	ListViewItem _item;
-	Dstring _label;
+	string _label;
 	bool _cancel = false;
 }
 
@@ -706,7 +702,7 @@ class ListView: ControlSuperClass // docmain
 		{
 			assert(lv.litems is null);
 		}
-		body
+		do
 		{
 			this.lv = lv;
 		}
@@ -750,7 +746,7 @@ class ListView: ControlSuperClass // docmain
 			insert(ii, item);
 		}
 		
-		void add(Dstring text)
+		void add(string text)
 		{
 			return add(new ListViewItem(text));
 		}
@@ -776,9 +772,9 @@ class ListView: ControlSuperClass // docmain
 		}
 		+/
 		
-		void addRange(Dstring[] range)
+		void addRange(string[] range)
 		{
-			foreach(Dstring s; range)
+			foreach(string s; range)
 			{
 				add(s);
 			}
@@ -802,12 +798,12 @@ class ListView: ControlSuperClass // docmain
 		{
 			assert(created);
 		}
-		body
+		do
 		{
-			int ii;
-			foreach(int i, ListViewItem item; _items)
+			size_t ii;
+			foreach(i, ListViewItem item; _items)
 			{
-				ii = cast(int)lv._ins(i, item);
+				ii = lv._ins(to!int(i), item);
 				//assert(-1 != ii);
 				assert(i == ii);
 				
@@ -884,7 +880,7 @@ class ListView: ControlSuperClass // docmain
 		{
 			assert(!owner.cols);
 		}
-		body
+		do
 		{
 			lv = owner;
 		}
@@ -913,12 +909,12 @@ class ListView: ControlSuperClass // docmain
 		{
 			assert(created);
 		}
-		body
+		do
 		{
 			int ii;
-			foreach(int i, ColumnHeader header; _headers)
+			foreach(size_t i, ColumnHeader header; _headers)
 			{
-				ii = cast(int)lv._ins(i, header);
+				ii = cast(int)lv._ins(to!int(i), header);
 				assert(-1 != ii);
 				//assert(i == ii);
 			}
@@ -1555,8 +1551,8 @@ class ListView: ControlSuperClass // docmain
 	///
 	// Simple as addRow("item", "sub item1", "sub item2", "etc");
 	// rowstrings[0] is the item and rowstrings[1 .. rowstrings.length] are its sub items.
-	//final void addRow(Dstring[] rowstrings ...)
-	final ListViewItem addRow(Dstring[] rowstrings ...)
+	//final void addRow(string[] rowstrings ...)
+	final ListViewItem addRow(string[] rowstrings ...)
 	{
 		if(rowstrings.length)
 		{
@@ -2117,7 +2113,7 @@ class ListView: ControlSuperClass // docmain
 		}
 		
 		//msg.result = CallWindowProcA(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(listviewPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -2269,12 +2265,6 @@ class ListView: ControlSuperClass // docmain
 					switch(nmh.code)
 					{
 						case LVN_GETDISPINFOA:
-							if(dfl.internal.utf.useUnicode)
-							{
-								break;
-							}
-							else
-							{
 								LV_DISPINFOA* lvdi;
 								lvdi = cast(LV_DISPINFOA*)nmh;
 								
@@ -2306,11 +2296,10 @@ class ListView: ControlSuperClass // docmain
 									}
 								}
 								break;
-							}
 						
 						case LVN_GETDISPINFOW:
 							{
-								Dstring text;
+								string text;
 								LV_DISPINFOW* lvdi;
 								lvdi = cast(LV_DISPINFOW*)nmh;
 								
@@ -2366,7 +2355,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_ITEMCHANGED:
 							{
-								auto nmlv = cast(NM_LISTVIEW*)nmh;
+								auto nmlv = cast(NMLISTVIEW*)nmh;
 								if(-1 != nmlv.iItem)
 								{
 									if(nmlv.uChanged & LVIF_STATE)
@@ -2394,7 +2383,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_COLUMNCLICK:
 							{
-								auto nmlv = cast(NM_LISTVIEW*)nmh;
+								auto nmlv = cast(NMLISTVIEW*)nmh;
 								scope ccea = new ColumnClickEventArgs(nmlv.iSubItem);
 								onColumnClick(ccea);
 							}
@@ -2404,8 +2393,6 @@ class ListView: ControlSuperClass // docmain
 							goto begin_label_edit;
 						
 						case LVN_BEGINLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-								break;
 							begin_label_edit:
 							
 							{
@@ -2426,7 +2413,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_ENDLABELEDITW:
 							{
-								Dstring label;
+								string label;
 								LV_DISPINFOW* nmdi;
 								nmdi = cast(LV_DISPINFOW*)nmh;
 								if(nmdi.item.pszText)
@@ -2438,7 +2425,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromUnicodez(nmdi.item.pszText);
+									label = to!string(to!wstring(fromStringz(nmdi.item.pszText)));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2458,13 +2445,7 @@ class ListView: ControlSuperClass // docmain
 							break;
 						
 						case LVN_ENDLABELEDITA:
-							if(dfl.internal.utf.useUnicode)
-							{
-								break;
-							}
-							else
-							{
-								Dstring label;
+								string label;
 								LV_DISPINFOA* nmdi;
 								nmdi = cast(LV_DISPINFOA*)nmh;
 								if(nmdi.item.pszText)
@@ -2476,7 +2457,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromAnsiz(nmdi.item.pszText);
+									label = to!string(fromStringz(nmdi.item.pszText));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2493,7 +2474,6 @@ class ListView: ControlSuperClass // docmain
 									}
 								}
 								break;
-							}
 						
 						default:
 					}
@@ -2560,7 +2540,7 @@ class ListView: ControlSuperClass // docmain
 	{
 		assert(mask);
 	}
-	body
+	do
 	{
 		wlvexstyle = (wlvexstyle & ~mask) | (flags & mask);
 		if(created)
@@ -2575,12 +2555,12 @@ class ListView: ControlSuperClass // docmain
 	
 	// If -subItemIndex- is 0 it's an item not a sub item.
 	// Returns the insertion index or -1 on failure.
-	package final LRESULT _ins(int index, LPARAM lparam, Dstring itemText, int subItemIndex, int imageIndex = -1)
+	package final LRESULT _ins(int index, LPARAM lparam, string itemText, int subItemIndex, int imageIndex = -1)
 	in
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		/+
 		cprintf("^ Insert item:  index=%d, lparam=0x%X, text='%.*s', subItemIndex=%d\n",
@@ -2628,7 +2608,7 @@ class ListView: ControlSuperClass // docmain
 	{
 		assert(subItemIndex > 0);
 	}
-	body
+	do
 	{
 		return _ins(index, cast(LPARAM)cast(void*)subItem, subItem.text, subItemIndex);
 	}
@@ -2657,16 +2637,8 @@ class ListView: ControlSuperClass // docmain
 		}
 		lvc.cx = header.width;
 		lvc.iSubItem = index; // iSubItem is probably only used when retrieving column info.
-		if(dfl.internal.utf.useUnicode)
-		{
-			lvc.lvcw.pszText = cast(typeof(lvc.lvcw.pszText))dfl.internal.utf.toUnicodez(header.text);
-			return prevwproc(LVM_INSERTCOLUMNW, cast(WPARAM)index, cast(LPARAM)&lvc.lvcw);
-		}
-		else
-		{
-			lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))dfl.internal.utf.toAnsiz(header.text);
-			return prevwproc(LVM_INSERTCOLUMNA, cast(WPARAM)index, cast(LPARAM)&lvc.lvca);
-		}
+		lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))header.text.ptr;
+		return prevwproc(LVM_INSERTCOLUMNA, cast(WPARAM)index, cast(LPARAM)&lvc.lvca);
 	}
 	
 	
@@ -2677,7 +2649,7 @@ class ListView: ControlSuperClass // docmain
 	{
 		assert(created);
 	}
-	body
+	do
 	{
 		return prevwproc(LVM_REDRAWITEMS, cast(WPARAM)index, cast(LPARAM)index);
 	}
@@ -2691,37 +2663,29 @@ class ListView: ControlSuperClass // docmain
 	}
 	
 	
-	LRESULT updateItemText(int index, Dstring newText, int subItemIndex = 0)
+	LRESULT updateItemText(int index, string newText, int subItemIndex = 0)
 	{
 		return updateItem(index);
 	}
 	
-	LRESULT updateItemText(ListViewItem item, Dstring newText, int subItemIndex = 0)
+	LRESULT updateItemText(ListViewItem item, string newText, int subItemIndex = 0)
 	{
 		return updateItem(item);
 	}
 	
 	
-	LRESULT updateColumnText(int colIndex, Dstring newText)
+	LRESULT updateColumnText(int colIndex, string newText)
 	{
 		//LV_COLUMNA lvc;
 		LvColumn lvc;
 		
 		lvc.mask = LVCF_TEXT;
-		if(dfl.internal.utf.useUnicode)
-		{
-			lvc.lvcw.pszText = cast(typeof(lvc.lvcw.pszText))dfl.internal.utf.toUnicodez(newText);
-			return prevwproc(LVM_SETCOLUMNW, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvcw);
-		}
-		else
-		{
-			lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))dfl.internal.utf.toAnsiz(newText);
-			return prevwproc(LVM_SETCOLUMNA, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvca);
-		}
+		lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))newText.ptr;
+		return prevwproc(LVM_SETCOLUMNA, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvca);
 	}
 	
 	
-	LRESULT updateColumnText(ColumnHeader col, Dstring newText)
+	LRESULT updateColumnText(ColumnHeader col, string newText)
 	{
 		int colIndex;
 		colIndex = columns.indexOf(col);
@@ -2802,7 +2766,7 @@ class ListView: ControlSuperClass // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(listviewPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

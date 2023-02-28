@@ -1,15 +1,20 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.combobox;
 
-private import dfl.internal.dlib;
+private import dfl.listbox;
+private import dfl.application;
+private import dfl.base;
+private import dfl.event;
+private import dfl.drawing;
+private import dfl.collections;
+private import dfl.control;
 
-private import dfl.listbox, dfl.application, dfl.base, dfl.internal.winapi;
-private import dfl.event, dfl.drawing, dfl.collections, dfl.control,
-	dfl.internal.utf;
+private import core.sys.windows.windows;
+
+private import std.string;
 
 
 private extern(Windows) void _initCombobox();
@@ -170,7 +175,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property void selectedItem(Dstring str) // setter
+	final @property void selectedItem(string str) // setter
 	{
 		int i;
 		i = items.indexOf(str);
@@ -196,7 +201,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	override @property void selectedValue(Dstring str) // setter
+	override @property void selectedValue(string str) // setter
 	{
 		selectedItem = str;
 	}
@@ -243,7 +248,7 @@ class ComboBox: ListControl // docmain
 	
 	
 	///
-	final int findString(Dstring str, int startIndex)
+	final int finstring(string str, int startIndex)
 	{
 		// TODO: find string if control not created ?
 		
@@ -251,10 +256,10 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			//if(dfl.internal.utf.useUnicode)
+				//result = cast(int)prevwproc(CB_FINstring, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
+			//else
+				result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)str.ptr);
 			if(result == CB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -263,14 +268,14 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final int findString(Dstring str)
+	final int finstring(string str)
 	{
-		return findString(str, -1); // Start at beginning.
+		return finstring(str, -1); // Start at beginning.
 	}
 	
 	
 	///
-	final int findStringExact(Dstring str, int startIndex)
+	final int finstringExact(string str, int startIndex)
 	{
 		// TODO: find string if control not created ?
 		
@@ -278,10 +283,10 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			if(dfl.internal.utf.useUnicode)
-				result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			else
-				result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.unsafeAnsiz(str));
+			//if(dfl.internal.utf.useUnicode)
+				//result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
+			//else
+				result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)str.ptr);
 			if(result == CB_ERR) // Redundant.
 				result = NO_MATCHES;
 		}
@@ -290,9 +295,9 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final int findStringExact(Dstring str)
+	final int finstringExact(string str)
 	{
-		return findStringExact(str, -1); // Start at beginning.
+		return finstringExact(str, -1); // Start at beginning.
 	}
 	
 	
@@ -435,7 +440,7 @@ class ComboBox: ListControl // docmain
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && isHandleCreated)
 			//return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-			return cast(uint)dfl.internal.utf.sendMessage(handle, WM_GETTEXTLENGTH, 0, 0);
+			return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
 		return cast(uint)wtext.length;
 	}
 	
@@ -522,7 +527,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		protected this(ComboBox lbox, Dstring[] range)
+		protected this(ComboBox lbox, string[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
@@ -543,7 +548,7 @@ class ComboBox: ListControl // docmain
 			add2(value);
 		}
 		
-		void add(Dstring value)
+		void add(string value)
 		{
 			add(new ListString(value));
 		}
@@ -564,9 +569,9 @@ class ComboBox: ListControl // docmain
 			}
 		}
 		
-		void addRange(Dstring[] range)
+		void addRange(string[] range)
 		{
-			foreach(Dstring s; range)
+			foreach(string s; range)
 			{
 				add(s);
 			}
@@ -576,15 +581,15 @@ class ComboBox: ListControl // docmain
 		private:
 		
 		ComboBox lbox;
-		Object[] _items;
-		
-		
+		Object[] _items = [];
+
+
 		this()
 		{
 		}
 		
 		
-		LRESULT insert2(WPARAM idx, Dstring val)
+		LRESULT insert2(WPARAM idx, string val)
 		{
 			insert(cast(int)idx, val);
 			return idx;
@@ -613,7 +618,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(Dstring val)
+		LRESULT add2(string val)
 		{
 			return add2(new ListString(val));
 		}
@@ -623,10 +628,10 @@ class ComboBox: ListControl // docmain
 		{
 			if(lbox.isHandleCreated)
 			{
-				if(dfl.internal.utf.useUnicode)
-					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
-				else
-					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(val))); // Can this be unsafeAnsiz()?
+				//if(dfl.internal.utf.useUnicode)
+					//lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
+				//else
+					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
 			}
 		}
 		
@@ -651,11 +656,11 @@ class ComboBox: ListControl // docmain
 		
 		
 		public:
-		
+
 		mixin ListWrapArray!(Object, _items,
-			_blankListCallback!(Object), _added,
-			_blankListCallback!(Object), _removed,
-			true, false, false) _wraparray;
+			&_blankListCallback!(Object), &_added,
+			&_blankListCallback!(Object), &_removed,
+			true, false, false, false) _wraparray;
 	}
 	
 	
@@ -689,7 +694,7 @@ class ComboBox: ListControl // docmain
 		m.hWnd = hwnd;
 		m.msg = CB_INSERTSTRING;
 		// Note: duplicate code.
-		if(dfl.internal.utf.useUnicode)
+		/*if(dfl.internal.utf.useUnicode)
 		{
 			foreach(int i, Object obj; icollection._items)
 			{
@@ -705,11 +710,11 @@ class ComboBox: ListControl // docmain
 			}
 		}
 		else
-		{
-			foreach(int i, Object obj; icollection._items)
+		{*/
+			foreach(size_t i, Object obj; icollection._items)
 			{
 				m.wParam = i;
-				m.lParam = cast(LPARAM)dfl.internal.utf.toAnsiz(getObjectString(obj)); // Can this be unsafeAnsiz()? // <--
+				m.lParam = cast(LPARAM)obj.toString().ptr; // Can this be unsafeAnsiz()? // <--
 				
 				prevWndProc(m);
 				//if(CB_ERR == m.result || CB_ERRSPACE == m.result)
@@ -718,7 +723,7 @@ class ComboBox: ListControl // docmain
 				
 				//prevwproc(CB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
 			}
-		}
+		//}
 		
 		//redrawEntire();
 	}
@@ -748,7 +753,7 @@ class ComboBox: ListControl // docmain
 		if(hasDropList)
 			wrect.height = DEFAULT_ITEM_HEIGHT * 8;
 		
-		Dstring ft;
+		string ft;
 		ft = wtext;
 		
 		super.createHandle();
@@ -762,10 +767,10 @@ class ComboBox: ListControl // docmain
 		// Fix the combo box's text since the initial window
 		// text isn't put in the edit box for some reason.
 		Message m;
-		if(dfl.internal.utf.useUnicode)
-			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toUnicodez(ft));
-		else
-			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toAnsiz(ft)); // Can this be unsafeAnsiz()?
+		//if(dfl.internal.utf.useUnicode)
+			//m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toUnicodez(ft));
+		//else
+			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)ft.ptr); // Can this be unsafeAnsiz()?
 		prevWndProc(m);
 	}
 	
@@ -809,7 +814,7 @@ class ComboBox: ListControl // docmain
 		assert(dis.hwndItem == handle);
 		assert(dis.CtlType == ODT_COMBOBOX);
 	}
-	body
+	do
 	{
 		DrawItemState state;
 		state = cast(DrawItemState)dis.itemState;
@@ -849,7 +854,7 @@ class ComboBox: ListControl // docmain
 	{
 		assert(mis.CtlType == ODT_COMBOBOX);
 	}
-	body
+	do
 	{
 		MeasureItemEventArgs miea;
 		scope Graphics gpx = new CommonGraphics(handle(), GetDC(handle));
@@ -866,7 +871,7 @@ class ComboBox: ListControl // docmain
 	override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -906,7 +911,7 @@ class ComboBox: ListControl // docmain
 						{
 							// Hack.
 							Object item = selectedItem;
-							text = item ? getObjectString(item) : cast(Dstring)null;
+							text = item ? getObjectString(item) : cast(string)null;
 						}
 						+/
 						onSelectedIndexChanged(EventArgs.empty);
@@ -941,13 +946,13 @@ class ComboBox: ListControl // docmain
 			case CB_ADDSTRING:
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.add2(cast(Dstring)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.add2(cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_INSERTSTRING:
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.insert2(msg.wParam, cast(Dstring)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.insert2(msg.wParam, cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_DELETESTRING:
@@ -996,7 +1001,7 @@ class ComboBox: ListControl // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return dfl.internal.utf.callWindowProc(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcA(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

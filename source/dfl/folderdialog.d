@@ -1,14 +1,18 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.folderdialog;
 
-private import dfl.internal.dlib, dfl.internal.clib;
+private import dfl.commondialog;
+private import dfl.base;
+private import dfl.internal.utf;
+private import dfl.application;
 
-private import dfl.commondialog, dfl.base, dfl.internal.winapi, dfl.internal.wincom;
-private import dfl.internal.utf, dfl.application;
+private import core.sys.windows.com;
+private import core.sys.windows.objidl;
+private import core.sys.windows.windows;
+private import core.sys.windows.shlobj;
 
 
 private extern(Windows) nothrow
@@ -65,7 +69,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 	
 	
 	///
-	final @property void description(Dstring desc) // setter
+	final @property void description(string desc) // setter
 	{
 		// lpszTitle
 		
@@ -73,14 +77,14 @@ class FolderBrowserDialog: CommonDialog // docmain
 	}
 	
 	/// ditto
-	final @property Dstring description() // getter
+	final @property string description() // getter
 	{
 		return _desc;
 	}
 	
 	
 	///
-	final @property void selectedPath(Dstring selpath) // setter
+	final @property void selectedPath(string selpath) // setter
 	{
 		// pszDisplayName
 		
@@ -88,7 +92,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 	}
 	
 	/// ditto
-	final @property Dstring selectedPath() // getter
+	final @property string selectedPath() // getter
 	{
 		return _selpath;
 	}
@@ -103,15 +107,15 @@ class FolderBrowserDialog: CommonDialog // docmain
 		// "&New Folder" and hide it, then shift "OK" and "Cancel" over.
 		
 		if(byes)
-			bi.ulFlags &= ~BIF_NONEWFOLDERBUTTON;
+			bi.ulFlags &= ~0x0200; // BIF_NONEWFOLDERBUTTON
 		else
-			bi.ulFlags |= BIF_NONEWFOLDERBUTTON;
+			bi.ulFlags |= 0x0200; // BIF_NONEWFOLDERBUTTON
 	}
 	
 	// /// ditto
 	final @property bool showNewFolderButton() // getter
 	{
-		return (bi.ulFlags & BIF_NONEWFOLDERBUTTON) == 0;
+		return (bi.ulFlags & 0x0200) == 0; // BIF_NONEWFOLDERBUTTON
 	}
 	
 	
@@ -172,7 +176,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 			biw.pszDisplayName = cast(wchar*)pdescz;
 			if(_desc.length)
 			{
-				Dwstring tmp;
+				wstring tmp;
 				tmp = dfl.internal.utf.toUnicode(_desc);
 				if(tmp.length >= MAX_PATH)
 					_errPathTooLong();
@@ -221,7 +225,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 			bia.pszDisplayName = cast(char*)pdescz;
 			if(_desc.length)
 			{
-				Dstring tmp; // ansi.
+				string tmp; // ansi.
 				tmp = dfl.internal.utf.toAnsi(_desc);
 				if(tmp.length >= MAX_PATH)
 					_errPathTooLong();
@@ -311,8 +315,8 @@ class FolderBrowserDialog: CommonDialog // docmain
 		static assert(BROWSEINFOW.ulFlags.offsetof == BROWSEINFOA.ulFlags.offsetof);
 	}
 	
-	Dstring _desc;
-	Dstring _selpath;
+	string _desc;
+	string _selpath;
 	
 	
 	enum UINT INIT_FLAGS = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
@@ -331,7 +335,7 @@ private extern(Windows) int fbdHookProc(HWND hwnd, UINT msg, LPARAM lparam, LPAR
 		fd = cast(FolderBrowserDialog)cast(void*)lpData;
 		if(fd)
 		{
-			Dstring s;
+			string s;
 			switch(msg)
 			{
 				case BFFM_INITIALIZED:
@@ -349,7 +353,7 @@ private extern(Windows) int fbdHookProc(HWND hwnd, UINT msg, LPARAM lparam, LPAR
 			}
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}

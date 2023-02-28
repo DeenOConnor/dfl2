@@ -1,14 +1,24 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.data;
 
-private import dfl.internal.dlib;
+private import dfl.base;
+private import dfl.application;
+private import dfl.internal.com;
 
-private import dfl.base, dfl.internal.winapi, dfl.internal.wincom, dfl.application,
-	dfl.internal.utf, dfl.internal.com;
+private import core.sys.windows.objidl;
+private import core.sys.windows.shlobj;
+private import core.sys.windows.winbase;
+private import core.sys.windows.windows;
+private import core.sys.windows.winuser;
+private import core.sys.windows.wtypes;
+
+private import std.conv : to;
+private import std.string : icmp, fromStringz, toStringz;
+private import std.utf : toUTF8;
+private import core.exception : OutOfMemoryError;
 
 
 ///
@@ -25,7 +35,7 @@ class DataFormats // docmain
 		
 		
 		/// Data format name.
-		final @property Dstring name() // getter
+		final @property string name() // getter
 		{
 			return _name;
 		}
@@ -33,7 +43,7 @@ class DataFormats // docmain
 		
 		package:
 		int _id;
-		Dstring _name;
+		string _name;
 		
 		
 		this()
@@ -45,87 +55,87 @@ class DataFormats // docmain
 	static:
 	
 	/// Predefined data formats.
-	@property Dstring bitmap() // getter
+	@property string bitmap() // getter
 	{
 		return getFormat(CF_BITMAP).name;
 	}
 	
 	/+
 	/// ditto
-	@property Dstring commaSeparatedValue() // getter
+	@property string commaSeparatedValue() // getter
 	{
 		return getFormat(?).name;
 	}
 	+/
 	
 	/// ditto
-	@property Dstring dib() // getter
+	@property string dib() // getter
 	{
 		return getFormat(CF_DIB).name;
 	}
 	
 	/// ditto
-	@property Dstring dif() // getter
+	@property string dif() // getter
 	{
 		return getFormat(CF_DIF).name;
 	}
 	
 	/// ditto
-	@property Dstring enhandedMetaFile() // getter
+	@property string enhandedMetaFile() // getter
 	{
 		return getFormat(CF_ENHMETAFILE).name;
 	}
 	
 	/// ditto
-	@property Dstring fileDrop() // getter
+	@property string fileDrop() // getter
 	{
 		return getFormat(CF_HDROP).name;
 	}
 	
 	/// ditto
-	@property Dstring html() // getter
+	@property string html() // getter
 	{
 		return getFormat("HTML Format").name;
 	}
 	
 	/// ditto
-	@property Dstring locale() // getter
+	@property string locale() // getter
 	{
 		return getFormat(CF_LOCALE).name;
 	}
 	
 	/// ditto
-	@property Dstring metafilePict() // getter
+	@property string metafilePict() // getter
 	{
 		return getFormat(CF_METAFILEPICT).name;
 	}
 	
 	/// ditto
-	@property Dstring oemText() // getter
+	@property string oemText() // getter
 	{
 		return getFormat(CF_OEMTEXT).name;
 	}
 	
 	/// ditto
-	@property Dstring palette() // getter
+	@property string palette() // getter
 	{
 		return getFormat(CF_PALETTE).name;
 	}
 	
 	/// ditto
-	@property Dstring penData() // getter
+	@property string penData() // getter
 	{
 		return getFormat(CF_PENDATA).name;
 	}
 	
 	/// ditto
-	@property Dstring riff() // getter
+	@property string riff() // getter
 	{
 		return getFormat(CF_RIFF).name;
 	}
 	
 	/// ditto
-	@property Dstring rtf() // getter
+	@property string rtf() // getter
 	{
 		return getFormat("Rich Text Format").name;
 	}
@@ -133,50 +143,50 @@ class DataFormats // docmain
 	
 	/+
 	/// ditto
-	@property Dstring serializable() // getter
+	@property string serializable() // getter
 	{
 		return getFormat(?).name;
 	}
 	+/
 	
 	/// ditto
-	@property Dstring stringFormat() // getter
+	@property string stringFormat() // getter
 	{
 		return utf8; // ?
 	}
 	
 	/// ditto
-	@property Dstring utf8() // getter
+	@property string utf8() // getter
 	{
 		return getFormat("UTF-8").name;
 	}
 	
 	/// ditto
-	@property Dstring symbolicLink() // getter
+	@property string symbolicLink() // getter
 	{
 		return getFormat(CF_SYLK).name;
 	}
 	
 	/// ditto
-	@property Dstring text() // getter
+	@property string text() // getter
 	{
 		return getFormat(CF_TEXT).name;
 	}
 	
 	/// ditto
-	@property Dstring tiff() // getter
+	@property string tiff() // getter
 	{
 		return getFormat(CF_TIFF).name;
 	}
 	
 	/// ditto
-	@property Dstring unicodeText() // getter
+	@property string unicodeText() // getter
 	{
 		return getFormat(CF_UNICODETEXT).name;
 	}
 	
 	/// ditto
-	@property Dstring waveAudio() // getter
+	@property string waveAudio() // getter
 	{
 		return getFormat(CF_WAVE).name;
 	}
@@ -211,16 +221,16 @@ class DataFormats // docmain
 	
 	/// ditto
 	// Creates the format name if it doesn't exist.
-	Format getFormat(Dstring name)
+	Format getFormat(string name)
 	{
 		_init();
 		foreach(Format onfmt; fmts)
 		{
-			if(!stringICmp(name, onfmt.name))
+			if(!icmp(name, onfmt.name))
 				return onfmt;
 		}
 		// Didn't find it.
-		return _didntFindId(dfl.internal.utf.registerClipboardFormat(name));
+		return _didntFindId(RegisterClipboardFormatA(name.ptr));
 	}
 	
 	/// ditto
@@ -241,12 +251,12 @@ class DataFormats // docmain
 			return;
 		
 		
-		void initfmt(int id, Dstring name)
+		void initfmt(int id, string name)
 		in
 		{
 			assert(!(id in fmts));
 		}
-		body
+		do
 		{
 			Format fmt;
 			fmt = new Format;
@@ -278,13 +288,15 @@ class DataFormats // docmain
 	
 	
 	// Does not get the name of one of the predefined constant ones.
-	Dstring getName(int id)
+	string getName(int id)
 	{
-		Dstring result;
-		result = dfl.internal.utf.getClipboardFormatName(id);
-		if(!result.length)
+		char[] buf;
+		int len;
+		buf = new char[64];
+		len = GetClipboardFormatNameA(id, buf.ptr, 64);
+		if(len == 0)
 			throw new DflException("Unable to get format");
-		return result;
+		return to!string(fromStringz(buf));
 	}
 	
 	
@@ -292,9 +304,9 @@ class DataFormats // docmain
 	{
 		if(type == typeid(ubyte[]))
 			return getFormat(text);
-		if(type == typeid(Dstring))
+		if(type == typeid(string))
 			return getFormat(stringFormat);
-		if(type == typeid(Dwstring))
+		if(type == typeid(wstring))
 			return getFormat(unicodeText);
 		//if(type == typeid(Bitmap))
 		//	return getFormat(bitmap);
@@ -302,11 +314,11 @@ class DataFormats // docmain
 		if(cast(TypeInfo_Class)type)
 			throw new DflException("Unknown data format");
 		
-		return getFormat(getObjectString(type)); // ?
+		return getFormat(type.toString()); // ?
 	}
 	
 	
-	private Dstring[] getHDropStrings(void[] value)
+	private string[] getHDropStrings(void[] value)
 	{
 		/+
 		if(value.length != HDROP.sizeof)
@@ -314,14 +326,14 @@ class DataFormats // docmain
 		
 		HDROP hd;
 		UINT num;
-		Dstring[] result;
+		string[] result;
 		size_t iw;
 		
 		hd = *cast(HDROP*)value.ptr;
 		num = dragQueryFile(hd);
 		if(!num)
 			return null;
-		result = new Dstring[num];
+		result = new string[num];
 		for(iw = 0; iw != num; iw++)
 		{
 			result[iw] = dragQueryFile(hd, iw);
@@ -332,7 +344,7 @@ class DataFormats // docmain
 		if(value.length <= DROPFILES.sizeof)
 			return null;
 		
-		Dstring[] result;
+		string[] result;
 		DROPFILES* df;
 		size_t iw, startiw;
 		
@@ -342,14 +354,14 @@ class DataFormats // docmain
 		
 		if(df.fWide) // Unicode.
 		{
-			Dwstring uni = cast(Dwstring)((value.ptr + df.pFiles)[0 .. value.length]);
+			wstring uni = cast(wstring)((value.ptr + df.pFiles)[0 .. value.length]);
 			for(iw = startiw = 0;; iw++)
 			{
 				if(!uni[iw])
 				{
 					if(startiw == iw)
 						break;
-					result ~= fromUnicode(uni.ptr + startiw, iw - startiw);
+					result ~= toUTF8((uni.ptr + startiw)[0..iw - startiw]);
 					assert(result[result.length - 1].length);
 					startiw = iw + 1;
 				}
@@ -357,14 +369,14 @@ class DataFormats // docmain
 		}
 		else // ANSI.
 		{
-			Dstring ansi = cast(Dstring)((value.ptr + df.pFiles)[0 .. value.length]);
+			string ansi = cast(string)((value.ptr + df.pFiles)[0 .. value.length]);
 			for(iw = startiw = 0;; iw++)
 			{
 				if(!ansi[iw])
 				{
 					if(startiw == iw)
 						break;
-					result ~= fromAnsi(ansi.ptr + startiw, iw - startiw);
+					result ~= to!string((ansi.ptr + startiw)[0..iw - startiw]);
 					assert(result[result.length - 1].length);
 					startiw = iw + 1;
 				}
@@ -384,14 +396,14 @@ class DataFormats // docmain
 				return Data(stopAtNull!(ubyte)(cast(ubyte[])value));
 			
 			case CF_UNICODETEXT:
-				return Data(stopAtNull!(Dwchar)(cast(Dwstring)value));
+				return Data(stopAtNull!(wchar)(cast(wchar[])value));
 			
 			case CF_HDROP:
 				return Data(getHDropStrings(value));
 			
 			default:
 				if(id == getFormat(stringFormat).id)
-					return Data(stopAtNull!(Dchar)(cast(Dstring)value));
+					return Data(stopAtNull!(char)(cast(char[])value));
 		}
 		
 		//throw new DflException("Unknown data format");
@@ -399,7 +411,7 @@ class DataFormats // docmain
 	}
 	
 	
-	void[] getCbFileDrop(Dstring[] fileNames)
+	void[] getCbFileDrop(string[] fileNames)
 	{
 		size_t sz = DROPFILES.sizeof;
 		void* p;
@@ -407,7 +419,7 @@ class DataFormats // docmain
 		
 		foreach(fn; fileNames)
 		{
-			sz += (dfl.internal.utf.toUnicodeLength(fn) + 1) << 1;
+			sz += (fn.length + 1) << 1;
 		}
 		sz += 2;
 		
@@ -415,7 +427,7 @@ class DataFormats // docmain
 		df = cast(DROPFILES*)p;
 		
 		df.pFiles = DROPFILES.sizeof;
-		df.fWide = TRUE;
+		df.fWide = true;
 		
 		wchar* ws = cast(wchar*)(p + DROPFILES.sizeof);
 		foreach(fn; fileNames)
@@ -442,37 +454,37 @@ class DataFormats // docmain
 			enum ubyte[] UBYTE_ZERO = [0];
 			return data.getText() ~ UBYTE_ZERO;
 		}
-		//else if(data.info == typeid(Dstring))
+		//else if(data.info == typeid(string))
 		//else if(getFormat(stringFormat).id == id)
-		else if((getFormat(stringFormat).id == id) || (data.info == typeid(Dstring)))
+		else if((getFormat(stringFormat).id == id) || (data.info == typeid(string)))
 		{
 			// UTF-8 string.
-			Dstring str;
+			string str;
 			str = data.getString();
 			//return toStringz(str)[0 .. str.length + 1];
 			//return unsafeStringz(str)[0 .. str.length + 1]; // ?
-			return cast(void[])unsafeStringz(str)[0 .. str.length + 1]; // ? Needed in D2.
+			return cast(void[])str[0 .. str.length + 1]; // ? Needed in D2.
 		}
-		//else if(data.info == typeid(Dwstring))
+		//else if(data.info == typeid(wstring))
 		//else if(CF_UNICODETEXT == id)
-		else if((CF_UNICODETEXT == id) || (data.info == typeid(Dwstring)))
+		else if((CF_UNICODETEXT == id) || (data.info == typeid(wstring)))
 		{
 			// Unicode string.
-			//return data.getUnicodeText() ~ cast(Dwstring)"\0";
-			//return cast(void[])(data.getUnicodeText() ~ cast(Dwstring)"\0"); // Needed in D2. Not guaranteed safe.
-			return (data.getUnicodeText() ~ cast(Dwstring)"\0").dup; // Needed in D2.
+			//return data.getUnicodeText() ~ cast(wstring)"\0";
+			//return cast(void[])(data.getUnicodeText() ~ cast(wstring)"\0"); // Needed in D2. Not guaranteed safe.
+			return (data.getUnicodeText() ~ cast(wstring)"\0").dup; // Needed in D2.
 		}
-		else if(data.info == typeid(Ddstring))
+		else if(data.info == typeid(string))
 		{
-			//return (*cast(Ddstring*)data.value) ~ "\0";
-			//return cast(void[])((*cast(Ddstring*)data.value) ~ "\0"); // Needed in D2. Not guaranteed safe.
-			return ((*cast(Ddstring*)data.value) ~ "\0").dup; // Needed in D2.
+			//return (*cast(string*)data.value) ~ "\0";
+			//return cast(void[])((*cast(string*)data.value) ~ "\0"); // Needed in D2. Not guaranteed safe.
+			return ((*cast(string*)data.value) ~ "\0").dup; // Needed in D2.
 		}
 		else if(CF_HDROP == id)
 		{
 			return getCbFileDrop(data.getStrings());
 		}
-		else if(data.info == typeid(void[]) || data.info == typeid(Dstring)
+		else if(data.info == typeid(void[]) || data.info == typeid(string)
 			|| data.info == typeid(ubyte[]) || data.info == typeid(byte[])) // Hack ?
 		{
 			return *cast(void[]*)data.value; // Save the array elements, not the reference.
@@ -481,11 +493,6 @@ class DataFormats // docmain
 		{
 			return data.value; // ?
 		}
-	}
-	
-	
-	this()
-	{
 	}
 }
 
@@ -529,7 +536,7 @@ struct Data // docmain
 	{
 		assert(_arguments.length == 1);
 	}
-	body
+	do
 	{
 		Data result;
 		result._info = _arguments[0];
@@ -547,10 +554,10 @@ struct Data // docmain
 	
 	/// ditto
 	// UTF-8.
-	Dstring getString()
+	string getString()
 	{
-		assert(_info == typeid(Dstring) || _info == typeid(void[]));
-		return *cast(Dstring*)_value;
+		assert(_info == typeid(string) || _info == typeid(void[]));
+		return *cast(string*)_value;
 	}
 	
 	/// ditto
@@ -567,10 +574,10 @@ struct Data // docmain
 	}
 	
 	/// ditto
-	Dwstring getUnicodeText()
+	wstring getUnicodeText()
 	{
-		assert(_info == typeid(Dwstring) || _info == typeid(void[]));
-		return *cast(Dwstring*)_value;
+		assert(_info == typeid(wstring) || _info == typeid(void[]));
+		return to!wstring(_value);
 	}
 	
 	/// ditto
@@ -586,10 +593,10 @@ struct Data // docmain
 	}
 	
 	/// ditto
-	Dstring[] getStrings()
+	string[] getStrings()
 	{
-		assert(_info == typeid(Dstring[]));
-		return *cast(Dstring[]*)_value;
+		assert(_info == typeid(string[]));
+		return *cast(string[]*)_value;
 	}
 	
 	/// ditto
@@ -614,43 +621,43 @@ interface IDataFormat
 +/
 
 
-/// Interface to a data object. The data can have different formats by setting different formats.
-interface IDataObject // docmain
+/// Interface to a DFL data object. The data can have different formats by setting different formats.
+interface IDflDataObject // docmain
 {
 	///
-	Data getData(Dstring fmt);
+	Data getData(string fmt);
 	/// ditto
 	Data getData(TypeInfo type);
 	/// ditto
-	Data getData(Dstring fmt, bool doConvert);
+	Data getData(string fmt, bool doConvert);
 	
 	///
-	bool getDataPresent(Dstring fmt); // Check.
+	bool getDataPresent(string fmt); // Check.
 	/// ditto
 	bool getDataPresent(TypeInfo type); // Check.
 	/// ditto
-	bool getDataPresent(Dstring fmt, bool canConvert); // Check.
+	bool getDataPresent(string fmt, bool canConvert); // Check.
 	
 	///
-	Dstring[] getFormats();
-	//Dstring[] getFormats(bool onlyNative);
+	string[] getFormats();
+	//string[] getFormats(bool onlyNative);
 	
 	///
 	void setData(Data obj);
 	/// ditto
-	void setData(Dstring fmt, Data obj);
+	void setData(string fmt, Data obj);
 	/// ditto
 	void setData(TypeInfo type, Data obj);
 	/// ditto
-	void setData(Dstring fmt, bool canConvert, Data obj);
+	void setData(string fmt, bool canConvert, Data obj);
 }
 
 
 ///
-class DataObject: dfl.data.IDataObject // docmain
+class DataObject: IDflDataObject // docmain
 {
 	///
-	Data getData(Dstring fmt)
+	Data getData(string fmt)
 	{
 		return getData(fmt, true);
 	}
@@ -662,7 +669,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	}
 	
 	/// ditto
-	Data getData(Dstring fmt, bool doConvert)
+	Data getData(string fmt, bool doConvert)
 	{
 		// doConvert ...
 		
@@ -676,7 +683,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	
 	
 	///
-	bool getDataPresent(Dstring fmt)
+	bool getDataPresent(string fmt)
 	{
 		return getDataPresent(fmt, true);
 	}
@@ -688,7 +695,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	}
 	
 	/// ditto
-	bool getDataPresent(Dstring fmt, bool canConvert)
+	bool getDataPresent(string fmt, bool canConvert)
 	{
 		// canConvert ...
 		return find(fmt) != -1;
@@ -696,11 +703,11 @@ class DataObject: dfl.data.IDataObject // docmain
 	
 	
 	///
-	Dstring[] getFormats()
+	string[] getFormats()
 	{
-		Dstring[] result;
-		result = new Dstring[all.length];
-		foreach(int i, ref Dstring fmt; result)
+		string[] result;
+		result = new string[all.length];
+		foreach(i, ref string fmt; result)
 		{
 			fmt = all[i].fmt;
 		}
@@ -709,13 +716,13 @@ class DataObject: dfl.data.IDataObject // docmain
 	
 	
 	// TO-DO: remove...
-	deprecated final Dstring[] getFormats(bool onlyNative)
+	deprecated final string[] getFormats(bool onlyNative)
 	{
 		return getFormats();
 	}
 	
 	
-	package final void _setData(Dstring fmt, Data obj, bool replace = true)
+	package final void _setData(string fmt, Data obj, bool replace = true)
 	{
 		int i;
 		i = find(fmt, false);
@@ -742,7 +749,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	
 	
 	/// ditto
-	void setData(Dstring fmt, Data obj)
+	void setData(string fmt, Data obj)
 	{
 		setData(fmt, true, obj);
 	}
@@ -756,7 +763,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	
 	
 	/// ditto
-	void setData(Dstring fmt, bool canConvert, Data obj)
+	void setData(string fmt, bool canConvert, Data obj)
 	{
 		/+
 		if(obj.info == typeid(Data))
@@ -774,7 +781,7 @@ class DataObject: dfl.data.IDataObject // docmain
 			Data cdat;
 			cdat = Data(*(cast(_DataConvert*)&obj));
 			_canConvertFormats(fmt,
-				(Dstring cfmt)
+				(string cfmt)
 				{
 					_setData(cfmt, cdat, false);
 				});
@@ -785,7 +792,7 @@ class DataObject: dfl.data.IDataObject // docmain
 	private:
 	struct Pair
 	{
-		Dstring fmt;
+		string fmt;
 		Data obj;
 	}
 	
@@ -805,12 +812,12 @@ class DataObject: dfl.data.IDataObject // docmain
 	}
 	
 	
-	int find(Dstring fmt, bool fix = true)
+	int find(string fmt, bool fix = true)
 	{
 		int i;
 		for(i = 0; i != all.length; i++)
 		{
-			if(!stringICmp(all[i].fmt, fmt))
+			if(!icmp(all[i].fmt, fmt))
 			{
 				if(fix && all[i].obj.info == typeid(_DataConvert))
 					fixPairEntry(all[i]);
@@ -828,21 +835,21 @@ private struct _DataConvert
 }
 
 
-package void _canConvertFormats(Dstring fmt, void delegate(Dstring cfmt) callback)
+package void _canConvertFormats(string fmt, void delegate(string cfmt) callback)
 {
-	//if(!stringICmp(fmt, DataFormats.utf8))
-	if(!stringICmp(fmt, "UTF-8"))
+	//if(!icmp(fmt, DataFormats.utf8))
+	if(!icmp(fmt, "UTF-8"))
 	{
 		callback(DataFormats.unicodeText);
 		callback(DataFormats.text);
 	}
-	else if(!stringICmp(fmt, DataFormats.unicodeText))
+	else if(!icmp(fmt, DataFormats.unicodeText))
 	{
 		//callback(DataFormats.utf8);
 		callback("UTF-8");
 		callback(DataFormats.text);
 	}
-	else if(!stringICmp(fmt, DataFormats.text))
+	else if(!icmp(fmt, DataFormats.text))
 	{
 		//callback(DataFormats.utf8);
 		callback("UTF-8");
@@ -851,56 +858,56 @@ package void _canConvertFormats(Dstring fmt, void delegate(Dstring cfmt) callbac
 }
 
 
-package Data _doConvertFormat(Data dat, Dstring toFmt)
+package Data _doConvertFormat(Data dat, string toFmt)
 {
 	Data result;
-	//if(!stringICmp(toFmt, DataFormats.utf8))
-	if(!stringICmp(toFmt, "UTF-8"))
+	//if(!icmp(toFmt, DataFormats.utf8))
+	if(!icmp(toFmt, "UTF-8"))
 	{
-		if(typeid(Dwstring) == dat.info)
+		if(typeid(wstring) == dat.info)
 		{
-			result = Data(utf16stringtoUtf8string(dat.getUnicodeText()));
+			result = Data(to!string(dat.getUnicodeText()));
 		}
 		else if(typeid(ubyte[]) == dat.info)
 		{
 			ubyte[] ubs;
 			ubs = dat.getText();
-			result = Data(dfl.internal.utf.fromAnsi(cast(Dstringz)ubs.ptr, ubs.length));
+			result = Data(to!string(fromStringz(cast(char[])ubs)));
 		}
 	}
-	else if(!stringICmp(toFmt, DataFormats.unicodeText))
+	else if(!icmp(toFmt, DataFormats.unicodeText))
 	{
-		if(typeid(Dstring) == dat.info)
+		if(typeid(string) == dat.info)
 		{
-			result = Data(utf8stringtoUtf16string(dat.getString()));
+			result = Data(to!wstring(dat.getString()));
 		}
 		else if(typeid(ubyte[]) == dat.info)
 		{
 			ubyte[] ubs;
 			ubs = dat.getText();
-			result = Data(dfl.internal.utf.ansiToUnicode(cast(Dstringz)ubs.ptr, ubs.length));
+			result = Data(to!string(fromStringz(cast(char[])ubs)));
 		}
 	}
-	else if(!stringICmp(toFmt, DataFormats.text))
+	else if(!icmp(toFmt, DataFormats.text))
 	{
-		if(typeid(Dstring) == dat.info)
+		if(typeid(string) == dat.info)
 		{
-			result = Data(cast(ubyte[])dfl.internal.utf.toAnsi(dat.getString()));
+			result = Data(cast(ubyte[])dat.getString());
 		}
-		else if(typeid(Dwstring) == dat.info)
+		else if(typeid(wstring) == dat.info)
 		{
-			Dwstring wcs;
+			wstring wcs;
 			wcs = dat.getUnicodeText();
-			result = Data(cast(ubyte[])unicodeToAnsi(wcs.ptr, wcs.length));
+			result = Data(cast(ubyte[])to!string(wcs));
 		}
 	}
 	return result;
 }
 
 
-class ComToDdataObject: dfl.data.IDataObject // package
+class ComToDdataObject: IDflDataObject // package
 {
-	this(dfl.internal.wincom.IDataObject dataObj)
+	this(IDataObject dataObj)
 	{
 		this.dataObj = dataObj;
 		dataObj.AddRef();
@@ -922,9 +929,9 @@ class ComToDdataObject: dfl.data.IDataObject // package
 		
 		fmte.cfFormat = cast(CLIPFORMAT)id;
 		fmte.ptd = null;
-		fmte.dwAspect = DVASPECT_CONTENT; // ?
+		fmte.dwAspect = DVASPECT.DVASPECT_CONTENT; // ?
 		fmte.lindex = -1;
-		fmte.tymed = TYMED_HGLOBAL; // ?
+		fmte.tymed = TYMED.TYMED_HGLOBAL; // ?
 		
 		if(S_OK != dataObj.GetData(&fmte, &stgm))
 			throw new DflException("Unable to get data");
@@ -956,7 +963,7 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	}
 	
 	
-	Data getData(Dstring fmt)
+	Data getData(string fmt)
 	{
 		return _getData(DataFormats.getFormat(fmt).id);
 	}
@@ -968,7 +975,7 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	}
 	
 	
-	Data getData(Dstring fmt, bool doConvert)
+	Data getData(string fmt, bool doConvert)
 	{
 		return getData(fmt); // ?
 	}
@@ -980,15 +987,15 @@ class ComToDdataObject: dfl.data.IDataObject // package
 		
 		fmte.cfFormat = cast(CLIPFORMAT)id;
 		fmte.ptd = null;
-		fmte.dwAspect = DVASPECT_CONTENT; // ?
+		fmte.dwAspect = DVASPECT.DVASPECT_CONTENT; // ?
 		fmte.lindex = -1;
-		fmte.tymed = TYMED_HGLOBAL; // ?
+		fmte.tymed = TYMED.TYMED_HGLOBAL; // ?
 		
 		return S_OK == dataObj.QueryGetData(&fmte);
 	}
 	
 	
-	bool getDataPresent(Dstring fmt)
+	bool getDataPresent(string fmt)
 	{
 		return _getDataPresent(DataFormats.getFormat(fmt).id);
 	}
@@ -1000,17 +1007,17 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	}
 	
 	
-	bool getDataPresent(Dstring fmt, bool canConvert)
+	bool getDataPresent(string fmt, bool canConvert)
 	{
 		return getDataPresent(fmt); // ?
 	}
 	
 	
-	Dstring[] getFormats()
+	string[] getFormats()
 	{
 		IEnumFORMATETC fenum;
 		FORMATETC fmte;
-		Dstring[] result;
+		string[] result;
 		ULONG nfetched = 1; // ?
 		
 		if(S_OK != dataObj.EnumFormatEtc(1, &fenum))
@@ -1033,7 +1040,7 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	
 	
 	// TO-DO: remove...
-	deprecated final Dstring[] getFormats(bool onlyNative)
+	deprecated final string[] getFormats(bool onlyNative)
 	{
 		return getFormats();
 	}
@@ -1097,7 +1104,7 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	}
 	
 	
-	void setData(Dstring fmt, Data obj)
+	void setData(string fmt, Data obj)
 	{
 		_setData(DataFormats.getFormat(fmt).id, obj);
 	}
@@ -1109,26 +1116,26 @@ class ComToDdataObject: dfl.data.IDataObject // package
 	}
 	
 	
-	void setData(Dstring fmt, bool canConvert, Data obj)
+	void setData(string fmt, bool canConvert, Data obj)
 	{
 		setData(fmt, obj); // ?
 	}
 	
 	
-	final bool isSameDataObject(dfl.internal.wincom.IDataObject dataObj)
+	final bool isSameDataObject(IDataObject dataObj)
 	{
 		return dataObj is this.dataObj;
 	}
 	
 	
 	private:
-	dfl.internal.wincom.IDataObject dataObj;
+	IDataObject dataObj;
 }
 
 
 package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 {
-	this(dfl.data.IDataObject dataObj, Dstring[] fmts, ULONG start)
+	this(IDflDataObject dataObj, string[] fmts, ULONG start)
 	{
 		this.dataObj = dataObj;
 		this.fmts = fmts;
@@ -1136,7 +1143,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 	}
 	
 	
-	this(dfl.data.IDataObject dataObj)
+	this(IDflDataObject dataObj)
 	{
 		this(dataObj, dataObj.getFormats(), 0);
 	}
@@ -1145,13 +1152,13 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 	extern(Windows):
 	override HRESULT QueryInterface(IID* riid, void** ppv)
 	{
-		if(*riid == _IID_IEnumFORMATETC)
+		if(*riid == IID_IEnumFORMATETC)
 		{
 			*ppv = cast(void*)cast(IEnumFORMATETC)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_IUnknown)
+		else if(*riid == IID_IUnknown)
 		{
 			*ppv = cast(void*)cast(IUnknown)this;
 			AddRef();
@@ -1195,10 +1202,10 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 				{
 					rgelt.cfFormat = cast(CLIPFORMAT)DataFormats.getFormat(fmts[idx]).id;
 					rgelt.ptd = null;
-					rgelt.dwAspect = DVASPECT_CONTENT; // ?
+					rgelt.dwAspect = DVASPECT.DVASPECT_CONTENT; // ?
 					rgelt.lindex = -1;
 					//rgelt.tymed = TYMED_NULL;
-					rgelt.tymed = TYMED_HGLOBAL;
+					rgelt.tymed = TYMED.TYMED_HGLOBAL;
 					
 					rgelt++;
 				}
@@ -1210,7 +1217,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 				result = S_FALSE;
 			}
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1239,7 +1246,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 			
 			result = S_OK;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1259,7 +1266,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 			*ppenum = new EnumDataObjectFORMATETC(dataObj, fmts, idx);
 			result = S_OK;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1273,15 +1280,15 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 	extern(D):
 	
 	private:
-	dfl.data.IDataObject dataObj;
-	Dstring[] fmts;
+	IDflDataObject dataObj;
+	string[] fmts;
 	ULONG idx;
 }
 
 
-class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
+class DtoComDataObject: DflComObject, IDataObject // package
 {
-	this(dfl.data.IDataObject dataObj)
+	this(IDflDataObject dataObj)
 	{
 		this.dataObj = dataObj;
 	}
@@ -1291,13 +1298,13 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 	
 	override HRESULT QueryInterface(IID* riid, void** ppv)
 	{
-		if(*riid == _IID_IDataObject)
+		if(*riid == IID_IDataObject)
 		{
-			*ppv = cast(void*)cast(dfl.internal.wincom.IDataObject)this;
+			*ppv = cast(void*)cast(IDataObject)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_IUnknown)
+		else if(*riid == IID_IUnknown)
 		{
 			*ppv = cast(void*)cast(IUnknown)this;
 			AddRef();
@@ -1313,7 +1320,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 	
 	HRESULT GetData(FORMATETC* pFormatetc, STGMEDIUM* pmedium)
 	{
-		Dstring fmt;
+		string fmt;
 		HRESULT result = S_OK;
 		Data data;
 		
@@ -1323,12 +1330,12 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 			{
 				result = DV_E_LINDEX;
 			}
-			else if(!(pFormatetc.tymed & TYMED_HGLOBAL))
+			else if(!(pFormatetc.tymed & TYMED.TYMED_HGLOBAL))
 			{
 				// Unsupported medium type.
 				result = DV_E_TYMED;
 			}
-			else if(!(pFormatetc.dwAspect & DVASPECT_CONTENT))
+			else if(!(pFormatetc.dwAspect & DVASPECT.DVASPECT_CONTENT))
 			{
 				// What about the other aspects?
 				result = DV_E_DVASPECT;
@@ -1346,7 +1353,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 				
 				//src = data.value;
 				src = DataFormats.getClipboardValueFromData(dfmt.id, data);
-				hg = GlobalAlloc(GMEM_SHARE, cast(uint)src.length);
+				hg = GlobalAlloc(0, cast(uint)src.length);
 				if(!hg)
 				{
 					result = STG_E_MEDIUMFULL;
@@ -1364,7 +1371,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 						pmem[0 .. src.length] = src[];
 						GlobalUnlock(hg);
 						
-						pmedium.tymed = TYMED_HGLOBAL;
+						pmedium.tymed = TYMED.TYMED_HGLOBAL;
 						pmedium.hGlobal = hg;
 						pmedium.pUnkForRelease = null; // ?
 					}
@@ -1377,13 +1384,13 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 			
 			result = DV_E_FORMATETC;
 		}
-		catch(OomException e)
+		catch(OutOfMemoryError e)
 		{
 			Application.onThreadException(e);
 			
 			result = E_OUTOFMEMORY;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1402,7 +1409,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 	
 	HRESULT QueryGetData(FORMATETC* pFormatetc)
 	{
-		Dstring fmt;
+		string fmt;
 		HRESULT result = S_OK;
 		
 		try
@@ -1411,12 +1418,12 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 			{
 				result = DV_E_LINDEX;
 			}
-			else if(!(pFormatetc.tymed & TYMED_HGLOBAL))
+			else if(!(pFormatetc.tymed & TYMED.TYMED_HGLOBAL))
 			{
 				// Unsupported medium type.
 				result = DV_E_TYMED;
 			}
-			else if(!(pFormatetc.dwAspect & DVASPECT_CONTENT))
+			else if(!(pFormatetc.dwAspect & DVASPECT.DVASPECT_CONTENT))
 			{
 				// What about the other aspects?
 				result = DV_E_DVASPECT;
@@ -1435,13 +1442,13 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 			
 			result = DV_E_FORMATETC;
 		}
-		catch(OomException e)
+		catch(OutOfMemoryError e)
 		{
 			Application.onThreadException(e);
 			
 			result = E_OUTOFMEMORY;
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1475,7 +1482,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 		
 		try
 		{
-			if(dwDirection == DATADIR_GET)
+			if(dwDirection == DATADIR.DATADIR_GET)
 			{
 				*ppenumFormatetc = new EnumDataObjectFORMATETC(dataObj);
 				result = S_OK;
@@ -1485,7 +1492,7 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 				result = E_NOTIMPL;
 			}
 		}
-		catch(DThrowable e)
+		catch(Throwable e)
 		{
 			Application.onThreadException(e);
 			
@@ -1517,6 +1524,6 @@ class DtoComDataObject: DflComObject, dfl.internal.wincom.IDataObject // package
 	extern(D):
 	
 	private:
-	dfl.data.IDataObject dataObj;
+	IDflDataObject dataObj;
 }
 

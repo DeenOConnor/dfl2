@@ -1,13 +1,16 @@
 // Written by Christopher E. Miller
 // See the included license.txt for copyright and license details.
 
-
 ///
 module dfl.colordialog;
 
-private import dfl.commondialog, dfl.base, dfl.internal.winapi, dfl.internal.wincom;
-private import dfl.internal.utf, dfl.application, dfl.drawing, dfl.internal.dlib;
+private import dfl.commondialog;
+private import dfl.control;
+private import dfl.base;
+private import dfl.application;
+private import dfl.drawing;
 
+private import core.sys.windows.windows;
 
 ///
 class ColorDialog: CommonDialog // docmain
@@ -199,6 +202,37 @@ class ColorDialog: CommonDialog // docmain
 			cref = cdef;
 		}
 	}
+
+
+	// Attempt to resolve "Error: no property hookProc for type dfl.colordialog.ColorDialog"
+	public override LRESULT hookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+	{
+		switch(msg)
+		{
+			case WM_NOTIFY:
+				{
+					NMHDR* nmhdr;
+					nmhdr = cast(NMHDR*)lparam;
+					switch(nmhdr.code)
+					{
+						case CDN_HELP:
+							{
+								Point pt;
+								GetCursorPos(&pt.point);
+								onHelpRequest(new HelpEventArgs(pt));
+							}
+							break;
+
+						default:
+					}
+				}
+				break;
+
+			default:
+		}
+
+		return 0;
+	}
 }
 
 
@@ -224,10 +258,11 @@ private extern(Windows) UINT ccHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
 		
 		if(cd)
 		{
+			// If IntelliSense highlights the following line as an error, it's on mushrooms again
 			result = cast(UINT)cd.hookProc(hwnd, msg, wparam, lparam);
 		}
 	}
-	catch(DThrowable e)
+	catch(Throwable e)
 	{
 		Application.onThreadException(e);
 	}

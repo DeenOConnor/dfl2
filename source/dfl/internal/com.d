@@ -4,25 +4,26 @@
 
 module dfl.internal.com;
 
-private import dfl.internal.winapi, dfl.internal.wincom, dfl.internal.dlib;
+private import dfl.internal.dlib;
+
+private import core.sys.windows.com;
+private import core.sys.windows.objidl;
+private import core.sys.windows.windows;
 
 
-version(DFL_TANGO_SEEK_COMPAT)
-{
-}
-else
-{
-	version = DFL_TANGO_NO_SEEK_COMPAT;
-}
+version = DFL_TANGO_NO_SEEK_COMPAT;
 
 
 // Importing dfl.application here causes the compiler to crash.
-//import dfl.application;
+private import dfl.application;
+
+/*
 private extern(C)
 {
 	size_t C_refCountInc(void* p);
 	size_t C_refCountDec(void* p);
 }
+*/
 
 
 // Won't be killed by GC if not referenced in D and the refcount is > 0.
@@ -30,21 +31,21 @@ class DflComObject: ComObject // package
 {
 	extern(Windows):
 	
-	override ULONG AddRef()
+	override uint AddRef()
 	{
 		//cprintf("AddRef `%.*s`\n", cast(int)toString().length, toString().ptr);
-		return cast(ULONG)C_refCountInc(cast(void*)this);
+		return cast(uint)C_refCountInc(cast(void*)this);
 	}
 	
-	override UINT Release()
+	override uint Release()
 	{
 		//cprintf("Release `%.*s`\n", cast(int)toString().length, toString().ptr);
-		return  cast(ULONG)C_refCountDec(cast(void*)this);
+		return cast(uint)C_refCountDec(cast(void*)this);
 	}
 }
 
 
-class DStreamToIStream: DflComObject, dfl.internal.wincom.IStream
+class DStreamToIStream: DflComObject, IStream
 {
 	this(DStream sourceDStream)
 	{
@@ -56,19 +57,19 @@ class DStreamToIStream: DflComObject, dfl.internal.wincom.IStream
 	
 	override HRESULT QueryInterface(IID* riid, void** ppv)
 	{
-		if(*riid == _IID_IStream)
+		if(*riid == IID_IStream)
 		{
-			*ppv = cast(void*)cast(dfl.internal.wincom.IStream)this;
+			*ppv = cast(void*)cast(IStream)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_ISequentialStream)
+		else if(*riid == IID_ISequentialStream)
 		{
-			*ppv = cast(void*)cast(dfl.internal.wincom.ISequentialStream)this;
+			*ppv = cast(void*)cast(ISequentialStream)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_IUnknown)
+		else if(*riid == IID_IUnknown)
 		{
 			*ppv = cast(void*)cast(IUnknown)this;
 			AddRef();
@@ -152,19 +153,19 @@ class DStreamToIStream: DflComObject, dfl.internal.wincom.IStream
 			ulong pos;
 			switch(dwOrigin)
 			{
-				case STREAM_SEEK_SET:
+				case STREAM_SEEK.STREAM_SEEK_SET:
 					pos = stm.seekSet(dlibMove.QuadPart);
 					if(plibNewPosition)
 						plibNewPosition.QuadPart = pos;
 					break;
 				
-				case STREAM_SEEK_CUR:
+				case STREAM_SEEK.STREAM_SEEK_CUR:
 					pos = stm.seekCur(dlibMove.QuadPart);
 					if(plibNewPosition)
 						plibNewPosition.QuadPart = pos;
 					break;
 				
-				case STREAM_SEEK_END:
+				case STREAM_SEEK.STREAM_SEEK_END:
 					pos = stm.seekEnd(dlibMove.QuadPart);
 					if(plibNewPosition)
 						plibNewPosition.QuadPart = pos;
@@ -242,7 +243,7 @@ class DStreamToIStream: DflComObject, dfl.internal.wincom.IStream
 	DStream stm;
 }
 
-class MemoryIStream: DflComObject, dfl.internal.wincom.IStream
+class MemoryIStream: DflComObject, IStream
 {
 	this(void[] memory)
 	{
@@ -254,19 +255,19 @@ class MemoryIStream: DflComObject, dfl.internal.wincom.IStream
 	
 	override HRESULT QueryInterface(IID* riid, void** ppv)
 	{
-		if(*riid == _IID_IStream)
+		if(*riid == IID_IStream)
 		{
-			*ppv = cast(void*)cast(dfl.internal.wincom.IStream)this;
+			*ppv = cast(void*)cast(IStream)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_ISequentialStream)
+		else if(*riid == IID_ISequentialStream)
 		{
-			*ppv = cast(void*)cast(dfl.internal.wincom.ISequentialStream)this;
+			*ppv = cast(void*)cast(ISequentialStream)this;
 			AddRef();
 			return S_OK;
 		}
-		else if(*riid == _IID_IUnknown)
+		else if(*riid == IID_IUnknown)
 		{
 			*ppv = cast(void*)cast(IUnknown)this;
 			AddRef();
@@ -313,14 +314,14 @@ class MemoryIStream: DflComObject, dfl.internal.wincom.IStream
 		auto toPos = cast(long)dlibMove.QuadPart;
 		switch(dwOrigin)
 		{
-			case STREAM_SEEK_SET:
+			case STREAM_SEEK.STREAM_SEEK_SET:
 				break;
 			
-			case STREAM_SEEK_CUR:
+			case STREAM_SEEK.STREAM_SEEK_CUR:
 				toPos = cast(long)seekpos + toPos;
 				break;
 			
-			case STREAM_SEEK_END:
+			case STREAM_SEEK.STREAM_SEEK_END:
 				toPos = cast(long)mem.length - toPos;
 				break;
 			
