@@ -8,6 +8,8 @@ module dfl.collections;
 
 private import dfl.base;
 
+private import std.conv : to;
+
 void _blankListCallback(TValue)(size_t idx, TValue val) // package
 {
 }
@@ -200,13 +202,14 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 	static if (OVERLOAD_STRING) {
 		/// ditto
 		int indexOf(string value) {
-			foreach (uint idx, TValue onval; Array) {
+			import std.conv : to;
+			foreach (size_t idx, TValue onval; Array) {
 				static if (is(TValue == TValueString)) {
 					if (onval == value) // TValue must have opEquals.
-						return idx;
+						return to!uint(idx);
 				} else {
 					if (onval.toString() == value)
-						return idx;
+						return to!uint(idx);
 				}
 			}
 			return -1;

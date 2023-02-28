@@ -58,7 +58,7 @@ class ApplicationContext // docmain
 	this(Form mainForm)
 	{
 		mform = mainForm;
-		mainForm.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
+		mainForm.closed.addHandler(&onMainFormClosed);
 	}
 	
 	
@@ -66,12 +66,12 @@ class ApplicationContext // docmain
 	final @property void mainForm(Form mainForm) // setter
 	{
 		if(mform)
-			mform.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
+			mform.closed.addHandler(&onMainFormClosed);
 		
 		mform = mainForm;
 		
 		if(mainForm)
-			mainForm.closed.addHandler!(typeof(&onMainFormClosed))(&onMainFormClosed);
+			mainForm.closed.addHandler(&onMainFormClosed);
 	}
 	
 	/// ditto
@@ -449,7 +449,7 @@ final class Application // docmain
 		bool keep = true;
 		tmr.interval = msDelay;
 		auto callback = (TMR.Timer sender, EventArgs ea) { sender.stop(); keep = false; };
-		tmr.tick.addHandler!(typeof(callback))(callback);
+		tmr.tick.addHandler(callback);
 		tmr.start();
 		while(keep)
 		{

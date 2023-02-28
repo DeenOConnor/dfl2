@@ -4,8 +4,6 @@
 ///
 module dfl.data;
 
-//private import dfl.internal.dlib;
-
 private import dfl.base;
 private import dfl.application;
 private import dfl.internal.com;
@@ -709,7 +707,7 @@ class DataObject: IDflDataObject // docmain
 	{
 		string[] result;
 		result = new string[all.length];
-		foreach(int i, ref string fmt; result)
+		foreach(i, ref string fmt; result)
 		{
 			fmt = all[i].fmt;
 		}

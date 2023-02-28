@@ -4,8 +4,6 @@
 ///
 module dfl.textbox;
 
-private import dfl.internal.dlib;
-
 private import dfl.control;
 private import dfl.base;
 private import dfl.application;
@@ -14,6 +12,8 @@ private import dfl.event;
 private import dfl.internal.utf;
 
 private import core.sys.windows.windows;
+
+private import std.string : splitLines;
 
 
 version(DFL_NO_MENUS)
@@ -112,10 +112,10 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	
 	///
-	final @property void lines(Dstring[] lns) // setter
+	final @property void lines(string[] lns) // setter
 	{
-		Dstring result;
-		foreach(Dstring s; lns)
+		string result;
+		foreach(string s; lns)
 		{
 			result ~= s ~ "\r\n";
 		}
@@ -125,9 +125,9 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	}
 	
 	/// ditto
-	final @property Dstring[] lines() // getter
+	final @property string[] lines() // getter
 	{
-		return stringSplitLines(text);
+		return splitLines(text);
 	}
 	
 	
@@ -174,7 +174,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			return cast(uint)SendMessageA(handle, EM_GETLINECOUNT, 0, 0);
 		}
 		
-		Dstring s;
+		string s;
 		size_t iw = 0;
 		uint count = 1;
 		s = text;
@@ -279,7 +279,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	
 	///
-	@property void selectedText(Dstring sel) // setter
+	@property void selectedText(string sel) // setter
 	{
 		/+
 		if(created)
@@ -294,7 +294,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	}
 	
 	/// ditto
-	@property Dstring selectedText() // getter
+	@property string selectedText() // getter
 	{
 		/+
 		if(created)
@@ -304,7 +304,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			if(v1 == v2)
 				return null;
 			assert(v2 > v1);
-			Dstring result = new char[v2 - v1 + 1];
+			string result = new char[v2 - v1 + 1];
 			result[result.length - 1] = 0;
 			result = result[0 .. result.length - 1];
 			result[] = text[v1 .. v2];
@@ -443,7 +443,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	
 	///
-	final void appendText(Dstring txt)
+	final void appendText(string txt)
 	{
 		if(created)
 		{
@@ -568,7 +568,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	}
 	
 	
-	override Dstring toString()
+	override string toString()
 	{
 		return text; // ?
 	}
@@ -599,7 +599,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(!isHandleCreated)
 		{
-			Dstring txt;
+			string txt;
 			txt = wtext;
 			
 			super.createHandle();
@@ -726,11 +726,11 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			MenuItem mi;
 			
 			cmenu = new ContextMenu;
-			cmenu.popup ~= &menuPopup;
+			cmenu.popup.addHandler(&menuPopup);
 			
 			miundo = new MenuItem;
 			miundo.text = "&Undo";
-			miundo.click ~= &menuUndo;
+			miundo.click.addHandler(&menuUndo);
 			miundo.index = 0;
 			cmenu.menuItems.add(miundo);
 			
@@ -741,25 +741,25 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			micut = new MenuItem;
 			micut.text = "Cu&t";
-			micut.click ~= &menuCut;
+			micut.click.addHandler(&menuCut);
 			micut.index = 2;
 			cmenu.menuItems.add(micut);
 			
 			micopy = new MenuItem;
 			micopy.text = "&Copy";
-			micopy.click ~= &menuCopy;
+			micopy.click.addHandler(&menuCopy);
 			micopy.index = 3;
 			cmenu.menuItems.add(micopy);
 			
 			mipaste = new MenuItem;
 			mipaste.text = "&Paste";
-			mipaste.click ~= &menuPaste;
+			mipaste.click.addHandler(&menuPaste);
 			mipaste.index = 4;
 			cmenu.menuItems.add(mipaste);
 			
 			midel = new MenuItem;
 			midel.text = "&Delete";
-			midel.click ~= &menuDelete;
+			midel.click.addHandler(&menuDelete);
 			midel.index = 5;
 			cmenu.menuItems.add(midel);
 			
@@ -770,7 +770,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			misel = new MenuItem;
 			misel.text = "Select &All";
-			misel.click ~= &menuSelectAll;
+			misel.click.addHandler(&menuSelectAll);
 			misel.index = 7;
 			cmenu.menuItems.add(misel);
 		}
@@ -884,7 +884,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			synchronized
 			{
 				if(!def)
-					def = new SafeCursor(LoadCursorA(null, IDC_IBEAM));
+					def = new SafeCursor(LoadCursorW(null, IDC_IBEAM));
 			}
 		}
 		

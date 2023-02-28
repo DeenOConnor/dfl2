@@ -770,10 +770,10 @@ class Control: Object, IWindow // docmain
 			}
 			else
 			{
-				foreach(int i, Control onCtrl; children)
+				foreach(size_t i, Control onCtrl; children)
 				{
 					if(onCtrl == ctrl)
-						return i;
+						return to!int(i);
 				}
 				return -1;
 			}
@@ -6956,6 +6956,8 @@ class Control: Object, IWindow // docmain
 	Control wparent;
 	Region wregion;
 	ControlCollection ccollection;
+
+	// TODO : Remove or rename, because this.wtext conflicts with import std.conv : wtext
 	string wtext; // After creation, this isn't used unless ControlStyles.CACHE_TEXT.
 	ControlStyles ctrlStyle = ControlStyles.STANDARD_CLICK | ControlStyles.STANDARD_DOUBLE_CLICK /+ | ControlStyles.RESIZE_REDRAW +/ ;
 	HBRUSH _hbrBg;

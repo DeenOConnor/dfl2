@@ -6,8 +6,6 @@ module dfl.listbox;
 
 static import std.algorithm;
 
-private import dfl.internal.dlib;
-
 private import dfl.control;
 private import dfl.base;
 private import dfl.application;
@@ -16,7 +14,8 @@ private import dfl.event;
 private import dfl.collections;
 
 private import core.stdc.string : memmove;
-private import std.string : toStringz;
+private import std.string : toStringz, fromStringz;
+private import std.conv : to;
 private import core.sys.windows.windows;
 
 
@@ -32,9 +31,9 @@ alias StringObject ListString;
 abstract class ListControl: ControlSuperClass // docmain
 {
 	///
-	final Dstring getItemText(Object item)
+	final string getItemText(Object item)
 	{
-		return getObjectString(item);
+		return item.toString();
 	}
 	
 	
@@ -52,7 +51,7 @@ abstract class ListControl: ControlSuperClass // docmain
 	/// ditto
 	
 	///
-	abstract @property void selectedValue(Dstring str); // setter
+	abstract @property void selectedValue(string str); // setter
 	/// ditto
 	abstract @property Object selectedValue(); // getter
 	
@@ -262,7 +261,7 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		bool contains(Dstring str)
+		bool contains(string str)
 		{
 			return indexOf(str) != -1;
 		}
@@ -281,13 +280,13 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		int indexOf(Dstring str)
+		int indexOf(string str)
 		{
 			int idx = 0;
 			foreach(Object onobj; this)
 			{
 				//if(getObjectString(onobj) is str && getObjectString(onobj).length == str.length)
-				if(getObjectString(onobj) == str)
+				if(onobj.toString() == str)
 					return idx;
 				idx++;
 			}
@@ -327,7 +326,7 @@ class ListBox: ListControl // docmain
 		
 		
 		// Used internally.
-		int _opApply(int delegate(ref Dstring) dg) // package
+		int _opApply(int delegate(ref string) dg) // package
 		{
 			int result = 0;
 			
@@ -339,8 +338,8 @@ class ListBox: ListControl // docmain
 					throw new DflException("Unable to enumerate selected list items");
 				foreach(int idx; items)
 				{
-					Dstring str;
-					str = getObjectString(lbox.items[idx]);
+					string str;
+					str = lbox.items[idx].toString();
 					result = dg(str);
 					if(result)
 						break;
@@ -349,18 +348,18 @@ class ListBox: ListControl // docmain
 			else
 			{
 				Object obj;
-				Dstring str;
+				string str;
 				obj = lbox.selectedItem;
 				if(obj)
 				{
-					str = getObjectString(obj);
+					str = obj.toString();
 					result = dg(str);
 				}
 			}
 			return result;
 		}
 		
-		mixin OpApplyAddIndex!(_opApply, Dstring);
+		mixin OpApplyAddIndex!(_opApply, string);
 		
 		mixin OpApplyAddIndex!(_opApply, Object);
 		
@@ -672,7 +671,7 @@ class ListBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property void selectedItem(Dstring str) // setter
+	final @property void selectedItem(string str) // setter
 	{
 		int i;
 		i = items.indexOf(str);
@@ -696,7 +695,7 @@ class ListBox: ListControl // docmain
 		selectedItem = val;
 	}
 	
-	override @property void selectedValue(Dstring str) // setter
+	override @property void selectedValue(string str) // setter
 	{
 		selectedItem = str;
 	}
@@ -847,7 +846,7 @@ class ListBox: ListControl // docmain
 	
 	
 	///
-	final int findString(Dstring str, int startIndex)
+	final int finstring(string str, int startIndex)
 	{
 		// TODO: find string if control not created ?
 		
@@ -864,14 +863,14 @@ class ListBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final int findString(Dstring str)
+	final int finstring(string str)
 	{
-		return findString(str, -1); // Start at beginning.
+		return finstring(str, -1); // Start at beginning.
 	}
 	
 	
 	///
-	final int findStringExact(Dstring str, int startIndex)
+	final int finstringExact(string str, int startIndex)
 	{
 		// TODO: find string if control not created ?
 		
@@ -888,9 +887,9 @@ class ListBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final int findStringExact(Dstring str)
+	final int finstringExact(string str)
 	{
-		return findStringExact(str, -1); // Start at beginning.
+		return finstringExact(str, -1); // Start at beginning.
 	}
 	
 	
@@ -990,9 +989,9 @@ class ListBox: ListControl // docmain
 			scope(exit)
 				endUpdate();
 			
-			foreach(int i, Object o; itemscopy)
+			foreach(i, Object o; itemscopy)
 			{
-				items.insert(i, o);
+				items.insert(to!int(i), o);
 			}
 		}
 	}
@@ -1014,7 +1013,7 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		protected this(ListBox lbox, Dstring[] range)
+		protected this(ListBox lbox, string[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
@@ -1036,7 +1035,7 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		void add(Dstring value)
+		void add(string value)
 		{
 			add(new ListString(value));
 		}
@@ -1058,9 +1057,9 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		void addRange(Dstring[] range)
+		void addRange(string[] range)
 		{
-			foreach(Dstring value; range)
+			foreach(string value; range)
 			{
 				add(value);
 			}
@@ -1073,7 +1072,7 @@ class ListBox: ListControl // docmain
 		Object[] _items;
 		
 		
-		LRESULT insert2(WPARAM idx, Dstring val)
+		LRESULT insert2(WPARAM idx, string val)
 		{
 			insert(cast(int)idx, val);
 			return idx;
@@ -1102,7 +1101,7 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(Dstring val)
+		LRESULT add2(string val)
 		{
 			return add2(new ListString(val));
 		}
@@ -1179,7 +1178,7 @@ class ListBox: ListControl // docmain
 		m.hWnd = handle;
 		m.msg = LB_INSERTSTRING;
 		// Note: duplicate code.
-			foreach(int i, Object obj; icollection._items)
+			foreach(size_t i, Object obj; icollection._items)
 			{
 				m.wParam = i;
 				m.lParam = cast(LPARAM)toStringz(obj.toString()); // Can this be unsafeAnsiz? // <--
@@ -1351,13 +1350,13 @@ class ListBox: ListControl // docmain
 			case LB_ADDSTRING:
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.add2(cast(Dstring)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.add2(to!string(fromStringz(cast(char*)msg.lParam))); // TODO: fix. // Needed in D2.
 				return;
 			
 			case LB_INSERTSTRING:
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.insert2(msg.wParam, cast(Dstring)stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.insert2(msg.wParam, to!string(fromStringz(cast(char*)msg.lParam))); // TODO: fix. // Needed in D2.
 				return;
 			
 			case LB_DELETESTRING:

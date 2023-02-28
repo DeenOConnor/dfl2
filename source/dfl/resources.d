@@ -4,13 +4,14 @@
 ///
 module dfl.resources;
 
-private import dfl.internal.dlib;
-
-private import dfl.internal.utf;
 private import dfl.base;
 private import dfl.drawing;
 
 private import core.sys.windows.windows;
+
+private import std.string : fromStringz, toStringz;
+private import std.conv : to;
+private import std.utf : toUTFz;
 
 
 version(DFL_NO_RESOURCES)
@@ -31,10 +32,10 @@ else
 		
 		/// ditto
 		// Note: libName gets unloaded and may take down all its resources with it.
-		this(Dstring libName, WORD language = 0)
+		this(string libName, WORD language = 0)
 		{
 			HINSTANCE inst;
-			inst = loadLibraryEx(libName, LOAD_LIBRARY_AS_DATAFILE);
+			inst = LoadLibraryExA(libName.ptr, null, LOAD_LIBRARY_AS_DATAFILE);
 			if(!inst)
 				throw new DflException("Unable to load resources from '" ~ libName ~ "'");
 			this(inst, language, true); // Owned.
@@ -90,7 +91,7 @@ else
 		}
 		
 		/// ditto
-		final Icon getIcon(Dstring name, bool defaultSize = true)
+		final Icon getIcon(string name, bool defaultSize = true)
 		{
 			/+
 			HICON hi;
@@ -100,7 +101,7 @@ else
 			return Icon.fromHandle(hi);
 			+/
 			HICON hi;
-			hi = cast(HICON)dfl.internal.utf.loadImage(hinst, name, IMAGE_ICON,
+			hi = LoadImageA(hinst, name.ptr, IMAGE_ICON,
 				0, 0, defaultSize ? (LR_DEFAULTSIZE | LR_SHARED) : 0);
 			if(!hi)
 				return null;
@@ -127,13 +128,13 @@ else
 		}
 		
 		/// ditto
-		final Icon getIcon(Dstring name, int width, int height)
+		final Icon getIcon(string name, int width, int height)
 		{
 			// Can't have size 0 (plus causes Windows to use the actual size).
 			//if(width <= 0 || height <= 0)
 			//	_noload("icon");
 			HICON hi;
-			hi = cast(HICON)dfl.internal.utf.loadImage(hinst, name, IMAGE_ICON,
+			hi = LoadImageA(hinst, name.ptr, IMAGE_ICON,
 				width, height, 0);
 			if(!hi)
 				return null;
@@ -160,10 +161,10 @@ else
 		}
 		
 		/// ditto
-		final Bitmap getBitmap(Dstring name)
+		final Bitmap getBitmap(string name)
 		{
 			HBITMAP h;
-			h = cast(HBITMAP)loadImage(hinst, name, IMAGE_BITMAP,
+			h = LoadImageA(hinst, name.ptr, IMAGE_BITMAP,
 				0, 0, 0);
 			if(!h)
 				return null;
@@ -190,10 +191,10 @@ else
 		}
 		
 		/// ditto
-		final Cursor getCursor(Dstring name)
+		final Cursor getCursor(string name)
 		{
 			HCURSOR h;
-			h = cast(HCURSOR)loadImage(hinst, name, IMAGE_CURSOR,
+			h = LoadImageA(hinst, name.ptr, IMAGE_CURSOR,
 				0, 0, 0);
 			if(!h)
 				return null;
@@ -204,29 +205,20 @@ else
 		
 		
 		///
-		final Dstring getString(int id)
+		final string getString(int id)
 		in
 		{
 			assert(id >= WORD.min && id <= WORD.max);
 		}
 		do
 		{
-			// Not casting to wDstring because a resource isn't guaranteed to be the same size.
+			// Not casting to wstring because a resource isn't guaranteed to be the same size.
 			wchar* ws = cast(wchar*)_getData(cast(LPCWSTR)RT_STRING, cast(LPCWSTR)cast(WORD)(id / 16 + 1)).ptr;
-			Dstring result;
-			if(ws)
-			{
-				int i;
-				for(i = 0; i < (id & 15); i++)
-				{
-					ws += 1 + cast(size_t)*ws;
-				}
-				result = utf16stringtoUtf8string((ws + 1)[0 .. cast(size_t)*ws]);
-			}
-			return result;
+			wstring result = to!wstring(fromStringz(ws));
+			return to!string(result);
 		}
 		
-		deprecated alias getString loadString;
+		deprecated alias getString loastring;
 		
 		
 		// Used internally
@@ -259,31 +251,31 @@ else
 		}
 		
 		/// ditto
-		final void[] getData(Dstring type, int id)
+		final void[] getData(string type, int id)
 		in
 		{
 			assert(id >= WORD.min && id <= WORD.max);
 		}
 		do
 		{
-			return _getData(utf8stringToUtf16stringz(type), cast(LPCWSTR)id);
+			return _getData(toUTFz!(wchar*)(type), cast(LPCWSTR)id);
 		}
 		
 		/// ditto
-		final void[] getData(int type, Dstring name)
+		final void[] getData(int type, string name)
 		in
 		{
 			assert(type >= WORD.min && type <= WORD.max);
 		}
 		do
 		{
-			return _getData(cast(LPCWSTR)type, utf8stringToUtf16stringz(name));
+			return _getData(cast(LPCWSTR)type, toUTFz!(wchar*)(name));
 		}
 		
 		/// ditto
-		final void[] getData(Dstring type, Dstring name)
+		final void[] getData(string type, string name)
 		{
-			return _getData(utf8stringToUtf16stringz(type), utf8stringToUtf16stringz(name));
+			return _getData(toUTFz!(wchar*)(type), toUTFz!(wchar*)(name));
 		}
 		
 		
@@ -301,7 +293,7 @@ else
 		bool _owned = false;
 		
 		
-		void _noload(Dstring type)
+		void _noload(string type)
 		{
 			throw new DflException("Unable to load " ~ type ~ " resource");
 		}

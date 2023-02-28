@@ -711,7 +711,7 @@ class ComboBox: ListControl // docmain
 		}
 		else
 		{*/
-			foreach(int i, Object obj; icollection._items)
+			foreach(size_t i, Object obj; icollection._items)
 			{
 				m.wParam = i;
 				m.lParam = cast(LPARAM)obj.toString().ptr; // Can this be unsafeAnsiz()? // <--

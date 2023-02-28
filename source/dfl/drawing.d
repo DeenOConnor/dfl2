@@ -7,8 +7,8 @@ module dfl.drawing;
 private import dfl.base;
 private import dfl.internal.com;
 
-// !!! Left here to not have an error about LogFont
-private import dfl.internal.utf;
+// Need to fix all errors about LogFont
+// private import dfl.internal.utf;
 
 private import core.sys.windows.com;
 private import core.sys.windows.objidl;
@@ -3444,6 +3444,7 @@ class Font // docmain
 {
 	// TODO : Get rid of this wrapper stuff and leave only LOGFONTW
 	// Used internally.
+	/*
 	static void LOGFONTAtoLogFont(ref LogFont lf, LOGFONTA* plfa) // package // deprecated
 	{
 		lf.lfa = *plfa;
@@ -3456,14 +3457,12 @@ class Font // docmain
 		lf.lfw = *plfw;
 		lf.faceName = dfl.internal.utf.fromUnicodez(plfw.lfFaceName.ptr);
 	}
+	*/
 	
 	
 	// Used internally.
-	this(HFONT hf, LOGFONTA* plfa, bool owned = true) // package // deprecated
+	this(HFONT hf, ref LOGFONTA lf, bool owned = true) // package // deprecated
 	{
-		LogFont lf;
-		LOGFONTAtoLogFont(lf, plfa);
-		
 		this.hf = hf;
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
@@ -3472,7 +3471,7 @@ class Font // docmain
 		_initLf(lf);
 	}
 	
-	
+	/*
 	// Used internally.
 	this(HFONT hf, ref LogFont lf, bool owned = true) // package
 	{
@@ -3483,6 +3482,7 @@ class Font // docmain
 		_fstyle = _style(lf);
 		_initLf(lf);
 	}
+	*/
 	
 	
 	// Used internally.
@@ -3492,7 +3492,7 @@ class Font // docmain
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
 		
-		LogFont lf;
+		LOGFONTA lf;
 		_info(lf);
 		
 		_fstyle = _style(lf);
@@ -3501,52 +3501,51 @@ class Font // docmain
 	
 	
 	// Used internally.
-	this(LOGFONTA* plfa, bool owned = true) // package // deprecated
-	{
-		LogFont lf;
-		LOGFONTAtoLogFont(lf, plfa);
-		
+	this(ref LOGFONTA lf, bool owned = true) // package // deprecated
+	{		
 		this(_create(lf), lf, owned);
 	}
 	
 	
+	/*
 	// Used internally.
 	this(ref LogFont lf, bool owned = true) // package
 	{
 		this(_create(lf), lf, owned);
 	}
+	*/
 	
 	
-	package static HFONT _create(ref LogFont lf)
+	package static HFONT _create(ref LOGFONTA lf)
 	{
 		HFONT result;
-		result = dfl.internal.utf.createFontIndirect(lf);
+		result = CreateFontIndirectA(&lf);
 		if(!result)
 			throw new DflException("Unable to create font");
 		return result;
 	}
 	
 	
-	private static void _style(ref LogFont lf, FontStyle style)
+	private static void _style(ref LOGFONTA lf, FontStyle style)
 	{
-		lf.lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
-		lf.lf.lfItalic = (style & FontStyle.ITALIC) ? TRUE : FALSE;
-		lf.lf.lfUnderline = (style & FontStyle.UNDERLINE) ? TRUE : FALSE;
-		lf.lf.lfStrikeOut = (style & FontStyle.STRIKEOUT) ? TRUE : FALSE;
+		lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
+		lf.lfItalic = (style & FontStyle.ITALIC) ? TRUE : FALSE;
+		lf.lfUnderline = (style & FontStyle.UNDERLINE) ? TRUE : FALSE;
+		lf.lfStrikeOut = (style & FontStyle.STRIKEOUT) ? TRUE : FALSE;
 	}
 	
 	
-	private static FontStyle _style(ref LogFont lf)
+	private static FontStyle _style(ref LOGFONTA lf)
 	{
 		FontStyle style = FontStyle.REGULAR;
 		
-		if(lf.lf.lfWeight >= FW_BOLD)
+		if(lf.lfWeight >= FW_BOLD)
 			style |= FontStyle.BOLD;
-		if(lf.lf.lfItalic)
+		if(lf.lfItalic)
 			style |= FontStyle.ITALIC;
-		if(lf.lf.lfUnderline)
+		if(lf.lfUnderline)
 			style |= FontStyle.UNDERLINE;
-		if(lf.lf.lfStrikeOut)
+		if(lf.lfStrikeOut)
 			style |= FontStyle.STRIKEOUT;
 		
 		return style;
@@ -3568,9 +3567,9 @@ class Font // docmain
 	}
 	
 	
-	package void _info(ref LogFont lf)
+	package void _info(ref LOGFONTA lf)
 	{
-		if(!dfl.internal.utf.getLogFont(hf, lf))
+		if(GetObjectA(hf, LOGFONTA.sizeof, &lf) != LOGFONTA.sizeof)
 			throw new DflException("Unable to get font information");
 	}
 	
@@ -3688,7 +3687,7 @@ class Font // docmain
 	///
 	this(Font font, FontStyle style)
 	{
-		LogFont lf;
+		LOGFONTA lf;
 		_unit = font._unit;
 		font._info(lf);
 		_style(lf, style);
@@ -3727,25 +3726,25 @@ class Font // docmain
 		GraphicsUnit unit, ubyte gdiCharSet,
 		FontSmoothing smoothing = FontSmoothing.DEFAULT)
 	{
-		LogFont lf;
+		LOGFONTA lf;
 		
-		lf.faceName = name;
-		lf.lf.lfCharSet = gdiCharSet;
-		lf.lf.lfQuality = cast(BYTE)smoothing;
-		lf.lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-		lf.lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-		lf.lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+		lf.lfFaceName = name;
+		lf.lfCharSet = gdiCharSet;
+		lf.lfQuality = cast(BYTE)smoothing;
+		lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+		lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+		lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 		
 		this(lf, emSize, style, unit);
 	}
 	
 	// /// ditto
 	// This is a somewhat internal function.
-	this(ref LogFont lf, float emSize, FontStyle style, GraphicsUnit unit)
+	this(ref LOGFONTA lf, float emSize, FontStyle style, GraphicsUnit unit)
 	{
 		_unit = unit;
 		
-		lf.lf.lfHeight = -getLfHeight(emSize, unit);
+		lf.lfHeight = -getLfHeight(emSize, unit);
 		_style(lf, style);
 		
 		this(_create(lf));
@@ -3835,11 +3834,11 @@ class Font // docmain
 	}
 	+/
 	
-	private void _initLf(ref LogFont lf)
+	private void _initLf(ref LOGFONTA lf)
 	{
-		this.lfHeight = lf.lf.lfHeight;
-		this.lfName = lf.faceName;
-		this.lfCharSet = lf.lf.lfCharSet;
+		this.lfHeight = lf.lfHeight;
+		this.lfName = to!string(lf.lfFaceName.dup);
+		this.lfCharSet = lf.lfCharSet;
 	}
 	
 	
@@ -3852,7 +3851,7 @@ class Font // docmain
 	}
 	+/
 	
-	private void _initLf(Font otherfont, ref LogFont lf)
+	private void _initLf(Font otherfont, ref LOGFONTA lf)
 	{
 		this.lfHeight = otherfont.lfHeight;
 		this.lfName = otherfont.lfName;

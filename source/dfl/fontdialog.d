@@ -350,10 +350,7 @@ class FontDialog: CommonDialog
 	
 	private void _update()
 	{
-		LogFont lf;
-		
-		Font.LOGFONTWtoLogFont(lf, &lfw);
-		
+		LOGFONTA lf;		
 		_fon = new Font(Font._create(lf), true);
 	}
 	
@@ -395,8 +392,8 @@ class FontDialog: CommonDialog
 
 // WM_CHOOSEFONT_SETFLAGS to update flags after dialog creation ... ?
 
-
-private extern(Windows) UINT fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
+// TODO : Fix mismatch of ulong and LRESULT being just long
+private extern(Windows) ulong fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
 {
 	enum PROP_STR = "DFL_FontDialog";
 	FontDialog fd;
@@ -426,6 +423,6 @@ private extern(Windows) UINT fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 		Application.onThreadException(e);
 	}
 	
-	return cast(uint)result;
+	return cast(ulong)result;
 }
 

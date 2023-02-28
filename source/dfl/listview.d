@@ -14,7 +14,7 @@ private import dfl.collections;
 private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
-private import std.conv : wtext;
+private import std.conv : to;
 private import std.string : icmp, fromStringz;
 
 version(DFL_NO_IMAGELIST)
@@ -56,7 +56,7 @@ private CallText getCallText(string text)
 	}
 	else
 	{
-		result.unicode = wtext(text).ptr;
+		result.unicode = to!wstring(text).ptr;
 		result.ansi = text.ptr;
 	}
 	return result;
@@ -800,10 +800,10 @@ class ListView: ControlSuperClass // docmain
 		}
 		do
 		{
-			int ii;
-			foreach(int i, ListViewItem item; _items)
+			size_t ii;
+			foreach(i, ListViewItem item; _items)
 			{
-				ii = cast(int)lv._ins(i, item);
+				ii = lv._ins(to!int(i), item);
 				//assert(-1 != ii);
 				assert(i == ii);
 				
@@ -912,9 +912,9 @@ class ListView: ControlSuperClass // docmain
 		do
 		{
 			int ii;
-			foreach(int i, ColumnHeader header; _headers)
+			foreach(size_t i, ColumnHeader header; _headers)
 			{
-				ii = cast(int)lv._ins(i, header);
+				ii = cast(int)lv._ins(to!int(i), header);
 				assert(-1 != ii);
 				//assert(i == ii);
 			}
@@ -2355,7 +2355,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_ITEMCHANGED:
 							{
-								auto nmlv = cast(NM_LISTVIEW*)nmh;
+								auto nmlv = cast(NMLISTVIEW*)nmh;
 								if(-1 != nmlv.iItem)
 								{
 									if(nmlv.uChanged & LVIF_STATE)
@@ -2383,7 +2383,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_COLUMNCLICK:
 							{
-								auto nmlv = cast(NM_LISTVIEW*)nmh;
+								auto nmlv = cast(NMLISTVIEW*)nmh;
 								scope ccea = new ColumnClickEventArgs(nmlv.iSubItem);
 								onColumnClick(ccea);
 							}
@@ -2425,7 +2425,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromStringz(nmdi.item.pszText);
+									label = to!string(to!wstring(fromStringz(nmdi.item.pszText)));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2457,7 +2457,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = fromStrings(nmdi.item.pszText);
+									label = to!string(fromStringz(nmdi.item.pszText));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)

@@ -4,17 +4,17 @@
 ///
 module dfl.menu;
 
-private import dfl.internal.dlib;
-
 private import dfl.control;
 private import dfl.base;
 private import dfl.event;
-private import dfl.internal.utf;
 private import dfl.drawing;
 private import dfl.application;
 private import dfl.collections;
 
 private import core.sys.windows.windows;
+
+private import std.string : icmp;
+
 
 version (DFL_NO_MENUS) {
 } else {
@@ -76,7 +76,7 @@ version (DFL_NO_MENUS) {
 	class MenuItem : Menu // docmain
 	{
 		///
-		final @property void text(Dstring txt) // setter
+		final @property void text(string txt) // setter
 		{
 			if (!menuItems.length && txt == SEPARATOR_TEXT) {
 				_type(_type() | MFT_SEPARATOR);
@@ -100,7 +100,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/// ditto
-		final @property Dstring text() // getter
+		final @property string text() // getter
 		{
 			// if(mparent) fetch text ?
 			return mtext;
@@ -416,14 +416,14 @@ version (DFL_NO_MENUS) {
 		}
 
 		/// ditto
-		this(Dstring text) {
+		this(string text) {
 			_init();
 
 			this.text = text;
 		}
 
 		/// ditto
-		this(Dstring text, MenuItem[] items) {
+		this(string text, MenuItem[] items) {
 			if (items.length) {
 				HMENU hm = CreatePopupMenu();
 				super(hm);
@@ -449,24 +449,24 @@ version (DFL_NO_MENUS) {
 				cprintf("~MenuItem\n");
 		}
 
-		override Dstring toString() {
+		override string toString() {
 			return text;
 		}
 
-		override Dequ opEquals(Object o) {
-			return text == getObjectString(o);
+		override bool opEquals(Object o) {
+			return text == o.toString();
 		}
 
-		Dequ opEquals(Dstring val) {
+		bool opEquals(string val) {
 			return text == val;
 		}
 
 		override int opCmp(Object o) {
-			return stringICmp(text, getObjectString(o));
+			return icmp(text, o.toString());
 		}
 
-		int opCmp(Dstring val) {
-			return stringICmp(text, val);
+		int opCmp(string val) {
+			return icmp(text, val);
 		}
 
 		protected override void onReflectedMessage(ref Message m) {
@@ -533,7 +533,7 @@ version (DFL_NO_MENUS) {
 	private:
 
 		int mid; // Menu ID.
-		Dstring mtext;
+		string mtext;
 		Menu mparent;
 		UINT fType = 0; // MFT_*
 		UINT fState = 0;
@@ -597,7 +597,7 @@ version (DFL_NO_MENUS) {
 	}
 
 	///
-	abstract class Menu : DObject // docmain
+	abstract class Menu : Object // docmain
 	{
 		// Retain DFL 0.9.2 compatibility.
 		deprecated static void setDFL092() {
@@ -667,7 +667,7 @@ version (DFL_NO_MENUS) {
 				insert(mi.mindex, mi);
 			}
 
-			void add(Dstring value) {
+			void add(string value) {
 				return add(new MenuItem(value));
 			}
 
@@ -680,11 +680,11 @@ version (DFL_NO_MENUS) {
 				}
 			}
 
-			void addRange(Dstring[] items) {
+			void addRange(string[] items) {
 				if (!Menu._compat092)
 					return _wraparray.addRange(items);
 
-				foreach (Dstring it; items) {
+				foreach (string it; items) {
 					insert(cast(int) length, it);
 				}
 			}
@@ -815,38 +815,38 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, Dstring typeData = null) // package
+		protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
-			if (typeData.length) {
-				if (dfl.internal.utf.useUnicode) {
-					static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
+			if (typeData !is null) {
+				//if (dfl.internal.utf.useUnicode) {
+				//	static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
+				//	lpmii.dwTypeData = cast(typeof(
+				//			lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
+				//	_setMenuItemInfoW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
+				//} else {
 					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
-					_setMenuItemInfoW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
-				} else {
-					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) dfl.internal.utf.unsafeAnsiz(typeData);
+							lpmii.dwTypeData)) typeData.ptr;
 					SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
-				}
+				//}
 			} else {
 				SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
 			}
 		}
 
 		/+ package +/
-		protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, Dstring typeData = null) // package
+		protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
-			if (typeData.length) {
-				if (dfl.internal.utf.useUnicode) {
-					static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
+			if (typeData !is null) {
+				//if (dfl.internal.utf.useUnicode) {
+				//	static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
+				//	lpmii.dwTypeData = cast(typeof(
+				//			lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
+				//	_insertMenuItemW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
+				//} else {
 					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
-					_insertMenuItemW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
-				} else {
-					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) dfl.internal.utf.unsafeAnsiz(typeData);
+							lpmii.dwTypeData)) typeData.ptr;
 					InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
-				}
+				//}
 			} else {
 				InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
 			}
@@ -885,7 +885,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, Dstring typeData = null) // package
+		protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
 			Menu._setInfo(uItem, fByPosition, lpmii, typeData);
 
@@ -894,7 +894,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, Dstring typeData = null) // package
+		protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
 			Menu._insert(uItem, fByPosition, lpmii, typeData);
 
