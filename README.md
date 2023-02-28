@@ -1,6 +1,8 @@
-dfl2
+DFL2
 ====
-dfl2 is a GUI library for windows,which is based on D2 ,now D2.067b1.
+DFL2, or D Forms Library 2, is a GUI library for Windows.
+DFL2 is based on original DFL by Christopher E. Miller, which was abandoned in 2011.
+This project is an attempt to bring DFL to modern D2 and make it a viable alternative to other existing GUI libraries.
 
 linker libs:
 ---
@@ -8,7 +10,7 @@ user32.lib ole32.lib oleAut32.lib gdi32.lib Comctl32.lib Comdlg32.lib advapi32.l
 
 How to start:
 --
-git clone https://github.com/FrankLIKE/dfl2
+git clone https://github.com/DeenOConnor/dfl2
 
 or 
 
