@@ -18,6 +18,7 @@ private import dfl.menu;
 
 private import core.sys.windows.commctrl;
 private import core.sys.windows.ole2;
+private import core.sys.windows.winbase;
 private import core.sys.windows.windef;
 private import core.sys.windows.windows;
 
@@ -168,131 +169,76 @@ final class Application // docmain
 	static:
 	
 	///
-	// Should be called before creating any controls.
-	// This is typically the first function called in main().
-	// Does nothing if not supported.
+	// Enables visual styles through writing and applying a manifest file
+	// Left for compatibility with Entice Designer
+	// Styles should be already enabled with a linker directive
 	void enableVisualStyles()
 	{
-		//string str64 = is64 ? "x64":"X86",strType = is64 ? "win32":"x64" ;
-		enum MANIFEST32 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` ~ "\r\n" ~
-			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` ~ "\r\n" ~
-				`<description>DFL manifest</description>` ~ "\r\n" ~
-				`<dependency>` ~ "\r\n" ~
-					`<dependentAssembly>` ~ "\r\n" ~
-						`<assemblyIdentity ` ~
-							`type="win32" ` ~
-							`name="Microsoft.Windows.Common-Controls" ` ~
-							`version="6.0.0.0" ` ~
-							`processorArchitecture="X86" ` ~
-							`publicKeyToken="6595b64144ccf1df" ` ~
-							`language="*" ` ~
-						`/>` ~ "\r\n" ~
-					`</dependentAssembly>` ~ "\r\n" ~
-				`</dependency>` ~ "\r\n" ~
-			`</assembly>` ~ "\r\n";
-			
-			enum MANIFEST64 = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>` ~ "\r\n" ~
-			`<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">` ~ "\r\n" ~
-				`<description>DFL manifest</description>` ~ "\r\n" ~
-				`<dependency>` ~ "\r\n" ~
-					`<dependentAssembly>` ~ "\r\n" ~
-						`<assemblyIdentity ` ~
-							`type="x64" ` ~
-							`name="Microsoft.Windows.Common-Controls" ` ~
-							`version="7.0.0.0" ` ~
-							`processorArchitecture="x64" ` ~
-							`publicKeyToken="6595b64144ccf1df" ` ~
-							`language="*" ` ~
-						`/>` ~ "\r\n" ~
-					`</dependentAssembly>` ~ "\r\n" ~
-				`</dependency>` ~ "\r\n" ~
-			`</assembly>` ~ "\r\n";
-		enum MANIFEST =  MANIFEST32;//is64 ? MANIFEST64:
-		HMODULE kernel32;
-		kernel32 = GetModuleHandleA("kernel32.dll");
-		//if(kernel32)
-		assert(kernel32);
+		enum MANIFEST = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+			<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+				<description>DFL manifest</description>
+				<dependency>
+					<dependentAssembly>
+						<assemblyIdentity
+							type="win32"
+							name="Microsoft.Windows.Common-Controls"
+							version="6.0.0.0"
+							processorArchitecture="*"
+							publicKeyToken="6595b64144ccf1df"
+							language="*"
+						/>
+					</dependentAssembly>
+				</dependency>
+			</assembly>`;
+		DWORD pathlen;
+		wchar[MAX_PATH] pathbuf = void;
+		pathlen = GetTempPathW(pathbuf.length, pathbuf.ptr);
+		if(pathlen)
 		{
-			CreateActCtxWProc createActCtxW;
-			createActCtxW = cast(CreateActCtxWProc)GetProcAddress(kernel32, "CreateActCtxW");
-			if(createActCtxW)
+			DWORD manifestlen;
+			wchar[MAX_PATH] manifestbuf = void;
+			manifestlen = GetTempFileNameW(pathbuf.ptr, "dmf", 0, manifestbuf.ptr);
+			if(manifestlen)
 			{
-				GetTempPathWProc getTempPathW;
-				GetTempFileNameWProc getTempFileNameW;
-				ActivateActCtxProc activateActCtx;
-				
-				getTempPathW = cast(GetTempPathWProc)GetProcAddress(kernel32, "GetTempPathW");
-				assert(getTempPathW !is null);
-				getTempFileNameW = cast(GetTempFileNameWProc)GetProcAddress(kernel32, "GetTempFileNameW");
-				assert(getTempFileNameW !is null);
-				activateActCtx = cast(ActivateActCtxProc)GetProcAddress(kernel32, "ActivateActCtx");
-				assert(activateActCtx !is null);
-				
-				DWORD pathlen;
-				wchar[MAX_PATH] pathbuf = void;
-				//if(pathbuf)
+				HANDLE hf;
+				hf = CreateFileW(manifestbuf.ptr, GENERIC_WRITE, 0, null, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, HANDLE.init);
+				if(hf != INVALID_HANDLE_VALUE)
 				{
-					pathlen = getTempPathW(pathbuf.length, pathbuf.ptr);
-					if(pathlen)
+                    scope(exit) CloseHandle(hf);
+					DWORD written;
+					if(WriteFile(hf, MANIFEST.ptr, MANIFEST.length, &written, null))
 					{
-						DWORD manifestlen;
-						wchar[MAX_PATH] manifestbuf = void;
-						//if(manifestbuf)
+						ACTCTXW ac;
+						HANDLE hac;
+
+						ac.cbSize = ACTCTXW.sizeof;
+						ac.dwFlags = 0;
+						ac.lpSource = manifestbuf.ptr;
+
+						hac = CreateActCtxW(&ac);
+						if(hac != INVALID_HANDLE_VALUE)
 						{
-							manifestlen = getTempFileNameW(pathbuf.ptr, "dmf", 0, manifestbuf.ptr);
-							if(manifestlen)
+							ULONG_PTR ul;
+							ActivateActCtx(hac, &ul);
+
+							_initCommonControls(ICC_STANDARD_CLASSES); // Yes.
+							//InitCommonControls(); // No. Doesn't work with common controls version 6!
+
+							// Ensure the actctx is actually associated with the message queue...
+							PostMessageA(null, wmDfl, 0, 0);
 							{
-								HANDLE hf;
-								hf = CreateFileW(manifestbuf.ptr, GENERIC_WRITE, 0, null, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, HANDLE.init);
-								if(hf != INVALID_HANDLE_VALUE)
-								{
-									DWORD written;
-									if(WriteFile(hf, MANIFEST.ptr, MANIFEST.length, &written, null))
-									{
-										CloseHandle(hf);
-										
-										ACTCTXW ac;
-										HANDLE hac;
-										
-										ac.cbSize = ACTCTXW.sizeof;
-										//ac.dwFlags = 4; // ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID
-										ac.dwFlags = 0;
-										ac.lpSource = manifestbuf.ptr;
-										//ac.lpAssemblyDirectory = pathbuf; // ?
-										
-										hac = createActCtxW(&ac);
-										if(hac != INVALID_HANDLE_VALUE)
-										{
-											ULONG_PTR ul;
-											activateActCtx(hac, &ul);
-											
-											_initCommonControls(ICC_STANDARD_CLASSES); // Yes.
-											//InitCommonControls(); // No. Doesn't work with common controls version 6!
-											
-											// Ensure the actctx is actually associated with the message queue...
-											PostMessageA(null, wmDfl, 0, 0);
-											{
-												MSG msg;
-												PeekMessageA(&msg, null, wmDfl, wmDfl, PM_REMOVE);
-											}
-										}
-										else
-										{
-											debug(APP_PRINT)
-												cprintf("CreateActCtxW failed.\n");
-										}
-									}
-									else
-									{
-										CloseHandle(hf);
-									}
-								}
-								
-								DeleteFileW(manifestbuf.ptr);
+								MSG msg;
+								PeekMessageA(&msg, null, wmDfl, wmDfl, PM_REMOVE);
 							}
+						}
+						else
+						{
+							debug(APP_PRINT)
+							writeln("CreateActCtxW failed.");
 						}
 					}
 				}
+				DeleteFileW(manifestbuf.ptr);
 			}
 		}
 	}
