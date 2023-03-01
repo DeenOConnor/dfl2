@@ -501,11 +501,6 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="dfl">
-  <Folder name="internal">
-   <File path="dfl\internal\com.d" />
-   <File path="dfl\internal\dlib.d" />
-   <File path="dfl\internal\utf.d" />
-  </Folder>
   <Folder name="undead">
    <Folder name="internal">
     <File path="undead\internal\file.d" />

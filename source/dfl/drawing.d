@@ -5,11 +5,11 @@
 module dfl.drawing;
 
 private import dfl.base;
-private import dfl.internal.com;
 
 private import core.sys.windows.com;
 private import core.sys.windows.objidl;
 private import core.sys.windows.ocidl;
+private import core.sys.windows.ole2;
 private import core.sys.windows.olectl;
 private import core.sys.windows.windows;
 private import core.sys.windows.wingdi;
@@ -1518,20 +1518,6 @@ private:
 		return null;
 	}
 
-	/*
-	static IPicture _fromDStream(Stream stm)
-	in
-	{
-    assert(stm !is null);
-	}
-	do
-	{
-    scope DStreamToIStream istm = new DStreamToIStream(stm);
-    return _fromIStream(istm);
-	}
-	*/
-
-
 	static IPicture _fromFileName(string fileName)
 	{
 		// alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
@@ -1595,7 +1581,9 @@ private:
 
 	static IPicture _fromMemory(void[] mem)
 	{
-		return _fromIStream(new MemoryIStream(mem));
+		IStream stream;
+		CreateStreamOnHGlobal(mem.ptr, false, &stream);
+		return _fromIStream(stream);
 	}
 
 }

@@ -13,6 +13,7 @@ private import dfl.event;
 private import core.sys.windows.windows;
 
 private import std.string : splitLines;
+private import std.conv : to;
 
 
 version(DFL_NO_MENUS)
@@ -275,8 +276,8 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		return (_style() & ES_READONLY) != 0;
 	}
-	
-	
+
+
 	///
 	@property void selectedText(string sel) // setter
 	{
@@ -285,22 +286,21 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)sel.ptr);
 		}
 	}
-	
+
 	/// ditto
 	@property string selectedText() // getter
 	{		
 		if(created) {
-			WPARAM selStart;
-			LPARAM selEnd;
-			auto len = SendMessageA(handle, EM_GETSEL, &selStart, &selEnd);
+			size_t selStart, selEnd;
+			auto len = SendMessageA(handle, EM_GETSEL, cast(WPARAM)&selStart, cast(WPARAM)&selEnd);
 			if (len != 0) {
 				return this.text[selStart..selEnd];
             }
         }
 		return null;
 	}
-	
-	
+
+
 	///
 	@property void selectionLength(uint len) // setter
 	{
@@ -312,7 +312,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			SendMessageA(handle, EM_SETSEL, v1, v2);
 		}
 	}
-	
+
 	/// ditto
 	// Current selection length, in characters.
 	// This does not necessarily correspond to the length of chars; some characters use multiple chars.
@@ -365,11 +365,11 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	// An end of line (\r\n) takes up 2 characters.
 	// Return may be larger than the amount of characters.
 	// This is a lot faster than retrieving the text, but retrieving the text is completely accurate.
-	@property size_t textLength() // getter
+	@property uint textLength() // getter
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && created())
-			return cast(size_t)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-		return wtext.length;
+			return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+		return to!uint(wtext.length);
 	}
 	
 	
@@ -669,7 +669,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			void menuPopup(Object sender, EventArgs ea)
 			{
-				int slen, tlen;
+				uint slen, tlen;
 				bool issel;
 				
 				slen = selectionLength;
@@ -1105,7 +1105,7 @@ class TextBox: TextBoxBase // docmain
 			// is sent with the ch parameter set to zero.
 			
 			if(created)
-				SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0)
+				SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0);
 			else
 				_style(_style() & ~ES_PASSWORD);
 		}

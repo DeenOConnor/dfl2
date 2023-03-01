@@ -489,7 +489,7 @@ abstract class FileDialog: CommonDialog // docmain
 		if(fileNames.length)
 		{
 			string ts;
-			ts = _fileNames[0].ptr;
+			ts = _fileNames[0];
 			buf[0 .. ts.length] = ts[];
 			buf[ts.length] = 0;
 		}
@@ -522,7 +522,7 @@ abstract class FileDialog: CommonDialog // docmain
 			{
 				if(!*p)
 				{
-					_fileNames ~= to!string(fromStringz)startp[0 .. p - startp]; // dup later.
+					_fileNames ~= to!string(fromStringz(startp[0 .. p - startp])); // dup later.
 
 					p++;
 					if(!*p)

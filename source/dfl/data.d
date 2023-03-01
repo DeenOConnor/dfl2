@@ -6,8 +6,8 @@ module dfl.data;
 
 private import dfl.base;
 private import dfl.application;
-private import dfl.internal.com;
 
+private import core.sys.windows.com;
 private import core.sys.windows.objidl;
 private import core.sys.windows.shlobj;
 private import core.sys.windows.winbase;
@@ -1133,7 +1133,7 @@ class ComToDdataObject: IDflDataObject // package
 }
 
 
-package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
+package class EnumDataObjectFORMATETC: ComObject, IEnumFORMATETC
 {
 	this(IDflDataObject dataObj, string[] fmts, ULONG start)
 	{
@@ -1286,7 +1286,7 @@ package class EnumDataObjectFORMATETC: DflComObject, IEnumFORMATETC
 }
 
 
-class DtoComDataObject: DflComObject, IDataObject // package
+class DtoComDataObject: ComObject, IDataObject // package
 {
 	this(IDflDataObject dataObj)
 	{
