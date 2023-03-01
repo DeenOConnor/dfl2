@@ -818,16 +818,8 @@ version (DFL_NO_MENUS) {
 		protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
 			if (typeData !is null) {
-				//if (dfl.internal.utf.useUnicode) {
-				//	static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
-				//	lpmii.dwTypeData = cast(typeof(
-				//			lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
-				//	_setMenuItemInfoW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
-				//} else {
-					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) typeData.ptr;
-					SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
-				//}
+				lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
+				SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
 			} else {
 				SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
 			}
@@ -837,16 +829,8 @@ version (DFL_NO_MENUS) {
 		protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
 		{
 			if (typeData !is null) {
-				//if (dfl.internal.utf.useUnicode) {
-				//	static assert(MENUITEMINFOW.sizeof == MENUITEMINFOA.sizeof);
-				//	lpmii.dwTypeData = cast(typeof(
-				//			lpmii.dwTypeData)) dfl.internal.utf.toUnicodez(typeData);
-				//	_insertMenuItemW(hmenu, uItem, fByPosition, cast(MENUITEMINFOW*) lpmii);
-				//} else {
-					lpmii.dwTypeData = cast(typeof(
-							lpmii.dwTypeData)) typeData.ptr;
-					InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
-				//}
+				lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
+				InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
 			} else {
 				InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
 			}

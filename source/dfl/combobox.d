@@ -256,12 +256,7 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			//if(dfl.internal.utf.useUnicode)
-				//result = cast(int)prevwproc(CB_FINstring, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			//else
-				result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)str.ptr);
-			if(result == CB_ERR) // Redundant.
-				result = NO_MATCHES;
+			result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)str.ptr);
 		}
 		
 		return result;
@@ -283,12 +278,7 @@ class ComboBox: ListControl // docmain
 		
 		if(isHandleCreated)
 		{
-			//if(dfl.internal.utf.useUnicode)
-				//result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)dfl.internal.utf.toUnicodez(str));
-			//else
-				result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)str.ptr);
-			if(result == CB_ERR) // Redundant.
-				result = NO_MATCHES;
+			result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)str.ptr);
 		}
 		
 		return result;
@@ -628,10 +618,7 @@ class ComboBox: ListControl // docmain
 		{
 			if(lbox.isHandleCreated)
 			{
-				//if(dfl.internal.utf.useUnicode)
-					//lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(val)));
-				//else
-					lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
+				lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
 			}
 		}
 		
@@ -693,48 +680,27 @@ class ComboBox: ListControl // docmain
 		Message m;
 		m.hWnd = hwnd;
 		m.msg = CB_INSERTSTRING;
-		// Note: duplicate code.
-		/*if(dfl.internal.utf.useUnicode)
+
+        foreach(size_t i, Object obj; icollection._items)
 		{
-			foreach(int i, Object obj; icollection._items)
-			{
-				m.wParam = i;
-				m.lParam = cast(LPARAM)dfl.internal.utf.toUnicodez(getObjectString(obj)); // <--
-				
-				prevWndProc(m);
-				//if(CB_ERR == m.result || CB_ERRSPACE == m.result)
-				if(m.result < 0)
-					throw new DflException("Unable to add combo box item");
-				
-				//prevwproc(CB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
-			}
+			m.wParam = i;
+			m.lParam = cast(LPARAM)obj.toString().ptr;
+
+			prevWndProc(m);
+			if(m.result < 0)
+				throw new DflException("Unable to add combo box item");
 		}
-		else
-		{*/
-			foreach(size_t i, Object obj; icollection._items)
-			{
-				m.wParam = i;
-				m.lParam = cast(LPARAM)obj.toString().ptr; // Can this be unsafeAnsiz()? // <--
-				
-				prevWndProc(m);
-				//if(CB_ERR == m.result || CB_ERRSPACE == m.result)
-				if(m.result < 0)
-					throw new DflException("Unable to add combo box item");
-				
-				//prevwproc(CB_SETITEMDATA, m.result, cast(LPARAM)cast(void*)obj);
-			}
-		//}
-		
+
 		//redrawEntire();
 	}
-	
-	
+
+
 	package final @property bool hasDropList() // getter
 	{
 		return dropDownStyle != ComboBoxStyle.SIMPLE;
 	}
-	
-	
+
+
 	// This is needed for the SIMPLE style.
 	protected override void onPaintBackground(PaintEventArgs pea)
 	{
@@ -767,10 +733,7 @@ class ComboBox: ListControl // docmain
 		// Fix the combo box's text since the initial window
 		// text isn't put in the edit box for some reason.
 		Message m;
-		//if(dfl.internal.utf.useUnicode)
-			//m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)dfl.internal.utf.toUnicodez(ft));
-		//else
-			m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)ft.ptr); // Can this be unsafeAnsiz()?
+		m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)ft.ptr);
 		prevWndProc(m);
 	}
 	

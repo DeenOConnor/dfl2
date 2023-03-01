@@ -7,9 +7,6 @@ module dfl.drawing;
 private import dfl.base;
 private import dfl.internal.com;
 
-// Need to fix all errors about LogFont
-// private import dfl.internal.utf;
-
 private import core.sys.windows.com;
 private import core.sys.windows.objidl;
 private import core.sys.windows.ocidl;
@@ -2452,7 +2449,7 @@ class Graphics // docmain
 
     prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
 
-    dfl.internal.utf.getTextExtentPoint32(hdc, text, &sz);
+    GetTextExtentPoint32(hdc, text, &sz);
 
     //if(prevFont)
     SelectObject(hdc, prevFont);
@@ -2514,50 +2511,6 @@ class Graphics // docmain
 
 
 	/+
-	// Doesn't work... dfl.internal.utf.drawTextEx uses a different buffer!
-	// ///
-	final string getTrimmedText(string text, Font font, Rect r, TextFormat fmt) // deprecated
-	{
-    switch(fmt.trimming)
-    {
-    case TextTrimming.ELLIPSIS:
-    case TextTrimming.ELLIPSIS_PATH:
-    {
-    char[] newtext;
-    RECT rect;
-    HFONT prevFont;
-
-    newtext = text.dup;
-    r.getRect(&rect);
-    prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
-
-    // DT_CALCRECT needs to prevent it from actually drawing.
-    if(!dfl.internal.utf.drawTextEx(hdc, newtext, &rect, DT_EXPANDTABS | DT_TABSTOP |
-    fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_MODIFYSTRING | DT_NOCLIP, &fmt._params))
-    {
-    //throw new DflException("Text trimming error");
-    }
-
-    //if(prevFont)
-    SelectObject(hdc, prevFont);
-
-    for(size_t iw = 0; iw != newtext.length; iw++)
-    {
-    if(!newtext[iw])
-    return newtext[0 .. iw];
-    }
-    //return newtext;
-    // There was no change, so no sense in keeping the duplicate.
-    delete newtext;
-    return text;
-    }
-    break;
-
-    default:
-    return text;
-    }
-	}
-
 	// ///
 	final string getTrimmedText(string text, Font font, Rect r, TextTrimming trim)
 	{
@@ -3442,24 +3395,6 @@ enum FontSmoothing
 ///
 class Font // docmain
 {
-	// TODO : Get rid of this wrapper stuff and leave only LOGFONTW
-	// Used internally.
-	/*
-	static void LOGFONTAtoLogFont(ref LogFont lf, LOGFONTA* plfa) // package // deprecated
-	{
-    lf.lfa = *plfa;
-    lf.faceName = dfl.internal.utf.fromAnsiz(plfa.lfFaceName.ptr);
-	}
-
-	// Used internally.
-	static void LOGFONTWtoLogFont(ref LogFont lf, LOGFONTW* plfw) // package // deprecated
-	{
-    lf.lfw = *plfw;
-    lf.faceName = dfl.internal.utf.fromUnicodez(plfw.lfFaceName.ptr);
-	}
-	*/
-
-
 	// Used internally.
 	this(HFONT hf, ref LOGFONTA lf, bool owned = true) // package // deprecated
 	{

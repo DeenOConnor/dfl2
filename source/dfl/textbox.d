@@ -9,7 +9,6 @@ private import dfl.base;
 private import dfl.application;
 private import dfl.drawing;
 private import dfl.event;
-private import dfl.internal.utf;
 
 private import core.sys.windows.windows;
 
@@ -281,40 +280,23 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	///
 	@property void selectedText(string sel) // setter
 	{
-		/+
-		if(created)
-			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)unsafeStringz(sel));
-		+/
-		
 		if(created)
 		{
-			//dfl.internal.utf.sendMessage(handle, EM_REPLACESEL, FALSE, sel);
-			dfl.internal.utf.sendMessageUnsafe(handle, EM_REPLACESEL, FALSE, sel);
+			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)sel.ptr);
 		}
 	}
 	
 	/// ditto
 	@property string selectedText() // getter
-	{
-		/+
-		if(created)
-		{
-			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
-			if(v1 == v2)
-				return null;
-			assert(v2 > v1);
-			string result = new char[v2 - v1 + 1];
-			result[result.length - 1] = 0;
-			result = result[0 .. result.length - 1];
-			result[] = text[v1 .. v2];
-			return result;
-		}
-		return null;
-		+/
-		
-		if(created)
-			return dfl.internal.utf.getSelectedText(handle);
+	{		
+		if(created) {
+			WPARAM selStart;
+			LPARAM selEnd;
+			auto len = SendMessageA(handle, EM_GETSEL, &selStart, &selEnd);
+			if (len != 0) {
+				return this.text[selStart..selEnd];
+            }
+        }
 		return null;
 	}
 	
@@ -383,12 +365,11 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	// An end of line (\r\n) takes up 2 characters.
 	// Return may be larger than the amount of characters.
 	// This is a lot faster than retrieving the text, but retrieving the text is completely accurate.
-	@property uint textLength() // getter
+	@property size_t textLength() // getter
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && created())
-			//return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-			return cast(uint)dfl.internal.utf.sendMessage(handle, WM_GETTEXTLENGTH, 0, 0);
-		return cast(uint)wtext.length;
+			return cast(size_t)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+		return wtext.length;
 	}
 	
 	
@@ -604,7 +585,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			super.createHandle();
 			
-			//dfl.internal.utf.setWindowText(hwnd, txt);
+			//SetWindowText(hwnd, txt);
 			text = txt; // So that it can be overridden.
 		}
 	}
@@ -938,7 +919,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		}
 		
 		//msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -1114,8 +1095,7 @@ class TextBox: TextBoxBase // docmain
 			// character specified by the ch parameter.
 			
 			if(created)
-				//SendMessageA(handle, EM_SETPASSWORDCHAR, pwc, 0);
-				dfl.internal.utf.emSetPasswordChar(handle, pwc);
+				SendMessageA(handle, EM_SETPASSWORDCHAR, pwc, 0);
 			else
 				_style(_style() | ES_PASSWORD);
 		}
@@ -1125,8 +1105,7 @@ class TextBox: TextBoxBase // docmain
 			// is sent with the ch parameter set to zero.
 			
 			if(created)
-				//SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0);
-				dfl.internal.utf.emSetPasswordChar(handle, 0);
+				SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0)
 			else
 				_style(_style() & ~ES_PASSWORD);
 		}
@@ -1138,8 +1117,7 @@ class TextBox: TextBoxBase // docmain
 	final @property dchar passwordChar() // getter
 	{
 		if(created)
-			//passchar = cast(dchar)SendMessageA(handle, EM_GETPASSWORDCHAR, 0, 0);
-			passchar = dfl.internal.utf.emGetPasswordChar(handle);
+			passchar = cast(dchar)SendMessageA(handle, EM_GETPASSWORDCHAR, 0, 0);
 		return passchar;
 	}
 	

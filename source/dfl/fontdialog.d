@@ -11,8 +11,6 @@ private import dfl.control;
 private import dfl.drawing;
 private import dfl.event;
 
-import dfl.internal.utf;
-
 private import core.sys.windows.commdlg;
 private import core.sys.windows.windows;
 

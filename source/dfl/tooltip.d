@@ -8,13 +8,15 @@ module dfl.tooltip;
 private import dfl.control;
 private import dfl.base;
 private import dfl.application;
-private import dfl.internal.utf;
 
 private import core.memory : GC;
 private import core.exception : OutOfMemoryError;
 
 private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
+
+private import std.conv : to;
+private import std.string : fromStringz;
 
 
 ///
@@ -173,35 +175,19 @@ class ToolTip // docmain
 		tool.uFlags = TTF_IDISHWND;
 		tool.hwnd = ctrl.handle;
 		tool.uId = cast(UINT)ctrl.handle;
-		
-		if(dfl.internal.utf.useUnicode)
-		{
-			tool.lpszText = cast(typeof(tool.lpszText))GC.malloc((MAX_TIP_TEXT_LENGTH + 1) * wchar.sizeof);
-			if(!tool.lpszText)
-				throw new OutOfMemoryError();
-			scope(exit)
-				GC.free(tool.lpszText);
-			tool.lpszText[0 .. 2] = 0;
-			SendMessageA(hwtt, TTM_GETTEXTW, 0, cast(LPARAM)&tool);
-			if(!(cast(wchar*)tool.lpszText)[0])
-				result = null;
-			else
-				result = fromUnicodez(cast(wchar*)tool.lpszText);
-		}
+
+		tool.lpszText = cast(typeof(tool.lpszText))GC.malloc(MAX_TIP_TEXT_LENGTH + 1);
+		if(!tool.lpszText)
+			throw new OutOfMemoryError();
+		scope(exit)
+			GC.free(tool.lpszText);
+		tool.lpszText[0] = 0;
+		SendMessageA(hwtt, TTM_GETTEXTA, 0, cast(LPARAM)&tool);
+		if(!tool.lpszText[0])
+			result = null;
 		else
-		{
-			tool.lpszText = cast(typeof(tool.lpszText))GC.malloc(MAX_TIP_TEXT_LENGTH + 1);
-			if(!tool.lpszText)
-				throw new OutOfMemoryError();
-			scope(exit)
-				GC.free(tool.lpszText);
-			tool.lpszText[0] = 0;
-			SendMessageA(hwtt, TTM_GETTEXTA, 0, cast(LPARAM)&tool);
-			if(!tool.lpszText[0])
-				result = null;
-			else
-				result = fromAnsiz(tool.lpszText); // Assumes fromAnsiz() copies.
-		}
+			result = to!string(fromStringz(tool.lpszText)); // Assumes fromAnsiz() copies.
+
 		return result;
 	}
 	
@@ -248,16 +234,8 @@ class ToolTip // docmain
 		{
 			// Update.
 			
-			if(dfl.internal.utf.useUnicode)
-			{
-				tool.lpszText = cast(typeof(tool.lpszText))toUnicodez(text);
-				SendMessageA(hwtt, TTM_UPDATETIPTEXTW, 0, cast(LPARAM)&tool);
-			}
-			else
-			{
-				tool.lpszText = cast(typeof(tool.lpszText))unsafeAnsiz(text);
-				SendMessageA(hwtt, TTM_UPDATETIPTEXTA, 0, cast(LPARAM)&tool);
-			}
+			tool.lpszText = cast(typeof(tool.lpszText))text.ptr;
+			SendMessageA(hwtt, TTM_UPDATETIPTEXTA, 0, cast(LPARAM)&tool);
 		}
 		else
 		{
@@ -272,16 +250,9 @@ class ToolTip // docmain
 			+/
 			tool.uFlags |= TTF_SUBCLASS; // Not a good idea ?
 			LRESULT lr;
-			if(dfl.internal.utf.useUnicode)
-			{
-				tool.lpszText = cast(typeof(tool.lpszText))toUnicodez(text);
-				lr = SendMessageA(hwtt, TTM_ADDTOOLW, 0, cast(LPARAM)&tool);
-			}
-			else
-			{
-				tool.lpszText = cast(typeof(tool.lpszText))unsafeAnsiz(text);
-				lr = SendMessageA(hwtt, TTM_ADDTOOLA, 0, cast(LPARAM)&tool);
-			}
+			
+            tool.lpszText = cast(typeof(tool.lpszText))text.ptr;
+			lr = SendMessageA(hwtt, TTM_ADDTOOLA, 0, cast(LPARAM)&tool);
 			
 			if(lr)
 				Application.refCountInc(cast(void*)this);

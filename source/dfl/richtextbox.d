@@ -784,7 +784,7 @@ class RichTextBox: TextBoxBase // docmain
 		/+
 		//if(!SendMessageA(handle, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
 		//if(!CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
-		if(!dfl.internal.utf.callWindowProc(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
+		if(!CallWindowProc(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
 			throw new DflException("Unable to set text formatting");
 		+/
 		CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf);
@@ -908,7 +908,7 @@ class RichTextBox: TextBoxBase // docmain
 			
 			super.createHandle();
 			
-			//dfl.internal.utf.setWindowText(hwnd, txt);
+			//SetWindowText(hwnd, txt);
 			text = txt; // So that it can be overridden.
 		}
 		+/
@@ -1021,7 +1021,6 @@ class RichTextBox: TextBoxBase // docmain
 	override void prevWndProc(ref Message m)
 	{
 		m.result = CallWindowProcA(richtextboxPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
-		//m.result = dfl.internal.utf.callWindowProc(richtextboxPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
 	}
 	
 	
