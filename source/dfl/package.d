@@ -4,69 +4,7 @@
 /// Imports all of DFL's public interface.
 module dfl;
 
-
-/*
-version(bud)
-    version = build;
-version(DFL_NO_BUD_DEF)
-    version = DFL_NO_BUILD_DEF;
-
-
-    //$(TOC pragmas, Pragmas)
-       // $(TOC_SUB pragmas,pragma_build, build)
-      //  $(TOC_SUB pragmas,pragma_build_def, build def)
-      //  $(TOC_SUB pragmas,pragma_export_version, export version)
-      //  $(TOC_SUB pragmas,pragma_ignore, ignore)
-      //  $(TOC_SUB pragmas,pragma_include, include)
-     //   $(TOC_SUB pragmas,pragma_link, link)
-        
-version(build)
-{
-
-    version(WINE)
-    {
-    }
-    else
-    {
-        version(DFL_NO_LIB)
-        {
-        }
-        else
-        {
-            pragma(link, "dfl_build");
-            
-            pragma(link, "ws2_32");
-            pragma(link, "gdi32");
-            pragma(link, "comctl32");
-            pragma(link, "advapi32");
-            pragma(link, "comdlg32");
-            pragma(link, "ole32");
-            pragma(link, "uuid");
-        }
-        
-        version(DFL_NO_BUILD_DEF)
-        {
-        }
-        else
-        {
-            pragma(build_def, "EXETYPE NT");
-            version(gui)
-            {
-                pragma(build_def, "SUBSYSTEM WINDOWS,4.0");
-            }
-            else
-            {
-                pragma(build_def, "SUBSYSTEM CONSOLE,4.0");
-            }
-        }
-    }
-}
-*/
- // pragma(link, "SUBSYSTEM WINDOWS,4.0");
-
-
-
-// Windows libraries that DFL depends on. Put here instead of using LoadLibrary to manually load everything - D.O
+// Windows libraries that DFL2 depends on. Put here instead of using LoadLibrary to manually load everything - D.O
 pragma(lib, "advapi32");
 pragma(lib, "comdlg32");
 pragma(lib, "comctl32");
@@ -77,16 +15,20 @@ pragma(lib, "ws2_32");
 pragma(lib, "uuid");    
 pragma(lib, "user32");
 
-// This is to activate common controls ver. 6 without some wacky winapi calls. Disabled for now, but this (imo) is better than calling
-// Application.enableVisualStyles() each time at startup. The proper way is by making an actual manifest file, but i don't know how to
-// do this with VS + VisualD (at least ver. 1.3.1) - D.O
-// pragma(linkerDirective, "\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0'  processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"");
-
-
-
+// This is to activate common controls ver. 6 without some wacky winapi calls. Enabled to not rely on Application.enableVisualStyles()
+// Passing /MANIFESTDEPENDENCY to the VS linker makes it include the dependency into a manifest file, creating one if missing
+// It would probably be better to create dfl2.manifest and link with it, but i don't know how to do this with VisualD (at least ver. 1.3.1)
+enum LINK_ENABLE_COMCTRL = 
+"\"/MANIFESTDEPENDENCY:type='win32'
+name='Microsoft.Windows.Common-Controls'
+version='6.0.0.0'
+processorArchitecture='*'
+publicKeyToken='6595b64144ccf1df'
+language='*'\"";
+pragma(linkerDirective, LINK_ENABLE_COMCTRL);
 
 public import
-    dfl.base, dfl.menu, dfl.control, // dfl.usercontrol,
+dfl.base, dfl.menu, dfl.control,
     dfl.form, dfl.drawing, dfl.panel, dfl.event,
     dfl.application, dfl.button, dfl.socket,
     dfl.timer, dfl.environment, dfl.label, dfl.textbox,
@@ -96,4 +38,3 @@ public import
     dfl.combobox, dfl.treeview, dfl.picturebox, dfl.tabcontrol,
     dfl.listview, dfl.statusbar, dfl.progressbar, dfl.resources,
     dfl.imagelist, dfl.toolbar;
-
