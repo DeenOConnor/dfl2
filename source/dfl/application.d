@@ -244,73 +244,86 @@ final class Application // docmain
 	}
 
 
-    private {
+	private {
 		// alias extern(Windows) int function(HWND, int) f_AllowDarkModeForWindow;
-		alias extern(Windows) void function(int) f_FlushMenuThemes;
+		alias extern(Windows) void function() f_FlushMenuThemes;
 		alias extern(Windows) void function(int) f_SetPreferredAppMode;
 		alias extern(Windows) int function(void*, char*, void*) f_SetWindowTheme;
 		alias extern(Windows) int function() f_ShouldAppsUseDarkMode;
 		alias extern(Windows) int function() f_ShouldSystemUseDarkMode;
+
 
 		static HMODULE hUxTheme;
 
 		static f_SetWindowTheme SetWindowTheme;
 		static f_ShouldAppsUseDarkMode ShouldAppsUseDarkMode; // Ordinal 132 or 0x84
 		// static f_AllowDarkModeForWindow AllowDarkModeForWindow; // Ordinal 133 or 0x85, but 0x85 is EndBufferedAnimation?
-        static f_SetPreferredAppMode SetPreferredAppMode; // Ordinal 135 or 0x87
-        static f_FlushMenuThemes FlushMenuThemes; // Ordinal 136 or 0x88
-        static f_ShouldSystemUseDarkMode ShouldSystemUseDarkMode; // Ordinal 138 0x8A
+		static f_SetPreferredAppMode SetPreferredAppMode; // Ordinal 135 or 0x87
+		static f_FlushMenuThemes FlushMenuThemes; // Ordinal 136 or 0x88
+		static f_ShouldSystemUseDarkMode ShouldSystemUseDarkMode; // Ordinal 138 0x8A
 
 		static bool uxThemeInitialized = false;
+
+
+		// Even more experimental, might not work with Windows versions less than Win 11 build 22000
+		alias extern(Windows) int function(void*, DWORD, LPCVOID, DWORD) f_DwmSetWindowAttribute;
+		static f_DwmSetWindowAttribute DwmSetWindowAttribute;
+		static HMODULE hDwmapi;
+
 
 		static bool initUxTheme() {
 			if (uxThemeInitialized) {
 				return true;
-            }
+			}
 
 			hUxTheme = GetModuleHandleA(toStringz("uxtheme.dll"));
+			hDwmapi = LoadLibraryA("dwmapi.dll");
 
-            if (hUxTheme is null) {
-                hUxTheme = LoadLibraryA("uxtheme.dll");
-            }
+			if (hUxTheme is null) {
+				hUxTheme = LoadLibraryA("uxtheme.dll");
+			}
 
-            if (hUxTheme is null) {
+			if (hUxTheme is null) {
 				debug {
 					writeln("Could not load uxtheme.dll, sticking to default settings!");
-                }
-            }
+				}
+			}
 
-			uxThemeInitialized = hUxTheme is null;
+			uxThemeInitialized = hUxTheme !is null;
 			return uxThemeInitialized;
-        }
+		}
 
 		static bool initUxFunctions() {
 			if (!uxThemeInitialized && !initUxTheme()) {
 				return false;
-            }
+			}
 
 			SetWindowTheme = cast(f_SetWindowTheme) GetProcAddress(hUxTheme, toStringz("SetWindowTheme"));
 
-            ShouldAppsUseDarkMode = cast(f_ShouldAppsUseDarkMode) GetProcAddress(hUxTheme, cast(char*)132L);
-            SetPreferredAppMode = cast(f_SetPreferredAppMode) GetProcAddress(hUxTheme, cast(char*)135L);
-            FlushMenuThemes = cast(f_FlushMenuThemes) GetProcAddress(hUxTheme, cast(char*)136L);
-            ShouldSystemUseDarkMode = cast(f_ShouldSystemUseDarkMode) GetProcAddress(hUxTheme, cast(char*)138L);
+			ShouldAppsUseDarkMode = cast(f_ShouldAppsUseDarkMode) GetProcAddress(hUxTheme, cast(char*)132L);
+			SetPreferredAppMode = cast(f_SetPreferredAppMode) GetProcAddress(hUxTheme, cast(char*)135L);
+			FlushMenuThemes = cast(f_FlushMenuThemes) GetProcAddress(hUxTheme, cast(char*)136L);
+			ShouldSystemUseDarkMode = cast(f_ShouldSystemUseDarkMode) GetProcAddress(hUxTheme, cast(char*)138L);
 
-            if (
-                SetWindowTheme is null
-                || ShouldAppsUseDarkMode is null
-                || SetPreferredAppMode is null
-                || FlushMenuThemes is null
-                || ShouldSystemUseDarkMode is null
-            ) {
+			if (hDwmapi !is null) {
+				DwmSetWindowAttribute = cast(f_DwmSetWindowAttribute) GetProcAddress(hDwmapi, toStringz("DwmSetWindowAttribute"));
+			}
+
+			if (
+				SetWindowTheme is null
+				|| ShouldAppsUseDarkMode is null
+				|| SetPreferredAppMode is null
+				|| FlushMenuThemes is null
+				|| ShouldSystemUseDarkMode is null
+			) {
 				debug {
 					writeln("Could not retrieve all needed functions");
-                }
-                return false;
-            }
+				}
+				return false;
+			}
 
 			return true;
-        }
+		}
 	}
 
 	/// Experimental feature!
@@ -322,23 +335,23 @@ final class Application // docmain
 			if (!initRes) {
 				debug {
 					writeln("Can't use uxtheme features because it could not be initialized!");
-                }
+				}
 				return false;
-            }
-        }
+			}
+		}
 
-        int res = ShouldAppsUseDarkMode() | ShouldSystemUseDarkMode();
-        if (res != 0) {
+		int res = ShouldAppsUseDarkMode() | ShouldSystemUseDarkMode();
+		if (res != 0) {
 			debug {
 				writeln("Apps or system should use dark mode");
             }
-            return true;
-        }
-		
+			return true;
+		}
+
 		debug {
 			writeln("Apps or system should use light mode OR functions returned incorrect values");
-        }
-        return false;
+		}
+		return false;
 	}
 
 	/// Experimental feature!
@@ -350,13 +363,13 @@ final class Application // docmain
 			if (!initRes) {
 				debug {
 					writeln("Can't use uxtheme features because it could not be initialized!");
-                }
+				}
 				return;
-            }
-        }
+			}
+		}
 
-        SetPreferredAppMode(1); // AllowDark
-    }
+		SetPreferredAppMode(1); // AllowDark
+	}
 
 	/// Experimental feature!
 	void forceDarkModeForApp() {
@@ -367,13 +380,13 @@ final class Application // docmain
 			if (!initRes) {
 				debug {
 					writeln("Can't use uxtheme features because it could not be initialized!");
-                }
+				}
 				return;
-            }
-        }
+			}
+		}
 
-        SetPreferredAppMode(2); // ForceDark
-    }
+		SetPreferredAppMode(2); // ForceDark
+	}
 
 	/// Experimental feature!
 	bool enableDarkModeForWindow(Form form) {
@@ -384,19 +397,20 @@ final class Application // docmain
 			if (!initRes) {
 				debug {
 					writeln("Can't use uxtheme features because it could not be initialized!");
-                }
+				}
 				return false;
-            }
-        }
+			}
+		}
 
-        import core.sys.windows.winuser : SetPropW;
+		import core.sys.windows.winuser : SetPropW;
 
-        //AllowDarkModeForWindow(mainForm.handle(), 1);
-        int res = SetPropW(form.handle(), "UseImmersiveDarkModeColors"w.ptr, null);
-        HRESULT hres = SetWindowTheme(form.handle(), cast(char*)toStringz("Explorer"), null);
+		//AllowDarkModeForWindow(mainForm.handle(), 1);
+		int res = SetPropW(form.handle(), "UseImmersiveDarkModeColors"w.ptr, null);
+		HRESULT hres = SetWindowTheme(form.handle(), cast(char*)toStringz("Explorer"), null);
+		form.invalidate(true);
 
 		return res != 0 && hres == 0;
-    }
+	}
 
 	/// Experimental feature!
 	bool forceDarkModeForWindow(Form form) {
@@ -407,12 +421,47 @@ final class Application // docmain
 			if (!initRes) {
 				debug {
 					writeln("Can't use uxtheme features because it could not be initialized!");
-                }
+				}
 				return false;
+			}
+		}
+
+		if (DwmSetWindowAttribute !is null) {
+			int yes_please = 1;
+			DwmSetWindowAttribute(form.handle(), 20, &yes_please, yes_please.sizeof);
+			return true;
+		}
+
+		return SetWindowTheme(form.handle(), cast(char*)toStringz("DarkMode_Explorer"), null) == 0;
+
+		scope (exit) {
+            themeApplyChildren(form);
+			FlushMenuThemes();
+			RedrawWindow(form.handle(), null, null,	RDW_INVALIDATE | RDW_UPDATENOW | RDW_ALLCHILDREN);
+        }
+	}
+
+	// Only used when forcing dark mode for the entire window
+	private void forceDarkModeForControl(Control ctrl) {
+		if (DwmSetWindowAttribute !is null) {
+			int yes_please = 1;
+			DwmSetWindowAttribute(ctrl.handle(), 20, &yes_please, yes_please.sizeof);
+		}
+		SetWindowTheme(ctrl.handle(), cast(char*)toStringz("DarkMode_Explorer"), null);
+		ctrl.invalidate();
+	}
+
+	private void themeApplyChildren(Control ctrl) {
+        auto childrenCount = ctrl.controls.children.length;
+        if (childrenCount > 0) {
+            foreach (ulong index; 0..childrenCount) {
+                SetWindowTheme(ctrl.handle(), cast(char*)toStringz("DarkMode_Explorer"), null);
+                //ctrl.controls.children[index].invalidate();
+                if (ctrl.controls.children[index].controls.children.length > 0) {
+                    themeApplyChildren(ctrl.controls.children[index]);
+                }
             }
         }
-
-        return SetWindowTheme(form.handle(), cast(char*)toStringz("DarkMode_Explorer"), null) == 0;
     }
 
 	
