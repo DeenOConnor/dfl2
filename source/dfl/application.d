@@ -242,7 +242,179 @@ final class Application // docmain
 			}
 		}
 	}
-	
+
+
+    private {
+		// alias extern(Windows) int function(HWND, int) f_AllowDarkModeForWindow;
+		alias extern(Windows) void function(int) f_FlushMenuThemes;
+		alias extern(Windows) void function(int) f_SetPreferredAppMode;
+		alias extern(Windows) int function(void*, char*, void*) f_SetWindowTheme;
+		alias extern(Windows) int function() f_ShouldAppsUseDarkMode;
+		alias extern(Windows) int function() f_ShouldSystemUseDarkMode;
+
+		static HMODULE hUxTheme;
+
+		static f_SetWindowTheme SetWindowTheme;
+		static f_ShouldAppsUseDarkMode ShouldAppsUseDarkMode; // Ordinal 132 or 0x84
+		// static f_AllowDarkModeForWindow AllowDarkModeForWindow; // Ordinal 133 or 0x85, but 0x85 is EndBufferedAnimation?
+        static f_SetPreferredAppMode SetPreferredAppMode; // Ordinal 135 or 0x87
+        static f_FlushMenuThemes FlushMenuThemes; // Ordinal 136 or 0x88
+        static f_ShouldSystemUseDarkMode ShouldSystemUseDarkMode; // Ordinal 138 0x8A
+
+		static bool uxThemeInitialized = false;
+
+		static bool initUxTheme() {
+			if (uxThemeInitialized) {
+				return true;
+            }
+
+			hUxTheme = GetModuleHandleA(toStringz("uxtheme.dll"));
+
+            if (hUxTheme is null) {
+                hUxTheme = LoadLibraryA("uxtheme.dll");
+            }
+
+            if (hUxTheme is null) {
+				debug {
+					writeln("Could not load uxtheme.dll, sticking to default settings!");
+                }
+            }
+
+			uxThemeInitialized = hUxTheme is null;
+			return uxThemeInitialized;
+        }
+
+		static bool initUxFunctions() {
+			if (!uxThemeInitialized && !initUxTheme()) {
+				return false;
+            }
+
+			SetWindowTheme = cast(f_SetWindowTheme) GetProcAddress(hUxTheme, toStringz("SetWindowTheme"));
+
+            ShouldAppsUseDarkMode = cast(f_ShouldAppsUseDarkMode) GetProcAddress(hUxTheme, cast(char*)132L);
+            SetPreferredAppMode = cast(f_SetPreferredAppMode) GetProcAddress(hUxTheme, cast(char*)135L);
+            FlushMenuThemes = cast(f_FlushMenuThemes) GetProcAddress(hUxTheme, cast(char*)136L);
+            ShouldSystemUseDarkMode = cast(f_ShouldSystemUseDarkMode) GetProcAddress(hUxTheme, cast(char*)138L);
+
+            if (
+                SetWindowTheme is null
+                || ShouldAppsUseDarkMode is null
+                || SetPreferredAppMode is null
+                || FlushMenuThemes is null
+                || ShouldSystemUseDarkMode is null
+            ) {
+				debug {
+					writeln("Could not retrieve all needed functions");
+                }
+                return false;
+            }
+
+			return true;
+        }
+	}
+
+	/// Experimental feature!
+	bool checkIfDarkModeNeeded() {
+		if (!uxThemeInitialized) {
+			bool initRes = initUxTheme();
+			initRes &= initUxFunctions();
+
+			if (!initRes) {
+				debug {
+					writeln("Can't use uxtheme features because it could not be initialized!");
+                }
+				return false;
+            }
+        }
+
+        int res = ShouldAppsUseDarkMode() | ShouldSystemUseDarkMode();
+        if (res != 0) {
+			debug {
+				writeln("Apps or system should use dark mode");
+            }
+            return true;
+        }
+		
+		debug {
+			writeln("Apps or system should use light mode OR functions returned incorrect values");
+        }
+        return false;
+	}
+
+	/// Experimental feature!
+	void enableDarkModeForApp() {
+		if (!uxThemeInitialized) {
+			bool initRes = initUxTheme();
+			initRes &= initUxFunctions();
+
+			if (!initRes) {
+				debug {
+					writeln("Can't use uxtheme features because it could not be initialized!");
+                }
+				return;
+            }
+        }
+
+        SetPreferredAppMode(1); // AllowDark
+    }
+
+	/// Experimental feature!
+	void forceDarkModeForApp() {
+		if (!uxThemeInitialized) {
+			bool initRes = initUxTheme();
+			initRes &= initUxFunctions();
+
+			if (!initRes) {
+				debug {
+					writeln("Can't use uxtheme features because it could not be initialized!");
+                }
+				return;
+            }
+        }
+
+        SetPreferredAppMode(2); // ForceDark
+    }
+
+	/// Experimental feature!
+	bool enableDarkModeForWindow(Form form) {
+		if (!uxThemeInitialized) {
+			bool initRes = initUxTheme();
+			initRes &= initUxFunctions();
+
+			if (!initRes) {
+				debug {
+					writeln("Can't use uxtheme features because it could not be initialized!");
+                }
+				return false;
+            }
+        }
+
+        import core.sys.windows.winuser : SetPropW;
+
+        //AllowDarkModeForWindow(mainForm.handle(), 1);
+        int res = SetPropW(form.handle(), "UseImmersiveDarkModeColors"w.ptr, null);
+        HRESULT hres = SetWindowTheme(form.handle(), cast(char*)toStringz("Explorer"), null);
+
+		return res != 0 && hres == 0;
+    }
+
+	/// Experimental feature!
+	bool forceDarkModeForWindow(Form form) {
+		if (!uxThemeInitialized) {
+			bool initRes = initUxTheme();
+			initRes &= initUxFunctions();
+
+			if (!initRes) {
+				debug {
+					writeln("Can't use uxtheme features because it could not be initialized!");
+                }
+				return false;
+            }
+        }
+
+        return SetWindowTheme(form.handle(), cast(char*)toStringz("DarkMode_Explorer"), null) == 0;
+    }
+
 	
 	/+
 	// ///
