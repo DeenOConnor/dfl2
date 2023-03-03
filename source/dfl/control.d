@@ -5751,8 +5751,8 @@ class Control: Object, IWindow // docmain
 					
 					//finishCreating(msg.hWnd);
 					
-					if(!(ctrlStyle & ControlStyles.CACHE_TEXT))
-						wtext = null;
+					//if(!(ctrlStyle & ControlStyles.CACHE_TEXT))
+					//	wtext = null;
 					
 					/+
 					// Gets created on demand instead.
