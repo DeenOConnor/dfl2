@@ -128,66 +128,61 @@ class GroupBox: ControlSuperClass // docmain
 		msg.result = CallWindowProcW(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 		
 		// Work around a Windows issue...
-		if(WM_PAINT == msg.msg)
+        if(WM_PAINT == msg.msg)
 		{
 			auto hmuxt = GetModuleHandleA("uxtheme.dll");
 			if(hmuxt)
 			{
 				alias int function() nothrow f_IsAppThemed;
-				auto isAppThemed = cast(f_IsAppThemed)GetProcAddress(hmuxt, "IsAppThemed");
-				if(isAppThemed !is null && isAppThemed())
+				alias void* function(void*, const(wchar*)) f_OpenThemeData;
+				alias int function(void*, int, int, int, uint*) f_GetThemeColor;
+				alias int function(void* hTheme) f_CloseThemeData;
+
+				auto IsAppThemed = cast(f_IsAppThemed)GetProcAddress(hmuxt, "IsAppThemed");
+				auto OpenThemeData = cast(f_OpenThemeData)GetProcAddress(hmuxt, "OpenThemeData");
+				auto GetThemeColor = cast(f_GetThemeColor)GetProcAddress(hmuxt, "GetThemeColor");
+				auto CloseThemeData = cast(f_CloseThemeData)GetProcAddress(hmuxt, "CloseThemeData");
+
+				if(IsAppThemed !is null && IsAppThemed())
 				{
-					auto txt = text;
-					if(txt.length)
+					if(this.text.length)
 					{
-						alias void* function(void* hwnd, const(wchar*) pszClassList) f_OpenThemeData;
-						auto openThemeData = cast(f_OpenThemeData)GetProcAddress(hmuxt, "OpenThemeData");
 						HTHEME htd;
-						if(openThemeData !is null
-							&& HTHEME.init != (htd = openThemeData(msg.hWnd, "Button")))
-						{
-							HDC hdc = cast(HDC)msg.wParam;
+						if (OpenThemeData !is null) {
+							htd = OpenThemeData(this.handle(), "Button"w.ptr);
+						}
+
+						//  hdc = cast(HDC)msg.wParam;
+						HDC hdc = GetDC(this.handle());
+						if (hdc !is null) {
+							scope(exit) ReleaseDC(this.handle(), hdc);
 							//PAINTSTRUCT ps;
-							bool gotdc = false;
-							if(!hdc)
-							{
-								//hdc = BeginPaint(msg.hWnd, &ps);
-								gotdc = true;
-								hdc = GetDC(msg.hWnd);
-							}
 							try
 							{
 								scope g = new Graphics(hdc, false); // Not owned.
-								auto f = font;
 								scope tfmt = new TextFormat(TextFormatFlags.SINGLE_LINE);
-								
+
 								Color c;
 								COLORREF cr;
-								alias int function(void* hTheme, int iPartId, int iStateId, int iPropId, uint* pColor) f_GetThemeColor;
-								auto getThemeColor = cast(f_GetThemeColor)GetProcAddress(hmuxt, "GetThemeColor");
 								auto gtcState = enabled ? (1 /*PBS_NORMAL*/) : (2 /*GBS_DISABLED*/);
-								if(getThemeColor !is null
-									&& 0 == getThemeColor(htd, 4 /*BP_GROUPBOX*/, gtcState, 3803 /*TMT_TEXTCOLOR*/, &cr))
+								if (
+									htd !is null
+									&& GetThemeColor !is null
+									&& 0 == GetThemeColor(htd, 4 /*BP_GROUPBOX*/, gtcState, 3803 /*TMT_TEXTCOLOR*/, &cr)
+								) {
 									c = Color.fromRgb(cr);
-								else
+									CloseThemeData(htd);
+								}
+								else {
 									c = enabled ? foreColor : SystemColors.grayText; // ?
-								
-								Size tsz = g.measureText(txt, f, tfmt);
-								
+								}
+
+								Size tsz = g.measureText(this.text, this.font, tfmt);
+
 								g.fillRectangle(backColor, 8, 0, 2 + tsz.width + 2, tsz.height + 2);
-								g.drawText(txt, f, c, Rect(8 + 2, 0, tsz.width, tsz.height), tfmt);
-							}
-							finally
-							{
-								//if(ps.hdc)
-								//	EndPaint(msg.hWnd, &ps);
-								if(gotdc)
-									ReleaseDC(msg.hWnd, hdc);
-								
-								alias int function(void* hTheme) f_CloseThemeData;
-								auto closeThemeData = cast(f_CloseThemeData)GetProcAddress(hmuxt, "CloseThemeData");
-								assert(closeThemeData !is null);
-								closeThemeData(htd);
+								g.drawText(this.text, this.font, c, Rect(8 + 2, 0, tsz.width, tsz.height), tfmt);
+							} catch (Throwable e) {
+
 							}
 						}
 					}
