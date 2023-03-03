@@ -9,11 +9,11 @@ private import dfl.base;
 private import dfl.application;
 private import dfl.drawing;
 private import dfl.event;
-private import dfl.internal.utf;
 
 private import core.sys.windows.windows;
 
 private import std.string : splitLines;
+private import std.conv : to;
 
 
 version(DFL_NO_MENUS)
@@ -276,49 +276,31 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		return (_style() & ES_READONLY) != 0;
 	}
-	
-	
+
+
 	///
 	@property void selectedText(string sel) // setter
 	{
-		/+
-		if(created)
-			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)unsafeStringz(sel));
-		+/
-		
 		if(created)
 		{
-			//dfl.internal.utf.sendMessage(handle, EM_REPLACESEL, FALSE, sel);
-			dfl.internal.utf.sendMessageUnsafe(handle, EM_REPLACESEL, FALSE, sel);
+			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)sel.ptr);
 		}
 	}
-	
+
 	/// ditto
 	@property string selectedText() // getter
-	{
-		/+
-		if(created)
-		{
-			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
-			if(v1 == v2)
-				return null;
-			assert(v2 > v1);
-			string result = new char[v2 - v1 + 1];
-			result[result.length - 1] = 0;
-			result = result[0 .. result.length - 1];
-			result[] = text[v1 .. v2];
-			return result;
-		}
-		return null;
-		+/
-		
-		if(created)
-			return dfl.internal.utf.getSelectedText(handle);
+	{		
+		if(created) {
+			size_t selStart, selEnd;
+			auto len = SendMessageA(handle, EM_GETSEL, cast(WPARAM)&selStart, cast(WPARAM)&selEnd);
+			if (len != 0) {
+				return this.text[selStart..selEnd];
+            }
+        }
 		return null;
 	}
-	
-	
+
+
 	///
 	@property void selectionLength(uint len) // setter
 	{
@@ -330,7 +312,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			SendMessageA(handle, EM_SETSEL, v1, v2);
 		}
 	}
-	
+
 	/// ditto
 	// Current selection length, in characters.
 	// This does not necessarily correspond to the length of chars; some characters use multiple chars.
@@ -386,9 +368,8 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	@property uint textLength() // getter
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && created())
-			//return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-			return cast(uint)dfl.internal.utf.sendMessage(handle, WM_GETTEXTLENGTH, 0, 0);
-		return cast(uint)wtext.length;
+			return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+		return to!uint(wtext.length);
 	}
 	
 	
@@ -604,7 +585,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			super.createHandle();
 			
-			//dfl.internal.utf.setWindowText(hwnd, txt);
+			//SetWindowText(hwnd, txt);
 			text = txt; // So that it can be overridden.
 		}
 	}
@@ -688,7 +669,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			
 			void menuPopup(Object sender, EventArgs ea)
 			{
-				int slen, tlen;
+				uint slen, tlen;
 				bool issel;
 				
 				slen = selectionLength;
@@ -938,7 +919,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		}
 		
 		//msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = dfl.internal.utf.callWindowProc(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -1114,8 +1095,7 @@ class TextBox: TextBoxBase // docmain
 			// character specified by the ch parameter.
 			
 			if(created)
-				//SendMessageA(handle, EM_SETPASSWORDCHAR, pwc, 0);
-				dfl.internal.utf.emSetPasswordChar(handle, pwc);
+				SendMessageA(handle, EM_SETPASSWORDCHAR, pwc, 0);
 			else
 				_style(_style() | ES_PASSWORD);
 		}
@@ -1125,8 +1105,7 @@ class TextBox: TextBoxBase // docmain
 			// is sent with the ch parameter set to zero.
 			
 			if(created)
-				//SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0);
-				dfl.internal.utf.emSetPasswordChar(handle, 0);
+				SendMessageA(handle, EM_SETPASSWORDCHAR, 0, 0);
 			else
 				_style(_style() & ~ES_PASSWORD);
 		}
@@ -1138,8 +1117,7 @@ class TextBox: TextBoxBase // docmain
 	final @property dchar passwordChar() // getter
 	{
 		if(created)
-			//passchar = cast(dchar)SendMessageA(handle, EM_GETPASSWORDCHAR, 0, 0);
-			passchar = dfl.internal.utf.emGetPasswordChar(handle);
+			passchar = cast(dchar)SendMessageA(handle, EM_GETPASSWORDCHAR, 0, 0);
 		return passchar;
 	}
 	

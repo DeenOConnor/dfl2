@@ -208,14 +208,7 @@ class RegistryValueSzW: RegistryValue
 	
 	/+ package +/ protected override LONG save(HKEY hkey, string name) // package
 	{
-		if(dfl.internal.utf.useUnicode)
-		{
-			
-		}
-		else
-		{
-			
-		}
+		
 	}
 }
 +/

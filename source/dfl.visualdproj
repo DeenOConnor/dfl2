@@ -501,30 +501,6 @@
   <filesToClean>*.obj;*.cmd;*.build;*.json;*.dep</filesToClean>
  </Config>
  <Folder name="dfl">
-  <Folder name="internal">
-   <File path="dfl\internal\com.d" />
-   <File path="dfl\internal\dlib.d" />
-   <File path="dfl\internal\utf.d" />
-  </Folder>
-  <Folder name="undead">
-   <Folder name="internal">
-    <File path="undead\internal\file.d" />
-   </Folder>
-   <File path="undead\bitarray.d" />
-   <File path="undead\cstream.d" />
-   <File path="undead\date.d" />
-   <File path="undead\datebase.d" />
-   <File path="undead\dateparse.d" />
-   <File path="undead\doformat.d" />
-   <File path="undead\metastrings.d" />
-   <File path="undead\regexp.d" />
-   <File path="undead\signals.d" />
-   <File path="undead\socketstream.d" />
-   <File path="undead\stream.d" />
-   <File path="undead\string.d" />
-   <File path="undead\utf.d" />
-   <File path="undead\xml.d" />
-  </Folder>
   <File path="dfl\all.d" />
   <File path="dfl\application.d" />
   <File path="dfl\base.d" />

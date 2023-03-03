@@ -11,7 +11,6 @@ private import dfl.drawing;
 private import dfl.application;
 private import dfl.event;
 private import dfl.collections;
-//private static import dfl.internal.utf;
 
 private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;

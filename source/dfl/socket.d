@@ -40,7 +40,6 @@ alias std.socket.Socket DflSocket; ///
 
 private import dfl.application;
 private import dfl.base;
-private import dfl.internal.utf;
 
 
 private import core.sys.windows.windows;

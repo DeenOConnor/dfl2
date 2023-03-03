@@ -2743,7 +2743,7 @@ class Form: ContainerControl, IDialogResult // docmain
 	}
 	
 	
-	//package alias dfl.internal.utf.defDlgProc _defFormProc;
+	//package alias DefDlgProc _defFormProc;
 	
 	protected override void defWndProc(ref Message msg)
 	{
@@ -3097,7 +3097,7 @@ class Form: ContainerControl, IDialogResult // docmain
 							case Keys.ESCAPE:
 								if(form.cancelButton)
 								{
-									//dfl.internal.utf.isDialogMessage(form.handle, &m._winMsg); // Closes the parent; bad for nested controls.
+									//IsDialogMessage(form.handle, &m._winMsg); // Closes the parent; bad for nested controls.
 									if(m.hWnd == form.handle || IsChild(form.handle, m.hWnd))
 									{
 										if(WM_KEYDOWN == m.msg)
@@ -3115,7 +3115,7 @@ class Form: ContainerControl, IDialogResult // docmain
 								return false;
 							
 							case Keys.UP, Keys.DOWN, Keys.RIGHT, Keys.LEFT:
-								//if(dfl.internal.utf.isDialogMessage(form.handle, &m._winMsg)) // Stopped working after removing controlparent.
+								//if(IsDialogMessage(form.handle, &m._winMsg)) // Stopped working after removing controlparent.
 								//	return true; // Prevent.
 								{
 									LRESULT dlgc;
@@ -3447,7 +3447,7 @@ version(NO_MDI) {} else
 			ccs.idFirstChild = 10000;
 			
 			Application.creatingControl(this);
-			hwnd = dfl.internal.utf.createWindowEx(wexstyle, MDICLIENT_CLASSNAME, wtext, wstyle, wrect.x, wrect.y,
+			hwnd = CreateWindowEx(wexstyle, MDICLIENT_CLASSNAME, wtext, wstyle, wrect.x, wrect.y,
 				wrect.width, wrect.height, wparent.handle, HMENU.init, Application.getInstance(), &ccs);
 			if(!hwnd)
 				goto create_err;

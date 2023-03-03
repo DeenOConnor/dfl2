@@ -10,11 +10,11 @@ private import dfl.drawing;
 private import dfl.application;
 private import dfl.commondialog;
 private import dfl.event;
-private import dfl.internal.utf;
 
 private import core.sys.windows.windows;
 private import std.conv : to;
 private import std.string : fromStringz;
+private import std.stdio : File;
 //private import std.path : join;
 
 ///
@@ -129,14 +129,7 @@ abstract class FileDialog: CommonDialog // docmain
 			if(ext.length && ext[0] == '.')
 				ext = ext[1 .. ext.length];
 			
-			if(dfl.internal.utf.useUnicode)
-			{
-				ofnw.lpstrDefExt = dfl.internal.utf.toUnicodez(ext);
-			}
-			else
-			{
-				ofna.lpstrDefExt = dfl.internal.utf.toAnsiz(ext);
-			}
+			ofna.lpstrDefExt = ext.ptr;
 			_defext = ext;
 		}
 	}
@@ -226,16 +219,10 @@ abstract class FileDialog: CommonDialog // docmain
 			size_t i, starti;
 			size_t nitems = 0;
 			
-			if(dfl.internal.utf.useUnicode)
-			{
-				str.sw = new wchar[filterString.length + 2];
-				str.sw = str.sw[0 .. 0];
-			}
-			else
-			{
-				str.sa = new char[filterString.length + 2];
-				str.sa = str.sa[0 .. 0];
-			}
+			str.sw = new wchar[filterString.length + 2];
+			str.sw = str.sw[0 .. 0];
+			str.sa = new char[filterString.length + 2];
+			str.sa = str.sa[0 .. 0];
 			
 			
 			for(i = starti = 0; i != filterString.length; i++)
@@ -245,49 +232,36 @@ abstract class FileDialog: CommonDialog // docmain
 					case '|':
 						if(starti == i)
 							goto bad_filter;
-						
-						if(dfl.internal.utf.useUnicode)
-						{
-							str.sw ~= dfl.internal.utf.toUnicode(filterString[starti .. i]);
-							str.sw ~= "\0"w;
-						}
-						else
-						{
-							str.sa ~= dfl.internal.utf.unsafeAnsi(filterString[starti .. i]);
-							str.sa ~= "\0";
-						}
-						
+
+						str.sw ~= to!wstring(filterString[starti .. i]);
+						str.sw ~= "\0"w;
+						str.sa ~= filterString[starti .. i];
+						str.sa ~= "\0";
+
 						starti = i + 1;
 						nitems++;
 						break;
-					
-					case 0:
-					case '\r', '\n':
+
+					case 0, '\r', '\n':
 						goto bad_filter;
-					
+
 					default:
 				}
 			}
 			if(starti == i || !(nitems % 2))
 				goto bad_filter;
-			if(dfl.internal.utf.useUnicode)
-			{
-				str.sw ~=dfl.internal.utf.toUnicode(filterString[starti .. i]);
-				str.sw ~= "\0\0"w;
-				
-				ofnw.lpstrFilter = str.sw.ptr;
-			}
-			else
-			{
-				str.sa ~= dfl.internal.utf.unsafeAnsi(filterString[starti .. i]);
-				str.sa ~= "\0\0";
-				
-				ofna.lpstrFilter = str.sa.ptr;
-			}
-			
+
+			str.sw ~= to!wstring(filterString[starti .. i]);
+			str.sw ~= "\0\0"w;
+			ofnw.lpstrFilter = str.sw.ptr;
+
+			str.sa ~= filterString[starti .. i];
+			str.sa ~= "\0\0";
+			ofna.lpstrFilter = str.sa.ptr;
+
 			_filter = filterString;
 			return;
-			
+
 			bad_filter:
 			throw new DflException("Invalid file filter string");
 		}
@@ -324,14 +298,7 @@ abstract class FileDialog: CommonDialog // docmain
 		}
 		else
 		{
-			if(dfl.internal.utf.useUnicode)
-			{
-				ofnw.lpstrInitialDir = dfl.internal.utf.toUnicodez(dir);
-			}
-			else
-			{
-				ofna.lpstrInitialDir = dfl.internal.utf.toAnsiz(dir);
-			}
+			ofna.lpstrInitialDir = dir.ptr;
 			_initDir = dir;
 		}
 	}
@@ -407,14 +374,7 @@ abstract class FileDialog: CommonDialog // docmain
 		}
 		else
 		{
-			if(dfl.internal.utf.useUnicode)
-			{
-				ofnw.lpstrTitle = dfl.internal.utf.toUnicodez(newTitle);
-			}
-			else
-			{
-				ofna.lpstrTitle = dfl.internal.utf.toAnsiz(newTitle);
-			}
+			ofna.lpstrTitle = newTitle.ptr;
 			_title = newTitle;
 		}
 	}
@@ -523,38 +483,20 @@ abstract class FileDialog: CommonDialog // docmain
 	
 	void beginOfn(HWND owner)
 	{
-		if(dfl.internal.utf.useUnicode)
+		auto buf = new char[(ofn.Flags & OFN_ALLOWMULTISELECT) ? FILE_BUF_LEN : MAX_PATH];
+		buf[0] = 0;
+
+		if(fileNames.length)
 		{
-			auto buf = new wchar[(ofn.Flags & OFN_ALLOWMULTISELECT) ? FILE_BUF_LEN : MAX_PATH];
-			buf[0] = 0;
-			
-			if(fileNames.length)
-			{
-				wstring ts;
-				ts = dfl.internal.utf.toUnicode(_fileNames[0]);
-				buf[0 .. ts.length] = ts[];
-				buf[ts.length] = 0;
-			}
-			
-			ofnw.nMaxFile =cast(uint)buf.length;
-			ofnw.lpstrFile = buf.ptr;
+			string ts;
+			ts = _fileNames[0];
+			buf[0 .. ts.length] = ts[];
+			buf[ts.length] = 0;
 		}
-		else
-		{
-			auto buf = new char[(ofn.Flags & OFN_ALLOWMULTISELECT) ? FILE_BUF_LEN : MAX_PATH];
-			buf[0] = 0;
-			
-			if(fileNames.length)
-			{
-				string ts;
-				ts = dfl.internal.utf.unsafeAnsi(_fileNames[0]);
-				buf[0 .. ts.length] = ts[];
-				buf[ts.length] = 0;
-			}
-			
-			ofna.nMaxFile = cast(uint)buf.length;
-			ofna.lpstrFile = buf.ptr;
-		}
+
+		ofna.nMaxFile = cast(uint)buf.length;
+		ofna.lpstrFile = buf.ptr;
+
 		
 		ofn.hwndOwner = owner;
 	}
@@ -573,48 +515,24 @@ abstract class FileDialog: CommonDialog // docmain
 			// Nonstandard reserve.
 			_fileNames = new string[4];
 			_fileNames = _fileNames[0 .. 0];
-			
-			if(dfl.internal.utf.useUnicode)
+
+			char* startp, p;
+			p = startp = ofna.lpstrFile;
+			for(;;)
 			{
-				wchar* startp, p;
-				p = startp = ofnw.lpstrFile;
-				for(;;)
+				if(!*p)
 				{
-					if(!*p)
-					{
-						_fileNames ~= dfl.internal.utf.fromUnicode(startp, p - startp); // dup later.
-						
-						p++;
-						if(!*p)
-							break;
-						
-						startp = p;
-						continue;
-					}
-					
+					_fileNames ~= to!string(fromStringz(startp[0 .. p - startp])); // dup later.
+
 					p++;
-				}
-			}
-			else
-			{
-				char* startp, p;
-				p = startp = ofna.lpstrFile;
-				for(;;)
-				{
 					if(!*p)
-					{
-						_fileNames ~= dfl.internal.utf.fromAnsi(startp, p - startp); // dup later.
-						
-						p++;
-						if(!*p)
-							break;
-						
-						startp = p;
-						continue;
-					}
-					
-					p++;
+						break;
+
+					startp = p;
+					continue;
 				}
+
+				p++;
 			}
 			
 			assert(_fileNames.length);
@@ -649,14 +567,7 @@ abstract class FileDialog: CommonDialog // docmain
 		else
 		{
 			_fileNames = new string[1];
-			//if(dfl.internal.utf.useUnicode)
-			//{
-				//_fileNames[0] = dfl.internal.utf.fromUnicodez(ofnw.lpstrFile);
-			//}
-			///else
-			//{
-				_fileNames[0] = to!string(fromStringz(ofna.lpstrFile));
-			//}
+			_fileNames[0] = to!string(fromStringz(ofna.lpstrFile));
 			
 			/+
 			if(addext && checkFileExists() && ofn.nFilterIndex)
@@ -796,11 +707,6 @@ class OpenFileDialog: FileDialog // docmain
 		return (ofn.Flags & OFN_HIDEREADONLY) == 0;
 	}
 	
-	
-	// private import std.stream; // TO-DO: remove this import; use dfl.internal.dlib.
-	private import std.stdio : File; // This seems to work
-
-
 	///
 	final File openFile()
 	{
@@ -829,10 +735,7 @@ class OpenFileDialog: FileDialog // docmain
 		
 		beginOfn(owner);
 		
-		//synchronized(typeid(dfl.internal.utf.CurDirLockType))
-		{
-			result = GetOpenFileNameA(&ofna);
-		}
+		result = GetOpenFileNameA(&ofna);
 		
 		if(result)
 		{
@@ -894,10 +797,6 @@ class SaveFileDialog: FileDialog // docmain
 		return (ofn.Flags & OFN_OVERWRITEPROMPT) != 0;
 	}
 	
-	
-	// private import std.stream; // TO-DO: remove this import; use dfl.internal.dlib.
-	private import std.stdio : File;	
-
 	///
 	// Opens and creates with read and write access.
 	// Warning: if file exists, it's truncated. // Is it really? Needs testing - D.O
@@ -913,13 +812,10 @@ class SaveFileDialog: FileDialog // docmain
 	{
 		beginOfn(owner);
 		
-		//synchronized(typeid(dfl.internal.utf.CurDirLockType))
+		if(GetSaveFileNameA(&ofna))
 		{
-			if(GetSaveFileNameA(&ofna))
-			{
-				finishOfn();
-				return true;
-			}
+			finishOfn();
+			return true;
 		}
 		
 		cancelOfn();

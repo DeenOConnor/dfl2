@@ -4,8 +4,6 @@
 ///
 module dfl.control;
 
-private import dfl.internal.com;
-
 private import dfl.base;
 private import dfl.form;
 private import dfl.drawing;
@@ -2948,7 +2946,7 @@ class Control: Object, IWindow // docmain
 	
 	version(DFL_NO_DRAG_DROP) {} else
 	{
-		private static class DropTarget: DflComObject, IDropTarget
+		private static class DropTarget: ComObject, IDropTarget
 		{
 			this(Control ctrl)
 			{
@@ -3150,7 +3148,7 @@ class Control: Object, IWindow // docmain
 		}
 		
 		
-		private static class DropSource: DflComObject, IDropSource
+		private static class DropSource: ComObject, IDropSource
 		{
 			this(Control ctrl)
 			{
