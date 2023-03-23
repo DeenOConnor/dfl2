@@ -99,7 +99,7 @@ class Label: Control // docmain
 	}
 	
 	
-	private void doAutoSize(string text)
+	private void doAutoSize(wstring text)
 	{
 		//if(isHandleCreated)
 		{
@@ -108,14 +108,14 @@ class Label: Control // docmain
 	}
 	
 	
-	override @property void text(string newText) // setter
+	override @property void text(wstring newText) // setter
 	{
 		super.text = newText;
 		
 		if(autosz)
 			doAutoSize(newText);
 		
-		invalidate(false);
+		//invalidate(false);
 	}
 	
 	alias Control.text text; // Overload.
@@ -250,7 +250,7 @@ class Label: Control // docmain
 	protected override void onPaint(PaintEventArgs ea)
 	{
 		int x, y, w, h;
-		string text;
+		wstring text;
 		
 		text = this.text;
 		
@@ -291,8 +291,8 @@ class Label: Control // docmain
 		}
 		
 		Color c;
-		//c = foreColor;
-		c = foreColor.solidColor(backColor);
+		c = foreColor;
+		//c = foreColor.solidColor(backColor);
 		
 		if(enabled)
 		{
@@ -300,16 +300,7 @@ class Label: Control // docmain
 		}
 		else
 		{
-			version(LABEL_GRAYSTRING)
-			{
-				// GrayString() is pretty ugly.
-				GrayStringA(ea.graphics.handle, null, &_disabledOutputProc,
-					cast(LPARAM)cast(void*)this, -1, x, y, w, h);
-			}
-			else
-			{
-				ea.graphics.drawTextDisabled(text, font, c, backColor, Rect(x, y, w, h), tfmt);
-			}
+			ea.graphics.drawTextDisabled(text, font, c, backColor, Rect(x, y, w, h), tfmt);
 		}
 		
 		super.onPaint(ea);

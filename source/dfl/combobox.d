@@ -175,7 +175,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property void selectedItem(string str) // setter
+	final @property void selectedItem(wstring str) // setter
 	{
 		int i;
 		i = items.indexOf(str);
@@ -201,7 +201,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	override @property void selectedValue(string str) // setter
+	override @property void selectedValue(wstring str) // setter
 	{
 		selectedItem = str;
 	}
@@ -517,7 +517,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		protected this(ComboBox lbox, string[] range)
+		protected this(ComboBox lbox, wstring[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
@@ -538,7 +538,7 @@ class ComboBox: ListControl // docmain
 			add2(value);
 		}
 		
-		void add(string value)
+		void add(wstring value)
 		{
 			add(new ListString(value));
 		}
@@ -559,9 +559,9 @@ class ComboBox: ListControl // docmain
 			}
 		}
 		
-		void addRange(string[] range)
+		void addRange(wstring[] range)
 		{
-			foreach(string s; range)
+			foreach(wstring s; range)
 			{
 				add(s);
 			}
@@ -579,7 +579,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT insert2(WPARAM idx, string val)
+		LRESULT insert2(WPARAM idx, wstring val)
 		{
 			insert(cast(int)idx, val);
 			return idx;
@@ -608,7 +608,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(string val)
+		LRESULT add2(wstring val)
 		{
 			return add2(new ListString(val));
 		}
@@ -719,7 +719,7 @@ class ComboBox: ListControl // docmain
 		if(hasDropList)
 			wrect.height = DEFAULT_ITEM_HEIGHT * 8;
 		
-		string ft;
+		wstring ft;
 		ft = wtext;
 		
 		super.createHandle();
@@ -834,7 +834,7 @@ class ComboBox: ListControl // docmain
 	override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -909,13 +909,13 @@ class ComboBox: ListControl // docmain
 			case CB_ADDSTRING:
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.add2(cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.add2(cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_INSERTSTRING:
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.insert2(msg.wParam, cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.insert2(msg.wParam, cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_DELETESTRING:

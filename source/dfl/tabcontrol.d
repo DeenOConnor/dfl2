@@ -16,6 +16,7 @@ private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 
 
 private extern(Windows) void _initTabcontrol();
@@ -25,7 +26,7 @@ private extern(Windows) void _initTabcontrol();
 class TabPage: Panel
 {
 	///
-	this(string tabText)
+	this(wstring tabText)
 	{
 		this();
 		
@@ -54,7 +55,7 @@ class TabPage: Panel
 	
 	override string toString()
 	{
-		return text;
+		return to!string(text);
 	}
 	
 
@@ -63,11 +64,11 @@ class TabPage: Panel
 	
 	override bool opEquals(Object o)
 	{
-		return text == o.toString();
+		return text == to!wstring(o.toString());
 	}
 
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -91,7 +92,7 @@ class TabPage: Panel
 	// imageIndex
 	
 	
-	override @property void text(string newText) // setter
+	override @property void text(wstring newText) // setter
 	{
 		// Note: this probably causes toStringz() to be called twice,
 		// allocating 2 of the same string.
@@ -960,7 +961,7 @@ class TabControl: TabControlBase // docmain
 	}
 	
 	
-	void updateTabText(TabPage page, string newText)
+	void updateTabText(TabPage page, wstring newText)
 	in
 	{
 		assert(created);
@@ -972,7 +973,7 @@ class TabControl: TabControlBase // docmain
 		assert(-1 != i);
 		
 		//TC_ITEMA tci;
-		TC_ITEMA tci;
+		TCITEMW tci;
 		tci.mask = TCIF_TEXT;
 		Message m;
 		tci.pszText = cast(typeof(tci.pszText))newText.ptr;

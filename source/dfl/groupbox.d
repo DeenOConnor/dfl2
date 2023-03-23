@@ -124,11 +124,12 @@ class GroupBox: ControlSuperClass // docmain
 	
 	protected override void prevWndProc(ref Message msg)
 	{
+        import std.stdio;
 		//msg.result = CallWindowProcA(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 		msg.result = CallWindowProcW(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 		
 		// Work around a Windows issue...
-        if(WM_PAINT == msg.msg)
+		if(WM_PAINT == msg.msg)
 		{
 			auto hmuxt = GetModuleHandleA("uxtheme.dll");
 			if(hmuxt)
@@ -148,8 +149,9 @@ class GroupBox: ControlSuperClass // docmain
 					if(this.text.length)
 					{
 						HTHEME htd;
+						wchar[] classname = ['B', 'u', 't', 't', 'o', 'n', '\0'];
 						if (OpenThemeData !is null) {
-							htd = OpenThemeData(this.handle(), "Button"w.ptr);
+							htd = OpenThemeData(null, classname.ptr);
 						}
 
 						//  hdc = cast(HDC)msg.wParam;
@@ -165,7 +167,7 @@ class GroupBox: ControlSuperClass // docmain
 								Color c;
 								COLORREF cr;
 								auto gtcState = enabled ? (1 /*PBS_NORMAL*/) : (2 /*GBS_DISABLED*/);
-								if (
+								if(
 									htd !is null
 									&& GetThemeColor !is null
 									&& 0 == GetThemeColor(htd, 4 /*BP_GROUPBOX*/, gtcState, 3803 /*TMT_TEXTCOLOR*/, &cr)
@@ -176,9 +178,9 @@ class GroupBox: ControlSuperClass // docmain
 								else {
 									c = enabled ? foreColor : SystemColors.grayText; // ?
 								}
-
+								
 								Size tsz = g.measureText(this.text, this.font, tfmt);
-
+								
 								g.fillRectangle(backColor, 8, 0, 2 + tsz.width + 2, tsz.height + 2);
 								g.drawText(this.text, this.font, c, Rect(8 + 2, 0, tsz.width, tsz.height), tfmt);
 							} catch (Throwable e) {

@@ -40,9 +40,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 	}
 
 	static if (OVERLOAD_STRING) {
-		static assert(!is(TValue == string));
-
-		static if (is(TValue == Object))
+        static if (is(TValue == Object))
 			alias StringObject TValueString;
 		else
 			alias TValue TValueString;
@@ -78,8 +76,8 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		void opIndexAssign(string value, int index) {
-			return opIndexAssign(new TValueString(value), index);
+		void opIndexAssign(wstring value, int index) {
+			opIndexAssign(new TValueString(value), index);
 		}
 	}
 
@@ -103,7 +101,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		void add(string value) {
+		void add(wstring value) {
 			_insert(cast(int) Array.length, new TValueString(value));
 		}
 	}
@@ -172,7 +170,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		bool contains(string value) {
+		bool contains(wstring value) {
 			return -1 != indexOf(value);
 		}
 	}
@@ -201,14 +199,14 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		int indexOf(string value) {
+		int indexOf(wstring value) {
 			import std.conv : to;
 			foreach (size_t idx, TValue onval; Array) {
 				static if (is(TValue == TValueString)) {
 					if (onval == value) // TValue must have opEquals.
 						return to!uint(idx);
 				} else {
-					if (onval.toString() == value)
+					if (to!wstring(onval.toString()) == value)
 						return to!uint(idx);
 				}
 			}
@@ -254,8 +252,8 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		private final void _insert(int index, string value) {
-			return _insert(index, new TValueString(value));
+		private final void _insert(int index, wstring value) {
+			_insert(index, new TValueString(value));
 		}
 	}
 
@@ -273,7 +271,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		void insert(int index, string value) {
+		void insert(int index, wstring value) {
 			return _insert(index, value);
 		}
 	}
@@ -304,7 +302,7 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		void remove(string value) {
+		void remove(wstring value) {
 			int i;
 			i = indexOf(value);
 			if (-1 != i)
@@ -363,8 +361,8 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
 
 	static if (OVERLOAD_STRING) {
 		/// ditto
-		void addRange(string[] values) {
-			foreach (string value; values) {
+		void addRange(wstring[] values) {
+			foreach (wstring value; values) {
 				add(value);
 			}
 		}

@@ -456,7 +456,7 @@ class Form: ContainerControl, IDialogResult // docmain
 				ly = SW_HIDE;
 			
 			Application.creatingControl(this);
-			hwnd = CreateWindowExA(exStyle, className.ptr, caption.ptr, wstyle & ~WS_VISIBLE,
+			hwnd = CreateWindowExW(exStyle, className.ptr, caption.ptr, wstyle & ~WS_VISIBLE,
 				x, ly, width, height, parent, menu, inst, param);
 			if(!hwnd)
 			{

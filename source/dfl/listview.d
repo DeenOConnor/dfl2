@@ -46,7 +46,7 @@ private union CallText
 }
 
 
-private CallText getCallText(string text)
+private CallText getCallText(wstring text)
 {
 	CallText result;
 	if(text is null)
@@ -56,8 +56,8 @@ private CallText getCallText(string text)
 	}
 	else
 	{
-		result.unicode = to!wstring(text).ptr;
-		result.ansi = text.ptr;
+		result.unicode = text.ptr;
+		result.ansi = to!string(text).ptr;
 	}
 	return result;
 }
@@ -89,7 +89,7 @@ class ListViewSubItem: Object
 	}
 	
 	/// ditto
-	this(string thisSubItemText)
+	this(wstring thisSubItemText)
 	{
 		this();
 		
@@ -97,7 +97,7 @@ class ListViewSubItem: Object
 	}
 	
 	/// ditto
-	this(ListViewItem owner, string thisSubItemText)
+	this(ListViewItem owner, wstring thisSubItemText)
 	{
 		this();
 		
@@ -117,7 +117,7 @@ class ListViewSubItem: Object
 	+/
 	
 	
-	package final void settextin(string newText)
+	package final void settextin(wstring newText)
 	{
 		calltxt = getCallText(newText);
 		_txt = newText;
@@ -126,17 +126,23 @@ class ListViewSubItem: Object
 	
 	override string toString()
 	{
+		return to!string(text);
+	}
+
+
+	wstring toWString()
+	{
 		return text;
 	}
 	
 	
 	override bool opEquals(Object o)
 	{
-		return text == o.toString();
+		return this.toString() == o.toString();
 	}
 	
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -144,18 +150,18 @@ class ListViewSubItem: Object
 	
 	override int opCmp(Object o)
 	{
-		return icmp(text, o.toString());
+		return icmp(this.toString(), o.toString());
 	}
 	
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}
 	
 	
 	///
-	final @property void text(string newText) // setter
+	final @property void text(wstring newText) // setter
 	{
 		settextin(newText);
 		
@@ -171,7 +177,7 @@ class ListViewSubItem: Object
 	}
 	
 	/// ditto
-	final @property string text() // getter
+	final @property wstring text() // getter
 	{
 		return _txt;
 	}
@@ -179,7 +185,7 @@ class ListViewSubItem: Object
 	
 	private:
 	package ListViewItem _item;
-	string _txt;
+	wstring _txt;
 	package CallText calltxt;
 }
 
@@ -232,7 +238,7 @@ class ListViewItem: Object
 	}
 	
 	/// ditto
-	this(string text)
+	this(wstring text)
 	{
 		this();
 		
@@ -276,7 +282,7 @@ class ListViewItem: Object
 	}
 	
 	
-	package final void settextin(string newText)
+	package final void settextin(wstring newText)
 	{
 		calltxt = getCallText(newText);
 		_txt = newText;
@@ -285,17 +291,23 @@ class ListViewItem: Object
 	
 	override string toString()
 	{
+		return to!string(text);
+	}
+
+
+	wstring toWString()
+	{
 		return text;
 	}
 	
 	
 	override bool opEquals(Object o)
 	{
-		return text == o.toString();
+		return this.toString() == o.toString();
 	}
 	
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -303,11 +315,11 @@ class ListViewItem: Object
 	
 	override int opCmp(Object o)
 	{
-		return icmp(text, o.toString());
+		return icmp(this.toString(), o.toString());
 	}
 	
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}
@@ -336,7 +348,7 @@ class ListViewItem: Object
 	
 	
 	///
-	final @property void text(string newText) // setter
+	final @property void text(wstring newText) // setter
 	{
 		settextin(newText);
 		
@@ -345,7 +357,7 @@ class ListViewItem: Object
 	}
 	
 	/// ditto
-	final @property string text() // getter
+	final @property wstring text() // getter
 	{
 		return _txt;
 	}
@@ -445,7 +457,7 @@ class ListViewItem: Object
 	{
 		int _imgidx = -1;
 	}
-	string _txt;
+	wstring _txt;
 	package CallText calltxt;
 }
 
@@ -454,7 +466,7 @@ class ListViewItem: Object
 class ColumnHeader: Object
 {
 	///
-	this(string text)
+	this(wstring text)
 	{
 		this();
 		
@@ -476,7 +488,7 @@ class ColumnHeader: Object
 	
 	
 	///
-	final @property void text(string newText) // setter
+	final @property void text(wstring newText) // setter
 	{
 		_txt = newText;
 		
@@ -487,7 +499,7 @@ class ColumnHeader: Object
 	}
 	
 	/// ditto
-	final @property string text() // getter
+	final @property wstring text() // getter
 	{
 		return _txt;
 	}
@@ -495,17 +507,23 @@ class ColumnHeader: Object
 	
 	override string toString()
 	{
+		return to!string(text);
+	}
+
+
+	wstring toWString()
+	{
 		return text;
 	}
 	
 	
 	override bool opEquals(Object o)
 	{
-		return text == o.toString();
+		return this.toString() == o.toString();
 	}
 	
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -517,7 +535,7 @@ class ColumnHeader: Object
 	}
 	
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}
@@ -577,7 +595,7 @@ class ColumnHeader: Object
 	
 	private:
 	package ListView lview;
-	string _txt;
+	wstring _txt;
 	int _width;
 	HorizontalAlignment _align;
 }
@@ -587,7 +605,7 @@ class ColumnHeader: Object
 class LabelEditEventArgs: EventArgs
 {
 	///
-	this(ListViewItem item, string label)
+	this(ListViewItem item, wstring label)
 	{
 		_item = item;
 		_label = label;
@@ -608,7 +626,7 @@ class LabelEditEventArgs: EventArgs
 	
 	
 	///
-	final @property string label() // getter
+	final @property wstring label() // getter
 	{
 		return _label;
 	}
@@ -629,7 +647,7 @@ class LabelEditEventArgs: EventArgs
 	
 	private:
 	ListViewItem _item;
-	string _label;
+	wstring _label;
 	bool _cancel = false;
 }
 
@@ -746,9 +764,9 @@ class ListView: ControlSuperClass // docmain
 			insert(ii, item);
 		}
 		
-		void add(string text)
+		void add(wstring text)
 		{
-			return add(new ListViewItem(text));
+			add(new ListViewItem(text));
 		}
 		
 		
@@ -772,9 +790,9 @@ class ListView: ControlSuperClass // docmain
 		}
 		+/
 		
-		void addRange(string[] range)
+		void addRange(wstring[] range)
 		{
-			foreach(string s; range)
+			foreach(wstring s; range)
 			{
 				add(s);
 			}
@@ -1552,7 +1570,7 @@ class ListView: ControlSuperClass // docmain
 	// Simple as addRow("item", "sub item1", "sub item2", "etc");
 	// rowstrings[0] is the item and rowstrings[1 .. rowstrings.length] are its sub items.
 	//final void addRow(string[] rowstrings ...)
-	final ListViewItem addRow(string[] rowstrings ...)
+	final ListViewItem addRow(wstring[] rowstrings ...)
 	{
 		if(rowstrings.length)
 		{
@@ -2413,7 +2431,7 @@ class ListView: ControlSuperClass // docmain
 						
 						case LVN_ENDLABELEDITW:
 							{
-								string label;
+								wstring label;
 								LV_DISPINFOW* nmdi;
 								nmdi = cast(LV_DISPINFOW*)nmh;
 								if(nmdi.item.pszText)
@@ -2425,7 +2443,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = to!string(to!wstring(fromStringz(nmdi.item.pszText)));
+									label = to!wstring(fromStringz(nmdi.item.pszText));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2445,7 +2463,7 @@ class ListView: ControlSuperClass // docmain
 							break;
 						
 						case LVN_ENDLABELEDITA:
-								string label;
+								wstring label;
 								LV_DISPINFOA* nmdi;
 								nmdi = cast(LV_DISPINFOA*)nmh;
 								if(nmdi.item.pszText)
@@ -2457,7 +2475,7 @@ class ListView: ControlSuperClass // docmain
 										m.result = FALSE;
 										break;
 									}
-									label = to!string(fromStringz(nmdi.item.pszText));
+									label = to!wstring(to!string(fromStringz(nmdi.item.pszText)));
 									scope LabelEditEventArgs nleea = new LabelEditEventArgs(lvitem, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -2555,7 +2573,7 @@ class ListView: ControlSuperClass // docmain
 	
 	// If -subItemIndex- is 0 it's an item not a sub item.
 	// Returns the insertion index or -1 on failure.
-	package final LRESULT _ins(int index, LPARAM lparam, string itemText, int subItemIndex, int imageIndex = -1)
+	package final LRESULT _ins(int index, LPARAM lparam, wstring itemText, int subItemIndex, int imageIndex = -1)
 	in
 	{
 		assert(created);
@@ -2663,29 +2681,29 @@ class ListView: ControlSuperClass // docmain
 	}
 	
 	
-	LRESULT updateItemText(int index, string newText, int subItemIndex = 0)
+	LRESULT updateItemText(int index, wstring newText, int subItemIndex = 0)
 	{
 		return updateItem(index);
 	}
 	
-	LRESULT updateItemText(ListViewItem item, string newText, int subItemIndex = 0)
+	LRESULT updateItemText(ListViewItem item, wstring newText, int subItemIndex = 0)
 	{
 		return updateItem(item);
 	}
 	
 	
-	LRESULT updateColumnText(int colIndex, string newText)
+	LRESULT updateColumnText(int colIndex, wstring newText)
 	{
 		//LV_COLUMNA lvc;
 		LvColumn lvc;
 		
 		lvc.mask = LVCF_TEXT;
-		lvc.lvca.pszText = cast(typeof(lvc.lvca.pszText))newText.ptr;
+		lvc.lvcw.pszText = cast(typeof(lvc.lvcw.pszText))newText.ptr;
 		return prevwproc(LVM_SETCOLUMNA, cast(WPARAM)colIndex, cast(LPARAM)&lvc.lvca);
 	}
 	
 	
-	LRESULT updateColumnText(ColumnHeader col, string newText)
+	LRESULT updateColumnText(ColumnHeader col, wstring newText)
 	{
 		int colIndex;
 		colIndex = columns.indexOf(col);

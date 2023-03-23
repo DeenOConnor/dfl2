@@ -176,8 +176,8 @@ enum ControlStyles: uint
 /// Control creation parameters.
 struct CreateParams
 {
-	string className; ///
-	string caption; /// ditto
+	wstring className; ///
+	wstring caption; /// ditto
 	void* param; /// ditto
 	HWND parent; /// ditto
 	HMENU menu; /// ditto
@@ -2684,16 +2684,17 @@ class Control: Object, IWindow // docmain
 	}
 	
 	
-	private final string _fetchText()
+	private final wstring _fetchText()
 	{
-		char[] buf;
-		GetWindowTextA(hwnd, buf.ptr, GetWindowTextLengthA(hwnd));
-		return to!string(fromStringz(buf));
+		auto textLength = GetWindowTextLengthW(hwnd);
+		wchar[] buf = new wchar[textLength + 1];
+		auto result = GetWindowTextW(hwnd, buf.ptr, textLength);
+		return to!wstring(fromStringz(buf));
 	}
 	
 	
 	///
-	@property void text(string txt) // setter
+	@property void text(wstring txt) // setter
 	{
 		if(isHandleCreated)
 		{
@@ -2703,8 +2704,9 @@ class Control: Object, IWindow // docmain
 				//	return;
 				wtext = txt;
 			}
-			
-			SetWindowTextA(hwnd, txt.ptr);
+            wtext = txt;
+
+			SetWindowTextW(hwnd, cast(wchar*)txt.ptr);
 		}
 		else
 		{
@@ -2713,14 +2715,15 @@ class Control: Object, IWindow // docmain
 	}
 	
 	/// ditto
-	@property string text() // getter
+	@property wstring text() // getter
 	{
 		if(isHandleCreated)
 		{
 			if(ctrlStyle & ControlStyles.CACHE_TEXT)
 				return wtext;
 			
-			return _fetchText();
+			//return _fetchText();
+			return wtext;
 		}
 		else
 		{
@@ -3641,7 +3644,7 @@ class Control: Object, IWindow // docmain
 	
 	
 	///
-	static bool isMnemonic(dchar charCode, string text) //string text
+	static bool isMnemonic(dchar charCode, wstring text) //string text
 	{
 		size_t ui;
 		for(ui = 0; ui != text.length; ui++)
@@ -4086,7 +4089,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	
-	override string toString()
+	wstring toWString()
 	{
 		return text;
 	}
@@ -5983,7 +5986,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	/// ditto
-	this(string text)
+	this(wstring text)
 	{
 		this();
 		wtext = text;
@@ -5992,7 +5995,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Control cparent, string text)
+	this(Control cparent, wstring text)
 	{
 		this();
 		wtext = text;
@@ -6002,7 +6005,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	/// ditto
-	this(string text, int left, int top, int width, int height)
+	this(wstring text, int left, int top, int width, int height)
 	{
 		this();
 		wtext = text;
@@ -6012,7 +6015,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	/// ditto
-	this(Control cparent, string text, int left, int top, int width, int height)
+	this(Control cparent, wstring text, int left, int top, int width, int height)
 	{
 		this();
 		wtext = text;
@@ -6254,7 +6257,7 @@ class Control: Object, IWindow // docmain
 	}
 	
 	
-	deprecated package final void createClassHandle(string className)
+	deprecated package final void createClassHandle(wstring className)
 	{
 		if(!wparent || !wparent.handle || killing)
 		{
@@ -6268,7 +6271,7 @@ class Control: Object, IWindow // docmain
 			return;
 		
 		Application.creatingControl(this);
-		hwnd = CreateWindowExA(wexstyle, className.ptr, wtext.ptr, wstyle, wrect.x, wrect.y,
+		hwnd = CreateWindowExW(wexstyle, className.ptr, wtext.ptr, wstyle, wrect.x, wrect.y,
 			wrect.width, wrect.height, wparent.handle, HMENU.init, Application.getInstance(), null);
 		if(!hwnd)
 			goto create_err;
@@ -6387,7 +6390,7 @@ class Control: Object, IWindow // docmain
 			
 			Application.creatingControl(this);
 				
-			hwnd = CreateWindowExA(exStyle, className.ptr, caption.ptr, (style & ~WS_VISIBLE), x, y,
+			hwnd = CreateWindowExW(exStyle, className.ptr, caption.ptr, (style & ~WS_VISIBLE), x, y,
 				width, height, parent, menu, inst, param);
 			if(!hwnd)
 			{
@@ -6956,7 +6959,7 @@ class Control: Object, IWindow // docmain
 	ControlCollection ccollection;
 
 	// TODO : Remove or rename, because this.wtext conflicts with import std.conv : wtext
-	string wtext; // After creation, this isn't used unless ControlStyles.CACHE_TEXT.
+	wstring wtext; // After creation, this isn't used unless ControlStyles.CACHE_TEXT.
 	ControlStyles ctrlStyle = ControlStyles.STANDARD_CLICK | ControlStyles.STANDARD_DOUBLE_CLICK /+ | ControlStyles.RESIZE_REDRAW +/ ;
 	HBRUSH _hbrBg;
 	RightToLeft rtol = RightToLeft.INHERIT;
