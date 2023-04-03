@@ -279,7 +279,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 
 
 	///
-	@property void selectedText(string sel) // setter
+	@property void selectedText(wstring sel) // setter
 	{
 		if(created)
 		{

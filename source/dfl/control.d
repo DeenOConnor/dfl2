@@ -3363,6 +3363,12 @@ class Control: Object, IWindow // docmain
 			return super.opEquals(ctrl);
 		return hwnd == ctrl.hwnd;
 	}
+
+
+	bool opEquals(wstring wstr)
+	{
+		return this.text == wstr;
+	}
 	
 	
 	override int opCmp(Object o)

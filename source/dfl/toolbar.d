@@ -16,6 +16,7 @@ private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 
 
 version(DFL_NO_IMAGELIST)
@@ -127,7 +128,7 @@ class ToolBarButton
 	}
 
 
-	override wstring toWString()
+	wstring toWString()
 	{
 		return text;
 	}

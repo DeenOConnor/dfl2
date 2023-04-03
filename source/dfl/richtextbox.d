@@ -139,7 +139,7 @@ class RichTextBox: TextBoxBase // docmain
 	alias TextBoxBase.cursor cursor; // Overload.
 	
 	
-	override @property string selectedText() // getter
+	override @property wstring selectedText() // getter
 	{
 		if(created)
 		{
@@ -150,9 +150,9 @@ class RichTextBox: TextBoxBase // docmain
 			assert(!result[len]);
 			return result[0 .. len];
 			+/
-			char[] buf = new char[selectionLength];
+			wchar[] buf = new wchar[selectionLength];
 			SendMessageA(hwnd, EM_GETSELTEXT, 0, cast(long)buf.ptr);
-			return to!string(buf);
+			return to!wstring(buf);
 		}
 		return null;
 	}

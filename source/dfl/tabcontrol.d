@@ -62,13 +62,13 @@ class TabPage: Panel
 	alias Control.opEquals opEquals;
 
 	
-	override bool opEquals(Object o)
+	override bool opEquals(Control o)
 	{
-		return text == to!wstring(o.toString());
+		return text == o.toWString();
 	}
 
 	
-	bool opEquals(wstring val)
+	override bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -77,13 +77,13 @@ class TabPage: Panel
 	alias Control.opCmp opCmp;
 
 
-	override int opCmp(Object o)
+	override int opCmp(Control o)
 	{
-		return icmp(text, o.toString());
+		return icmp(text, o.toWString());
 	}
 
 
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}

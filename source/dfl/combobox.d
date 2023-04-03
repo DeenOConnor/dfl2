@@ -166,7 +166,7 @@ class ComboBox: ListControl // docmain
 	
 	
 	///
-	final @property void selectedItem(Object o) // setter
+	final @property void selectedItem(Control o) // setter
 	{
 		int i;
 		i = items.indexOf(o);
@@ -184,7 +184,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property Object selectedItem() // getter
+	final @property Control selectedItem() // getter
 	{
 		int idx;
 		idx = selectedIndex;
@@ -195,7 +195,7 @@ class ComboBox: ListControl // docmain
 	
 	
 	///
-	override @property void selectedValue(Object val) // setter
+	override @property void selectedValue(Control val) // setter
 	{
 		selectedItem = val;
 	}
@@ -207,7 +207,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	override @property Object selectedValue() // getter
+	override @property Control selectedValue() // getter
 	{
 		return selectedItem;
 	}
@@ -510,7 +510,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		protected this(ComboBox lbox, Object[] range)
+		protected this(ComboBox lbox, Control[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
@@ -533,22 +533,22 @@ class ComboBox: ListControl // docmain
 		+/
 		
 		
-		void add(Object value)
+		void add(Control value)
 		{
 			add2(value);
 		}
 		
 		void add(wstring value)
 		{
-			add(new ListString(value));
+			add(new Control(value));
 		}
 		
 		
-		void addRange(Object[] range)
+		void addRange(Control[] range)
 		{
 			if(lbox.sorted)
 			{
-				foreach(Object value; range)
+				foreach(Control value; range)
 				{
 					add(value);
 				}
@@ -571,7 +571,7 @@ class ComboBox: ListControl // docmain
 		private:
 		
 		ComboBox lbox;
-		Object[] _items = [];
+		Control[] _items = [];
 
 
 		this()
@@ -586,7 +586,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(Object val)
+		LRESULT add2(Control val)
 		{
 			int i;
 			if(lbox.sorted)
@@ -610,11 +610,11 @@ class ComboBox: ListControl // docmain
 		
 		LRESULT add2(wstring val)
 		{
-			return add2(new ListString(val));
+			return add2(new Control(val));
 		}
 		
 		
-		void _added(size_t idx, Object val)
+		void _added(size_t idx, Control val)
 		{
 			if(lbox.isHandleCreated)
 			{
@@ -623,7 +623,7 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		void _removed(size_t idx, Object val)
+		void _removed(size_t idx, Control val)
 		{
 			if(size_t.max == idx) // Clear all.
 			{
@@ -644,9 +644,9 @@ class ComboBox: ListControl // docmain
 		
 		public:
 
-		mixin ListWrapArray!(Object, _items,
-			&_blankListCallback!(Object), &_added,
-			&_blankListCallback!(Object), &_removed,
+		mixin ListWrapArray!(Control, _items,
+			&_blankListCallback!(Control), &_added,
+			&_blankListCallback!(Control), &_removed,
 			true, false, false, false) _wraparray;
 	}
 	
@@ -681,7 +681,7 @@ class ComboBox: ListControl // docmain
 		m.hWnd = hwnd;
 		m.msg = CB_INSERTSTRING;
 
-        foreach(size_t i, Object obj; icollection._items)
+        foreach(size_t i, Control obj; icollection._items)
 		{
 			m.wParam = i;
 			m.lParam = cast(LPARAM)obj.toString().ptr;

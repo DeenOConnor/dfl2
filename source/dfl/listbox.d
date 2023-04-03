@@ -31,9 +31,9 @@ alias StringObject ListString;
 abstract class ListControl: ControlSuperClass // docmain
 {
 	///
-	final wstring getItemText(Object item)
+	final wstring getItemText(Control item)
 	{
-		return to!wstring(item.toString());
+		return item.toWString();
 	}
 	
 	
@@ -47,13 +47,13 @@ abstract class ListControl: ControlSuperClass // docmain
 	abstract @property int selectedIndex(); // getter
 	
 	///
-	abstract @property void selectedValue(Object val); // setter
+	abstract @property void selectedValue(Control val); // setter
 	/// ditto
 	
 	///
 	abstract @property void selectedValue(wstring str); // setter
 	/// ditto
-	abstract @property Object selectedValue(); // getter
+	abstract @property Control selectedValue(); // getter
 	
 	
 	static @property Color defaultBackColor() // getter
@@ -665,9 +665,9 @@ class ListBox: ListControl // docmain
 		return -1;
 	}
 	
-	
+
 	///
-	final @property void selectedItem(Object o) // setter
+	final @property void selectedItem(Control o) // setter
 	{
 		int i;
 		i = items.indexOf(o);
@@ -685,7 +685,7 @@ class ListBox: ListControl // docmain
 	}
 	
 	
-	final @property Object selectedItem() // getter
+	final @property Control selectedItem() // getter
 	{
 		int idx;
 		idx = selectedIndex;
@@ -695,7 +695,7 @@ class ListBox: ListControl // docmain
 	}
 	
 	
-	override @property void selectedValue(Object val) // setter
+	override @property void selectedValue(Control val) // setter
 	{
 		selectedItem = val;
 	}
@@ -705,7 +705,7 @@ class ListBox: ListControl // docmain
 		selectedItem = str;
 	}
 	
-	override @property Object selectedValue() // getter
+	override @property Control selectedValue() // getter
 	{
 		return selectedItem;
 	}
@@ -984,7 +984,7 @@ class ListBox: ListControl // docmain
 	{
 		if(icollection._items.length)
 		{
-			Object[] itemscopy;
+			Control[] itemscopy;
 			itemscopy = icollection._items.dup;
 			std.algorithm.sort( itemscopy );
 			
@@ -994,7 +994,7 @@ class ListBox: ListControl // docmain
 			scope(exit)
 				endUpdate();
 			
-			foreach(i, Object o; itemscopy)
+			foreach(i, Control o; itemscopy)
 			{
 				items.insert(to!int(i), o);
 			}
@@ -1034,7 +1034,7 @@ class ListBox: ListControl // docmain
 		+/
 		
 		
-		void add(Object value)
+		void add(Control value)
 		{
 			add2(value);
 		}
@@ -1042,7 +1042,7 @@ class ListBox: ListControl // docmain
 		
 		void add(wstring value)
 		{
-			add(new ListString(value));
+			add(new Control(value));
 		}
 		
 		
@@ -1074,7 +1074,7 @@ class ListBox: ListControl // docmain
 		private:
 		
 		ListBox lbox;
-		Object[] _items;
+		Control[] _items;
 		
 		
 		LRESULT insert2(WPARAM idx, wstring val)
@@ -1084,7 +1084,7 @@ class ListBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(Object val)
+		LRESULT add2(Control val)
 		{
 			int i;
 			if(lbox.sorted)
@@ -1108,7 +1108,7 @@ class ListBox: ListControl // docmain
 		
 		LRESULT add2(wstring val)
 		{
-			return add2(new ListString(val));
+			return add2(new Control(val));
 		}
 		
 		
