@@ -15,6 +15,7 @@ private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 
 private extern(Windows) void _initStatusbar();
 
@@ -42,13 +43,13 @@ enum StatusBarPanelBorderStyle: ubyte
 class StatusBarPanel: Object
 {
 	///
-	this(string text)
+	this(wstring text)
 	{
 		this._txt = text;
 	}
 	
 	/// ditto
-	this(string text, int width)
+	this(wstring text, int width)
 	{
 		this._txt = text;
 		this._width = width;
@@ -59,8 +60,11 @@ class StatusBarPanel: Object
 	{
 	}
 	
+	override string toString() {
+		return to!string(_txt);
+    }
 	
-	override string toString()
+	wstring toWString()
 	{
 		return _txt;
 	}
@@ -68,7 +72,7 @@ class StatusBarPanel: Object
 	
 	override bool opEquals(Object o)
 	{
-		return _txt == o.toString(); // ?
+		return _txt == to!wstring(o.toString()); // ?
 	}
 	
 	bool opEquals(StatusBarPanel pnl)
@@ -76,7 +80,7 @@ class StatusBarPanel: Object
 		return _txt == pnl._txt;
 	}
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return _txt == val;
 	}
@@ -84,7 +88,7 @@ class StatusBarPanel: Object
 	
 	override int opCmp(Object o)
 	{
-		return icmp(_txt, o.toString()); // ?
+		return icmp(_txt, to!string(o.toString())); // ?
 	}
 	
 	int opCmp(StatusBarPanel pnl)
@@ -92,7 +96,7 @@ class StatusBarPanel: Object
 		return icmp(_txt, pnl._txt);
 	}
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(_txt, val);
 	}
@@ -200,7 +204,7 @@ class StatusBarPanel: Object
 	
 	
 	///
-	final @property void text(string txt) // setter
+	final @property void text(wstring txt) // setter
 	{
 		if(_parent && _parent.isHandleCreated)
 		{
@@ -213,7 +217,7 @@ class StatusBarPanel: Object
 	}
 	
 	/// ditto
-	final @property string text() // getter
+	final @property wstring text() // getter
 	{
 		return _txt;
 	}
@@ -254,7 +258,7 @@ class StatusBarPanel: Object
 	
 	private:
 	
-	string _txt = null;
+	wstring _txt = null;
 	int _width = 100;
 	StatusBar _parent = null;
 	WPARAM _utype = 0; // StatusBarPanelBorderStyle.SUNKEN.
@@ -493,7 +497,7 @@ class StatusBar: ControlSuperClass // docmain
 	}
 	
 	
-	override @property void text(string txt) // setter
+	override @property void text(wstring txt) // setter
 	{
 		if(isHandleCreated && !showPanels)
 		{
@@ -506,7 +510,7 @@ class StatusBar: ControlSuperClass // docmain
 	}
 	
 	/// ditto
-	override @property string text() // getter
+	override @property wstring text() // getter
 	{
 		return this._simpletext;
 	}
@@ -575,7 +579,7 @@ class StatusBar: ControlSuperClass // docmain
 	private:
 	
 	StatusBarPanelCollection lpanels;
-	string _simpletext = null;
+	wstring _simpletext = null;
 	bool _issimple = true;
 	
 	
@@ -589,7 +593,7 @@ class StatusBar: ControlSuperClass // docmain
 	}
 	
 	
-	void _sendidxtext(int idx, WPARAM utype, string txt)
+	void _sendidxtext(int idx, WPARAM utype, wstring txt)
 	{
 		assert(isHandleCreated);
 		

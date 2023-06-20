@@ -166,7 +166,7 @@ class ComboBox: ListControl // docmain
 	
 	
 	///
-	final @property void selectedItem(Object o) // setter
+	final @property void selectedItem(Control o) // setter
 	{
 		int i;
 		i = items.indexOf(o);
@@ -175,7 +175,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property void selectedItem(string str) // setter
+	final @property void selectedItem(wstring str) // setter
 	{
 		int i;
 		i = items.indexOf(str);
@@ -184,7 +184,7 @@ class ComboBox: ListControl // docmain
 	}
 	
 	/// ditto
-	final @property Object selectedItem() // getter
+	final @property Control selectedItem() // getter
 	{
 		int idx;
 		idx = selectedIndex;
@@ -195,19 +195,19 @@ class ComboBox: ListControl // docmain
 	
 	
 	///
-	override @property void selectedValue(Object val) // setter
+	override @property void selectedValue(Control val) // setter
 	{
 		selectedItem = val;
 	}
 	
 	/// ditto
-	override @property void selectedValue(string str) // setter
+	override @property void selectedValue(wstring str) // setter
 	{
 		selectedItem = str;
 	}
 	
 	/// ditto
-	override @property Object selectedValue() // getter
+	override @property Control selectedValue() // getter
 	{
 		return selectedItem;
 	}
@@ -510,14 +510,14 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		protected this(ComboBox lbox, Object[] range)
+		protected this(ComboBox lbox, Control[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
 		}
 		
 		
-		protected this(ComboBox lbox, string[] range)
+		protected this(ComboBox lbox, wstring[] range)
 		{
 			this.lbox = lbox;
 			addRange(range);
@@ -533,22 +533,22 @@ class ComboBox: ListControl // docmain
 		+/
 		
 		
-		void add(Object value)
+		void add(Control value)
 		{
 			add2(value);
 		}
 		
-		void add(string value)
+		void add(wstring value)
 		{
-			add(new ListString(value));
+			add(new Control(value));
 		}
 		
 		
-		void addRange(Object[] range)
+		void addRange(Control[] range)
 		{
 			if(lbox.sorted)
 			{
-				foreach(Object value; range)
+				foreach(Control value; range)
 				{
 					add(value);
 				}
@@ -559,9 +559,9 @@ class ComboBox: ListControl // docmain
 			}
 		}
 		
-		void addRange(string[] range)
+		void addRange(wstring[] range)
 		{
-			foreach(string s; range)
+			foreach(wstring s; range)
 			{
 				add(s);
 			}
@@ -571,7 +571,7 @@ class ComboBox: ListControl // docmain
 		private:
 		
 		ComboBox lbox;
-		Object[] _items = [];
+		Control[] _items = [];
 
 
 		this()
@@ -579,14 +579,14 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT insert2(WPARAM idx, string val)
+		LRESULT insert2(WPARAM idx, wstring val)
 		{
 			insert(cast(int)idx, val);
 			return idx;
 		}
 		
 		
-		LRESULT add2(Object val)
+		LRESULT add2(Control val)
 		{
 			int i;
 			if(lbox.sorted)
@@ -608,22 +608,22 @@ class ComboBox: ListControl // docmain
 		}
 		
 		
-		LRESULT add2(string val)
+		LRESULT add2(wstring val)
 		{
-			return add2(new ListString(val));
+			return add2(new Control(val));
 		}
 		
 		
-		void _added(size_t idx, Object val)
+		void _added(size_t idx, Control val)
 		{
 			if(lbox.isHandleCreated)
 			{
-				lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
+				lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toWString().ptr);
 			}
 		}
 		
 		
-		void _removed(size_t idx, Object val)
+		void _removed(size_t idx, Control val)
 		{
 			if(size_t.max == idx) // Clear all.
 			{
@@ -644,10 +644,10 @@ class ComboBox: ListControl // docmain
 		
 		public:
 
-		mixin ListWrapArray!(Object, _items,
-			&_blankListCallback!(Object), &_added,
-			&_blankListCallback!(Object), &_removed,
-			true, false, false, false) _wraparray;
+		mixin ListWrapArray!(Control, _items,
+			_blankListCallback!(Control), _added,
+			_blankListCallback!(Control), _removed,
+            true, false, false, false) _wraparray;
 	}
 	
 	
@@ -681,7 +681,7 @@ class ComboBox: ListControl // docmain
 		m.hWnd = hwnd;
 		m.msg = CB_INSERTSTRING;
 
-        foreach(size_t i, Object obj; icollection._items)
+        foreach(size_t i, Control obj; icollection._items)
 		{
 			m.wParam = i;
 			m.lParam = cast(LPARAM)obj.toString().ptr;
@@ -719,7 +719,7 @@ class ComboBox: ListControl // docmain
 		if(hasDropList)
 			wrect.height = DEFAULT_ITEM_HEIGHT * 8;
 		
-		string ft;
+		wstring ft;
 		ft = wtext;
 		
 		super.createHandle();
@@ -834,7 +834,7 @@ class ComboBox: ListControl // docmain
 	override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -909,13 +909,13 @@ class ComboBox: ListControl // docmain
 			case CB_ADDSTRING:
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.add2(cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.add2(cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_INSERTSTRING:
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
 				//msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
-				msg.result = icollection.insert2(msg.wParam, cast(string)fromStringz(cast(char*)msg.lParam).dup); // TODO: fix. // Needed in D2.
+				msg.result = icollection.insert2(msg.wParam, cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
 				return;
 			
 			case CB_DELETESTRING:
@@ -964,7 +964,7 @@ class ComboBox: ListControl // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return CallWindowProcA(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcW(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 

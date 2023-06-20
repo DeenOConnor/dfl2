@@ -16,6 +16,7 @@ private import core.sys.windows.commctrl;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 
 
 version(DFL_NO_IMAGELIST)
@@ -59,7 +60,7 @@ class ToolBarButton
 	}
 	
 	///
-	this(string text)
+	this(wstring text)
 	{
 		this();
 		
@@ -90,7 +91,7 @@ class ToolBarButton
 	
 	
 	///
-	@property void text(string newText) // setter
+	@property void text(wstring newText) // setter
 	{
 		_text = newText;
 		
@@ -99,7 +100,7 @@ class ToolBarButton
 	}
 	
 	/// ditto
-	@property string text() // getter
+	@property wstring text() // getter
 	{
 		return _text;
 	}
@@ -123,17 +124,23 @@ class ToolBarButton
 	
 	override string toString()
 	{
+		return to!string(text);
+	}
+
+
+	wstring toWString()
+	{
 		return text;
 	}
 	
 	
 	override bool opEquals(Object o)
 	{
-		return text == o.toString();
+		return this.toString() == o.toString();
 	}
 	
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return text == val;
 	}
@@ -145,7 +152,7 @@ class ToolBarButton
 	}
 	
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}
@@ -291,7 +298,7 @@ class ToolBarButton
 	private:
 	ToolBar tbar;
 	int _id = 0;
-	string _text;
+	wstring _text;
 	Object _tag;
 	ToolBarButtonStyle _style = ToolBarButtonStyle.PUSH_BUTTON;
 	BYTE _state = TBSTATE_ENABLED;

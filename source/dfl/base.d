@@ -10,6 +10,7 @@ private import dfl.event;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 private import core.stdc.string : strcpy;
 private import core.stdc.stdlib : alloca;
 private import core.memory;
@@ -46,25 +47,28 @@ alias Throwable DflThrowable;
 class StringObject: Object
 {
 	///
-	string value;
+	wstring value;
 	
 	
 	///
-	this(string str) pure nothrow
+	this(wstring str) pure nothrow
 	{
 		this.value = str;
 	}
 	
-	
+	wstring toWString() {
+		return value;
+    }
+
 	override string toString()
 	{
-		return value;
+		return to!string(value);
 	}
 	
 	
 	override bool opEquals(Object o)
 	{
-		return value == o.toString(); // ?
+		return to!string(value) == o.toString(); // ?
 	}
 	
 	
@@ -76,7 +80,7 @@ class StringObject: Object
 	
 	override int opCmp(Object o)
 	{
-		return icmp(value, o.toString()); // ?
+		return icmp(value, to!wstring(o.toString())); // ?
 	}
 	
 	

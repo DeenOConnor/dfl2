@@ -112,10 +112,10 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	
 	///
-	final @property void lines(string[] lns) // setter
+	final @property void lines(wstring[] lns) // setter
 	{
-		string result;
-		foreach(string s; lns)
+		wstring result;
+		foreach(wstring s; lns)
 		{
 			result ~= s ~ "\r\n";
 		}
@@ -125,7 +125,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	}
 	
 	/// ditto
-	final @property string[] lines() // getter
+	final @property wstring[] lines() // getter
 	{
 		return splitLines(text);
 	}
@@ -174,7 +174,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			return cast(uint)SendMessageA(handle, EM_GETLINECOUNT, 0, 0);
 		}
 		
-		string s;
+		wstring s;
 		size_t iw = 0;
 		uint count = 1;
 		s = text;
@@ -279,7 +279,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 
 
 	///
-	@property void selectedText(string sel) // setter
+	@property void selectedText(wstring sel) // setter
 	{
 		if(created)
 		{
@@ -288,7 +288,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	}
 
 	/// ditto
-	@property string selectedText() // getter
+	@property wstring selectedText() // getter
 	{		
 		if(created) {
 			size_t selStart, selEnd;
@@ -424,7 +424,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	
 	///
-	final void appendText(string txt)
+	final void appendText(wstring txt)
 	{
 		if(created)
 		{
@@ -551,6 +551,12 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	
 	override string toString()
 	{
+		return to!string(text); // ?
+	}
+
+
+	override wstring toWString()
+	{
 		return text; // ?
 	}
 	
@@ -580,7 +586,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(!isHandleCreated)
 		{
-			string txt;
+			wstring txt;
 			txt = wtext;
 			
 			super.createHandle();

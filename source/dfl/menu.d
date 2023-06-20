@@ -14,6 +14,7 @@ private import dfl.collections;
 private import core.sys.windows.windows;
 
 private import std.string : icmp;
+private import std.conv : to;
 
 
 version (DFL_NO_MENUS) {
@@ -76,7 +77,7 @@ version (DFL_NO_MENUS) {
 	class MenuItem : Menu // docmain
 	{
 		///
-		final @property void text(string txt) // setter
+		final @property void text(wstring txt) // setter
 		{
 			if (!menuItems.length && txt == SEPARATOR_TEXT) {
 				_type(_type() | MFT_SEPARATOR);
@@ -100,7 +101,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/// ditto
-		final @property string text() // getter
+		final @property wstring text() // getter
 		{
 			// if(mparent) fetch text ?
 			return mtext;
@@ -416,14 +417,14 @@ version (DFL_NO_MENUS) {
 		}
 
 		/// ditto
-		this(string text) {
+		this(wstring text) {
 			_init();
 
 			this.text = text;
 		}
 
 		/// ditto
-		this(string text, MenuItem[] items) {
+		this(wstring text, MenuItem[] items) {
 			if (items.length) {
 				HMENU hm = CreatePopupMenu();
 				super(hm);
@@ -450,14 +451,18 @@ version (DFL_NO_MENUS) {
 		}
 
 		override string toString() {
+			return to!string(text);
+		}
+
+		wstring toWString() {
 			return text;
 		}
 
 		override bool opEquals(Object o) {
-			return text == o.toString();
+			return this.toString() == o.toString();
 		}
 
-		bool opEquals(string val) {
+		bool opEquals(wstring val) {
 			return text == val;
 		}
 
@@ -465,7 +470,7 @@ version (DFL_NO_MENUS) {
 			return icmp(text, o.toString());
 		}
 
-		int opCmp(string val) {
+		int opCmp(wstring val) {
 			return icmp(text, val);
 		}
 
@@ -533,7 +538,7 @@ version (DFL_NO_MENUS) {
 	private:
 
 		int mid; // Menu ID.
-		string mtext;
+		wstring mtext;
 		Menu mparent;
 		UINT fType = 0; // MFT_*
 		UINT fState = 0;
@@ -667,8 +672,8 @@ version (DFL_NO_MENUS) {
 				insert(mi.mindex, mi);
 			}
 
-			void add(string value) {
-				return add(new MenuItem(value));
+			void add(wstring value) {
+				add(new MenuItem(value));
 			}
 
 			void addRange(MenuItem[] items) {
@@ -680,11 +685,11 @@ version (DFL_NO_MENUS) {
 				}
 			}
 
-			void addRange(string[] items) {
+			void addRange(wstring[] items) {
 				if (!Menu._compat092)
-					return _wraparray.addRange(items);
+					_wraparray.addRange(items);
 
-				foreach (string it; items) {
+				foreach (wstring it; items) {
 					insert(cast(int) length, it);
 				}
 			}
@@ -815,7 +820,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
+		protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
 		{
 			if (typeData !is null) {
 				lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
@@ -826,7 +831,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
+		protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
 		{
 			if (typeData !is null) {
 				lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
@@ -869,7 +874,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
+		protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
 		{
 			Menu._setInfo(uItem, fByPosition, lpmii, typeData);
 
@@ -878,7 +883,7 @@ version (DFL_NO_MENUS) {
 		}
 
 		/+ package +/
-		protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, string typeData = null) // package
+		protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
 		{
 			Menu._insert(uItem, fByPosition, lpmii, typeData);
 

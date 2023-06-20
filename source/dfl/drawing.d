@@ -15,31 +15,8 @@ private import core.sys.windows.windows;
 private import core.sys.windows.wingdi;
 
 private import std.conv : to;
+private import std.string : toStringz;
 
-
-version(D_Version2)
-{
-	version = DFL_D2;
-	version = DFL_D2_AND_ABOVE;
-}
-else version(D_Version3)
-{
-	version = DFL_D3;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else version(D_Version4)
-{
-	version = DFL_D4;
-	version = DFL_D4_AND_ABOVE;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else
-{
-	version = DFL_D1;
-}
-//version = DFL_D1_AND_ABOVE;
 
 private int MAP_LOGHIM_TO_PIX(int x, int longpixels) {
 	return MulDiv(x, longpixels, 2540);
@@ -67,27 +44,16 @@ struct Point // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Point) pt)
 	{
-		///
-		const bool opEquals(ref const(Point) pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
-
-		/// ditto
-		const bool opEquals(Point pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
+		return x == pt.x && y == pt.y;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Point pt)
 	{
-		///
-		bool opEquals(Point pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
+		return x == pt.x && y == pt.y;
 	}
 
 
@@ -166,27 +132,16 @@ struct Size // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Size) sz)
 	{
-		///
-		const bool opEquals(ref const(Size) sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
-
-		/// ditto
-		const bool opEquals(Size sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
+		return width == sz.width && height == sz.height;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Size sz)
 	{
-		///
-		bool opEquals(Size sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
+		return width == sz.width && height == sz.height;
 	}
 
 
@@ -338,30 +293,18 @@ struct Rect // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Rect) r)
 	{
-		///
-		const bool opEquals(ref const(Rect) r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
-
-		/// ditto
-		const bool opEquals(Rect r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
+		return x == r.x && y == r.y &&
+			width == r.width && height == r.height;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Rect r)
 	{
-		///
-		bool opEquals(Rect r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
+		return x == r.x && y == r.y &&
+			width == r.width && height == r.height;
 	}
 
 
@@ -2378,7 +2321,7 @@ class Graphics // docmain
 	// Windows 95/98/Me limits -text- to 8192 characters.
 
 	///
-	final void drawText(string text, Font font, Color color, Rect r, TextFormat fmt)
+	final void drawText(wstring text, Font font, Color color, Rect r, TextFormat fmt)
 	{
 		// Should SaveDC/RestoreDC be used instead?
 
@@ -2392,7 +2335,7 @@ class Graphics // docmain
 
 		RECT rect;
 		r.getRect(&rect);
-		DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
+		auto dtr = DrawTextExW(hdc, cast(wchar*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
                     fmt._trim | fmt._flags | fmt._align, &fmt._params);
 
 		// Reset stuff.
@@ -2405,14 +2348,14 @@ class Graphics // docmain
 	}
 
 	/// ditto
-	final void drawText(string text, Font font, Color color, Rect r)
+	final void drawText(wstring text, Font font, Color color, Rect r)
 	{
 		return drawText(text, font, color, r, getCachedTextFormat());
 	}
 
 
 	///
-	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
+	final void drawTextDisabled(wstring text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
 	{
 		r.offset(1, 1);
 		//drawText(text, font, Color(24, color).solidColor(backColor), r, fmt); // Lighter, lower one.
@@ -2423,7 +2366,7 @@ class Graphics // docmain
 	}
 
 	/// ditto
-	final void drawTextDisabled(string text, Font font, Color color, Color backColor, Rect r)
+	final void drawTextDisabled(wstring text, Font font, Color color, Color backColor, Rect r)
 	{
 		return drawTextDisabled(text, font, color, backColor, r, getCachedTextFormat());
 	}
@@ -2451,7 +2394,7 @@ class Graphics // docmain
 
 
 	///
-	final Size measureText(string text, Font font, int maxWidth, TextFormat fmt)
+	final Size measureText(wstring text, Font font, int maxWidth, TextFormat fmt)
 	{
 		RECT rect;
 		HFONT prevFont;
@@ -2463,10 +2406,11 @@ class Graphics // docmain
 
 		prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
 
-		if(!DrawTextExA(hdc, cast(char*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
+		if(!DrawTextExW(hdc, cast(wchar*)text.ptr, to!int(text.length), &rect, DT_EXPANDTABS | DT_TABSTOP |
                         fmt._trim | fmt._flags | fmt._align | DT_CALCRECT | DT_NOCLIP, &fmt._params))
 		{
-			//throw new DflException("Text measure error");
+			import std.stdio;
+			writeln("Text measure error");
 			rect.left = 0;
 			rect.top = 0;
 			rect.right = 0;
@@ -2480,19 +2424,19 @@ class Graphics // docmain
 	}
 
 	/// ditto
-	final Size measureText(string text, Font font, TextFormat fmt)
+	final Size measureText(wstring text, Font font, TextFormat fmt)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, fmt);
 	}
 
 	/// ditto
-	final Size measureText(string text, Font font, int maxWidth)
+	final Size measureText(wstring text, Font font, int maxWidth)
 	{
 		return measureText(text, font, maxWidth, getCachedTextFormat());
 	}
 
 	/// ditto
-	final Size measureText(string text, Font font)
+	final Size measureText(wstring text, Font font)
 	{
 		return measureText(text, font, DEFAULT_MEASURE_SIZE, getCachedTextFormat());
 	}

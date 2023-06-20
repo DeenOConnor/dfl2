@@ -117,7 +117,7 @@ class TreeViewEventArgs: EventArgs
 class NodeLabelEditEventArgs: EventArgs
 {
 	///
-	this(TreeNode node, string label)
+	this(TreeNode node, wstring label)
 	{
 		_node = node;
 		_label = label;
@@ -138,7 +138,7 @@ class NodeLabelEditEventArgs: EventArgs
 	
 	
 	///
-	final @property string label() // getter
+	final @property wstring label() // getter
 	{
 		return _label;
 	}
@@ -159,7 +159,7 @@ class NodeLabelEditEventArgs: EventArgs
 	
 	private:
 	TreeNode _node;
-	string _label;
+	wstring _label;
 	bool _cancel = false;
 }
 
@@ -168,7 +168,7 @@ class NodeLabelEditEventArgs: EventArgs
 class TreeNode: Object
 {
 	///
-	this(string labelText)
+	this(wstring labelText)
 	{
 		this();
 		
@@ -176,7 +176,7 @@ class TreeNode: Object
 	}
 	
 	/// ditto
-	this(string labelText, TreeNode[] children)
+	this(wstring labelText, TreeNode[] children)
 	{
 		this();
 		
@@ -197,9 +197,9 @@ class TreeNode: Object
 		tchildren = new TreeNodeCollection(tview, this);
 	}
 	
-	this(Object val) // package
+	this(Control val) // package
 	{
-		this(val.toString());
+		this(val.toWString());
 	}
 	
 	
@@ -263,7 +263,7 @@ class TreeNode: Object
 	
 	///
 	// Path from the root to this node.
-	final @property string fullPath() // getter
+	final @property wstring fullPath() // getter
 	{
 		if(!tparent)
 			return ttext;
@@ -273,14 +273,14 @@ class TreeNode: Object
 		dchar sep;
 		sep = tview.pathSeparator;
 		//return std.string.format("%s%s%s", tparent.fullPath, sep, ttext);
-		char[4] ssep;
+		wchar[4] ssep;
 		int sseplen = 0;
-		foreach(char ch; (&sep)[0 .. 1])
+		foreach(wchar ch; (&sep)[0 .. 1])
 		{
 			ssep[sseplen++] = ch;
 		}
 		//return tparent.fullPath ~ ssep[0 .. sseplen] ~ ttext;
-		return tparent.fullPath ~ cast(string)ssep[0 .. sseplen] ~ ttext; // Needed in D2.
+		return tparent.fullPath ~ cast(wstring)ssep[0 .. sseplen] ~ ttext; // Needed in D2.
 	}
 	
 	
@@ -425,13 +425,13 @@ class TreeNode: Object
 	
 	
 	///
-	final @property void text(string newText) // setter
+	final @property void text(wstring newText) // setter
 	{
 		ttext = newText;
 		
 		if(created)
 		{
-			TV_ITEMA item;
+			TV_ITEMW item;
 			Message m;
 			
 			item.mask = TVIF_HANDLE | TVIF_TEXT;
@@ -442,13 +442,13 @@ class TreeNode: Object
 			m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
 			+/
 			item.pszText = cast(typeof(item.pszText))ttext.ptr;
-			m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
+			m = Message(tview.handle, TVM_SETITEMW, 0, cast(LPARAM)&item);
 			tview.prevWndProc(m);
 		}
 	}
 	
 	/// ditto
-	final @property string text() // getter
+	final @property wstring text() // getter
 	{
 		return ttext;
 	}
@@ -469,7 +469,7 @@ class TreeNode: Object
 		{
 			SetFocus(tview.hwnd); // Needs to have focus.
 			HWND hwEdit;
-			hwEdit = cast(HWND)SendMessageA(tview.hwnd, TVM_EDITLABELA, 0, cast(LPARAM)hnode);
+			hwEdit = cast(HWND)SendMessageA(tview.hwnd, TVM_EDITLABELW, 0, cast(LPARAM)hnode);
 			if(!hwEdit)
 				goto err_edit;
 		}
@@ -574,9 +574,9 @@ class TreeNode: Object
 			
 			if(created)
 			{
-				TV_ITEMA item;
+				TV_ITEMW item;
 				Message m;
-				m = Message(tview.handle, TVM_SETITEMA, 0, cast(LPARAM)&item);
+				m = Message(tview.handle, TVM_SETITEMW, 0, cast(LPARAM)&item);
 				
 				item.mask = TVIF_HANDLE | TVIF_IMAGE;
 				item.hItem = hnode;
@@ -600,6 +600,11 @@ class TreeNode: Object
 	
 	override string toString()
 	{
+		return to!string(ttext);
+	}
+
+	wstring toWString()
+	{
 		return ttext;
 	}
 	
@@ -614,7 +619,7 @@ class TreeNode: Object
 		return 0 == icmp(ttext, node.ttext);
 	}
 	
-	bool opEquals(string val)
+	bool opEquals(wstring val)
 	{
 		return 0 == icmp(ttext, val);
 	}
@@ -630,14 +635,14 @@ class TreeNode: Object
 		return icmp(ttext, node.ttext);
 	}
 	
-	int opCmp(string val)
+	int opCmp(wstring val)
 	{
 		return icmp(text, val);
 	}
 	
 	
 	private:
-	string ttext;
+	wstring ttext;
 	TreeNode tparent;
 	TreeNodeCollection tchildren;
 	Object ttag;
@@ -671,11 +676,11 @@ class TreeNode: Object
 	{
 		if(created)
 		{
-			TV_ITEMA ti;
+			TV_ITEMW ti;
 			ti.mask = TVIF_HANDLE | TVIF_STATE;
 			ti.hItem = hnode;
 			ti.stateMask = state;
-			if(SendMessageA(tview.handle, TVM_GETITEMA, 0, cast(LPARAM)&ti))
+			if(SendMessageA(tview.handle, TVM_GETITEMW, 0, cast(LPARAM)&ti))
 			{
 				if(ti.state & state)
 					return true;
@@ -726,20 +731,20 @@ class TreeNodeCollection
 		insert(i, node);
 	}
 	
-	void add(string text)
+	void add(wstring text)
 	{
 		return add(new TreeNode(text));
 	}
 	
-	void add(Object val)
+	void add(Control val)
 	{
-		return add(new TreeNode(val.toString())); // ?
+		return add(new TreeNode(val.toWString())); // ?
 	}
 	
 	
-	void addRange(Object[] range)
+	void addRange(Control[] range)
 	{
-		foreach(Object o; range)
+		foreach(Control o; range)
 		{
 			add(o);
 		}
@@ -753,9 +758,9 @@ class TreeNodeCollection
 		}
 	}
 	
-	void addRange(string[] range)
+	void addRange(wstring[] range)
 	{
-		foreach(string s; range)
+		foreach(wstring s; range)
 		{
 			add(s);
 		}
@@ -823,7 +828,7 @@ class TreeNodeCollection
 	}
 	
 	
-	package void populateInsertChildNode(ref Message m, ref TV_ITEMA dest, TreeNode node)
+	package void populateInsertChildNode(ref Message m, ref TV_ITEMW dest, TreeNode node)
 	{
 		with(dest)
 		{
@@ -848,7 +853,7 @@ class TreeNodeCollection
 			+/
 			pszText = cast(typeof(pszText))node.text.ptr;
 			m.hWnd = tview.handle;
-			m.msg = TVM_INSERTITEMA;
+			m.msg = TVM_INSERTITEMW;
 		}
 	}
 	
@@ -860,7 +865,7 @@ class TreeNodeCollection
 	}
 	do
 	{
-		TV_INSERTSTRUCTA tis;
+		TV_INSERTSTRUCTW tis;
 		Message m;
 		
 		tis.hInsertAfter = TVI_LAST;
@@ -895,7 +900,7 @@ class TreeNodeCollection
 		
 		if(created)
 		{
-			TV_INSERTSTRUCTA tis;
+			TV_INSERTSTRUCTW tis;
 			
 			if(idx <= 0)
 			{
@@ -1926,14 +1931,14 @@ class TreeView: ControlSuperClass // docmain
 						
 						case TVN_ENDLABELEDITW:
 							{
-								string label;
+								wstring label;
 								TV_DISPINFOW* nmdi;
 								nmdi = cast(TV_DISPINFOW*)nmh;
 								if(nmdi.item.pszText)
 								{
 									TreeNode node;
 									node = cast(TreeNode)cast(void*)nmdi.item.lParam;
-									label = to!string(fromStringz(nmdi.item.pszText));
+									label = to!wstring(fromStringz(nmdi.item.pszText));
 									scope NodeLabelEditEventArgs nleea = new NodeLabelEditEventArgs(node, label);
 									onAfterLabelEdit(nleea);
 									if(nleea.cancelEdit)
@@ -1953,6 +1958,7 @@ class TreeView: ControlSuperClass // docmain
 							break;
 						
 						case TVN_ENDLABELEDITA:
+							/* Ignore ansi for now
 								string label;
 								TV_DISPINFOA* nmdi;
 								nmdi = cast(TV_DISPINFOA*)nmh;
@@ -1971,12 +1977,13 @@ class TreeView: ControlSuperClass // docmain
 									{
 										// TODO: check if correct implementation.
 										// Update the node's cached text..
-										node.ttext = label;
+										node.ttext = to!wstring(label);
 										
 										m.result = TRUE;
 									}
 								}
 								break;
+							*/
 						
 						default:
 					}

@@ -384,7 +384,7 @@ class Button: ButtonBase, IButtonControl // docmain
 	}
 	
 	
-	override @property void text(string txt) // setter
+	override @property void text(wstring txt) // setter
 	{
 		if(txt.length)
 			assert(!this.image, "Button image with text not supported");
