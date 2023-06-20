@@ -212,6 +212,47 @@ class ProgressBar: ControlSuperClass // docmain
 		msg.result = CallWindowProcW(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
+	final @property ProgressBar.STYLES style() {
+		return this.currentStyle;
+    }
+
+	final @property void style(ProgressBar.STYLES newStyle) {
+		this.currentStyle = newStyle;
+
+		auto windowStyle = GetWindowLongPtrA(handle, GWL_STYLE);
+		final switch (newStyle)
+		{
+			case STYLES.BLOCKS:
+				SetWindowLongPtrA(handle, GWL_STYLE, currentStyle & ~PBS_SMOOTH & ~PBS_MARQUEE);
+                prevwproc(PBM_SETPOS, _val, 0);
+				//recreateHandle();
+				break;
+			case STYLES.SMOOTH:
+				SetWindowLongPtrA(handle, GWL_STYLE, currentStyle | PBS_SMOOTH & ~PBS_MARQUEE);
+                prevwproc(PBM_SETPOS, _val, 0);
+				//recreateHandle();
+				break;
+			case STYLES.MARQUEE:
+				SetWindowLongPtrA(handle, GWL_STYLE, currentStyle | PBS_MARQUEE);
+		}
+		bool isMarquee = newStyle == STYLES.MARQUEE;
+        SetWindowLongPtrA(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
+        prevwproc(PBM_SETMARQUEE, isMarquee, this.speed * (isMarquee ? 1 : 0));
+    }
+
+	final @property int animationSpeed() {
+		return this.speed;
+    }
+
+	final @property void animationSpeed(int newSpeed) {
+		this.speed = newSpeed;
+    }
+
+	static enum STYLES {
+		BLOCKS = 0,
+		SMOOTH = PBS_SMOOTH,
+		MARQUEE = PBS_MARQUEE
+    }
 	
 	private:
 	
@@ -219,6 +260,8 @@ class ProgressBar: ControlSuperClass // docmain
 	enum MAX_INIT = 100;
 	enum STEP_INIT = 10;
 	enum VAL_INIT = 0;
+	ProgressBar.STYLES currentStyle;
+	int speed = 0;
 	
 	int _min = MIN_INIT, _max = MAX_INIT, _step = STEP_INIT, _val = VAL_INIT;
 	

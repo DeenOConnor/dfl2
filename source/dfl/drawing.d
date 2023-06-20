@@ -18,30 +18,6 @@ private import std.conv : to;
 private import std.string : toStringz;
 
 
-version(D_Version2)
-{
-	version = DFL_D2;
-	version = DFL_D2_AND_ABOVE;
-}
-else version(D_Version3)
-{
-	version = DFL_D3;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else version(D_Version4)
-{
-	version = DFL_D4;
-	version = DFL_D4_AND_ABOVE;
-	version = DFL_D3_AND_ABOVE;
-	version = DFL_D2_AND_ABOVE;
-}
-else
-{
-	version = DFL_D1;
-}
-//version = DFL_D1_AND_ABOVE;
-
 private int MAP_LOGHIM_TO_PIX(int x, int longpixels) {
 	return MulDiv(x, longpixels, 2540);
 }
@@ -68,27 +44,16 @@ struct Point // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Point) pt)
 	{
-		///
-		const bool opEquals(ref const(Point) pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
-
-		/// ditto
-		const bool opEquals(Point pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
+		return x == pt.x && y == pt.y;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Point pt)
 	{
-		///
-		bool opEquals(Point pt)
-		{
-			return x == pt.x && y == pt.y;
-		}
+		return x == pt.x && y == pt.y;
 	}
 
 
@@ -167,27 +132,16 @@ struct Size // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Size) sz)
 	{
-		///
-		const bool opEquals(ref const(Size) sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
-
-		/// ditto
-		const bool opEquals(Size sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
+		return width == sz.width && height == sz.height;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Size sz)
 	{
-		///
-		bool opEquals(Size sz)
-		{
-			return width == sz.width && height == sz.height;
-		}
+		return width == sz.width && height == sz.height;
 	}
 
 
@@ -339,30 +293,18 @@ struct Rect // docmain
 	}
 
 
-	version(DFL_D2_AND_ABOVE)
+	///
+	const bool opEquals(ref const(Rect) r)
 	{
-		///
-		const bool opEquals(ref const(Rect) r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
-
-		/// ditto
-		const bool opEquals(Rect r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
+		return x == r.x && y == r.y &&
+			width == r.width && height == r.height;
 	}
-	else
+
+	/// ditto
+	const bool opEquals(Rect r)
 	{
-		///
-		bool opEquals(Rect r)
-		{
-			return x == r.x && y == r.y &&
-				width == r.width && height == r.height;
-		}
+		return x == r.x && y == r.y &&
+			width == r.width && height == r.height;
 	}
 
 

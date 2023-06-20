@@ -68,7 +68,7 @@ class StringObject: Object
 	
 	override bool opEquals(Object o)
 	{
-		return value == to!wstring(o.toString()); // ?
+		return to!string(value) == o.toString(); // ?
 	}
 	
 	

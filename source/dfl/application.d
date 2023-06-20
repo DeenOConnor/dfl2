@@ -244,42 +244,25 @@ final class Application // docmain
 	}
 
 
+	/*
+		It seems that DFL uses its own common controls derivatives, which makes OpenThemeData consistently return null
+		This means that a lot in dfl.application and dfl.drawing will have to be rewritten almost completely
+		So for now there's no dark theme (or even properly following system theme really)
+	*/
+
 	private {
 		alias extern(Windows) int function(void*, char*, void*) f_SetWindowTheme;
 		// Even more experimental, might not work with Windows versions less than Win 11 build 22000
 		alias extern(Windows) int function(void*, DWORD, LPCVOID, DWORD) f_DwmSetWindowAttribute;
 		alias extern(Windows) int function() f_DwmFlush;
+        alias int function() nothrow f_IsAppThemed;
+        alias void* function(void*, const(wchar*)) f_OpenThemeData;
+        alias int function(void*, int, int, int, uint*) f_GetThemeColor;
+        alias int function(void* hTheme) f_CloseThemeData;
 
 		static HMODULE hUxTheme;
 
-		static f_SetWindowTheme SetWindowTheme;
-		static f_DwmSetWindowAttribute DwmSetWindowAttribute;
-		static f_DwmFlush DwmFlush;
-		static HMODULE hDwmapi;
-
 		static bool uxThemeInitialized = false;
-
-		static bool initUxTheme() {
-			if (uxThemeInitialized) {
-				return true;
-            }
-
-			hUxTheme = GetModuleHandleA(toStringz("uxtheme.dll"));
-			hDwmapi = LoadLibraryA("dwmapi.dll");
-
-            if (hUxTheme is null) {
-                hUxTheme = LoadLibraryA("uxtheme.dll");
-            }
-
-            if (hUxTheme is null) {
-				debug {
-					writeln("Could not load uxtheme.dll, sticking to default settings!");
-                }
-            }
-
-			uxThemeInitialized = hUxTheme !is null;
-			return uxThemeInitialized;
-        }
 
 		static bool initUxFunctions() {
 			if (!uxThemeInitialized && !initUxTheme()) {
@@ -287,6 +270,10 @@ final class Application // docmain
             }
 
 			SetWindowTheme = cast(f_SetWindowTheme) GetProcAddress(hUxTheme, toStringz("SetWindowTheme"));
+            IsAppThemed = cast(f_IsAppThemed) GetProcAddress(hUxTheme, "IsAppThemed");
+            OpenThemeData = cast(f_OpenThemeData) GetProcAddress(hUxTheme, "OpenThemeData");
+            GetThemeColor = cast(f_GetThemeColor) GetProcAddress(hUxTheme, "GetThemeColor");
+            CloseThemeData = cast(f_CloseThemeData) GetProcAddress(hUxTheme, "CloseThemeData");
 
 			if (hDwmapi !is null) {
 				DwmSetWindowAttribute = cast(f_DwmSetWindowAttribute) GetProcAddress(hDwmapi, toStringz("DwmSetWindowAttribute"));
@@ -303,6 +290,37 @@ final class Application // docmain
 			return true;
         }
 	}
+
+    static f_SetWindowTheme SetWindowTheme;
+	static f_IsAppThemed IsAppThemed;
+	static f_OpenThemeData OpenThemeData;
+	static f_GetThemeColor GetThemeColor;
+	static f_CloseThemeData CloseThemeData;
+    static f_DwmSetWindowAttribute DwmSetWindowAttribute;
+    static f_DwmFlush DwmFlush;
+    static HMODULE hDwmapi;
+
+    static bool initUxTheme() {
+        if (uxThemeInitialized) {
+            return true;
+        }
+
+        hUxTheme = GetModuleHandleA(toStringz("uxtheme.dll"));
+        hDwmapi = LoadLibraryA("dwmapi.dll");
+
+        if (hUxTheme is null) {
+            hUxTheme = LoadLibraryA("uxtheme.dll");
+        }
+
+        if (hUxTheme is null) {
+            debug {
+                writeln("Could not load uxtheme.dll, sticking to default settings!");
+            }
+        }
+
+        uxThemeInitialized = hUxTheme !is null;
+        return uxThemeInitialized;
+    }
 
 	/// Experimental feature!
 	void setDarkModeForWindow(Form form) {
@@ -770,72 +788,7 @@ final class Application // docmain
 			
 			autoScale = true;
 		}
-		
-		
-		/+
-		private int inThread2()
-		{
-			try
-			{
-				// Create in this thread so that it owns the handle.
-				assert(!isHandleCreated);
-				show();
-				SetForegroundWindow(handle);
-				
-				MSG msg;
-				assert(isHandleCreated);
-				// Using the unicode stuf here messes up the redrawing for some reason.
-				while(GetMessageA(&msg, HWND.init, 0, 0)) // TODO: unicode ?
-				//while(getMessage(&msg, HWND.init, 0, 0))
-				{
-					if(!IsDialogMessageA(handle, &msg))
-					//if(!isDialogMessage(handle, &msg))
-					{
-						TranslateMessage(&msg);
-						DispatchMessageA(&msg);
-						//dispatchMessage(&msg);
-					}
-					
-					if(!isHandleCreated)
-						break;
-				}
-			}
-			finally
-			{
-				dispose();
-				assert(!isHandleCreated);
-				
-				thread1 = null;
-			}
-			
-			return 0;
-		}
-		
-		private void tinThread2() { inThread2(); }
-		
-		
-		private Thread thread1;
-		
-		bool doContinue()
-		{
-			assert(!isHandleCreated);
-			
-			// Need to use a separate thread so that all the main thread's messages
-			// will be there still when the exception is recovered from.
-			// This is very important for some messages, such as socket events.
-			thread1 = Thread.getThis(); // Problems with DMD 2.x
-			Thread thd;
-			thd = new Thread(&inThread2);
-			thd.start();
-			do
-			{
-				Sleep(200);
-			}
-			while(thread1);
-			
-			return ctnu;
-		}
-		+/
+
 		
 		bool doContinue()
 		{
@@ -849,13 +802,6 @@ final class Application // docmain
 				WaitMessage();
 				if(PeekMessageA(&msg._winMsg, handle, 0, 0, PM_REMOVE | PM_NOYIELD))
 				{
-					/+
-					//if(!IsDialogMessageA(handle, &msg._winMsg)) // Back to the old problems.
-					{
-						TranslateMessage(&msg._winMsg);
-						DispatchMessageA(&msg._winMsg);
-					}
-					+/
 					gotMessage(msg);
 				}
 				
@@ -884,32 +830,12 @@ final class Application // docmain
 	///
 	bool showDefaultExceptionDialog(Object e)
 	{
-		/+
-		if(IDYES == MessageBoxA(null,
-			"An application exception has occured. Click Yes to allow\r\n"
-			"the application to ignore this error and attempt to continue.\r\n"
-			"Click No to quit the application.\r\n\r\n"~
-			e.toString(),
-			null, MB_ICONWARNING | MB_TASKMODAL | MB_YESNO))
-		{
-			except = false;
-			return;
-		}
-		+/
-		
-		//try
 		{
 			if((new ErrForm(e.toString())).doContinue())
 			{
 				return true;
 			}
 		}
-		/+
-		catch
-		{
-			MessageBoxA(null, "Error displaying error message", "DFL", MB_ICONERROR | MB_TASKMODAL);
-		}
-		+/
 		
 		return false;
 	}
@@ -943,7 +869,6 @@ final class Application // docmain
 			}
 			
 			except = true;
-			//if(threadException.handlers.length)
 			if(threadException.hasHandlers)
 			{
 				threadException(typeid(Application), new ThreadExceptionEventArgs(e));
@@ -959,11 +884,7 @@ final class Application // docmain
 					return;
 				}
 			}
-			//except = false;
-			
-			//throw e;
 			writefln("Error: %*s", e.toString());
-			//exitThread();
 			Environment.exit(1);
 		}
 		catch (Throwable e)
@@ -1132,8 +1053,6 @@ final class Application // docmain
 	// Returns null if not found.
 	package Control lookupHwnd(HWND hwnd) nothrow
 	{
-		//if(hwnd in controls)
-		//	return controls[hwnd];
 		auto pc = hwnd in controls;
 		if(pc)
 			return *pc;
@@ -1588,30 +1507,7 @@ final class Application // docmain
 	{
 		IMessageFilter[] filters;
 	}
-	
-	
-	/+
-	@property void filters(IMessageFilter[] filters) // setter
-	{
-		// The TlsFilterValue is being garbage collected!
 		
-		TlsFilterValue* val = cast(TlsFilterValue*)TlsGetValue(tlsFilter);
-		if(!val)
-			val = new TlsFilterValue;
-		val.filters = filters;
-		TlsSetValue(tlsFilter, cast(LPVOID)val);
-	}
-	
-	
-	@property IMessageFilter[] filters() nothrow // getter
-	{
-		TlsFilterValue* val = cast(TlsFilterValue*)TlsGetValue(tlsFilter);
-		if(!val)
-			return null;
-		return val.filters;
-	}
-	+/
-	
 	
 	version(CUSTOM_MSG_HOOK)
 	{
@@ -1658,8 +1554,6 @@ final class Application // docmain
 	
 	void gotMessage(ref Message msg)
 	{
-		//debug(SHOW_MESSAGE_INFO)
-		//	showMessageInfo(msg);
 		void handleHotkey()
 		{
 			immutable kid = cast(int)msg.wParam,
@@ -1712,7 +1606,6 @@ final class Application // docmain
 			handleHotkey();
 		}
 		TranslateMessage(&msg._winMsg);
-		//DispatchMessageA(&msg._winMsg);
 		DispatchMessageA(&msg._winMsg);
 	}
 }
@@ -1917,9 +1810,7 @@ debug(SHOW_MESSAGE_INFO)
 
 
 extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
-{
-	//cprintf("HWND %p; WM %d(0x%X); WPARAM %d(0x%X); LPARAM %d(0x%X);\n", hwnd, msg, msg, wparam, wparam, lparam, lparam);
-	
+{	
 	if(msg == wmDfl)
 	{
 		switch(wparam)
@@ -1934,7 +1825,6 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					}
 					catch(Throwable e)
 					{
-						//Application.onThreadException(e);
 						try
 						{
 							pinv.exception = e;
@@ -1957,7 +1847,6 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 					}
 					catch(Throwable e)
 					{
-						//Application.onThreadException(e);
 						try
 						{
 							pinv.exception = e;
@@ -2022,8 +1911,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 		ctrl.hwnd = hwnd;
 		debug(APP_PRINT)
 			cprintf("Added window 0x%X.\n", hwnd);
-		
-		//ctrl.finishCreating(hwnd);
+
 		goto do_msg;
 	}
 	
@@ -2093,15 +1981,6 @@ version(CUSTOM_MSG_HOOK)
 }
 else
 {
-	/+
-	struct CustomMsg
-	{
-		HWND hwnd;
-		UINT message;
-		WPARAM wParam;
-		LPARAM lParam;
-	}
-	+/
 }
 
 
@@ -2154,10 +2033,7 @@ else
 alias HANDLE HTHEME;
 
 extern(Windows)
-{
-	// alias BOOL function(LPTRACKMOUSEEVENT lpEventTrack) TrackMouseEventProc; // Exists in core.sys.windows.winuser
-	// alias BOOL function(HWND, COLORREF, BYTE, DWORD) SetLayeredWindowAttributesProc; // Same as above
-	
+{	
 	alias HTHEME function(HWND) GetWindowThemeProc;
 	alias BOOL function(HTHEME hTheme, int iPartId, int iStateId) IsThemeBackgroundPartiallyTransparentProc;
 	alias HRESULT function(HWND hwnd, HDC hdc, RECT* prc) DrawThemeParentBackgroundProc;
@@ -2328,11 +2204,6 @@ static this()
 	}
 	else
 	{
-		/* TrackMouseEvent exists in core.sys.windows.winuser
-		trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(user32, "TrackMouseEvent");
-		if(!trackMouseEvent) // Must be Windows 95; check if common controls has it (IE 5.5).
-			trackMouseEvent = cast(TrackMouseEventProc)GetProcAddress(GetModuleHandleA("comctl32.dll"), "_TrackMouseEvent");
-		*/
 	}
 	
 	version(SUPPORTS_OPACITY)
@@ -2343,8 +2214,6 @@ static this()
 	}
 	else
 	{
-		// Exists in core.sys.windows.winuser
-		// setLayeredWindowAttributes = cast(SetLayeredWindowAttributesProc)GetProcAddress(user32, "SetLayeredWindowAttributes");
 	}
 }
 
@@ -2434,22 +2303,7 @@ extern(Windows)
 			listboxClassStyle = info.style;
 		}
 	}
-	
-	
-	/+
-	void _initLabel()
-	{
-		if(!labelPrevWndProc)
-		{
-			WNDCLASSA info;
-			labelPrevWndProc = superClass(HINSTANCE.init, "STATIC", LABEL_CLASSNAME, info);
-			if(!labelPrevWndProc)
-				_unableToInit(LABEL_CLASSNAME);
-			labelClassStyle = info.wc.style;
-		}
-	}
-	+/
-	
+
 	
 	void _initButton()
 	{
@@ -2591,46 +2445,8 @@ extern(Windows)
 	}
 }
 
-/*
-WNDPROC _superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // deprecated
-{
-	WNDPROC wndProc;
-	
-	if(!GetClassInfoA(hinst, className.ptr, &getInfo)) // TODO: unicode.
-		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
-	
-	wndProc = getInfo.lpfnWndProc;
-	getInfo.lpfnWndProc = &dflWndProc;
-	
-	getInfo.style &= ~CS_GLOBALCLASS;
-	getInfo.hCursor = HCURSOR.init;
-	getInfo.lpszClassName = newClassName.ptr;
-	getInfo.hInstance = Application.getInstance();
-	
-	if(!RegisterClassA(&getInfo)) // TODO: unicode.
-		 throw new DflException("Unable to register window class '" ~ newClassName ~ "'");
-		//return null;
-	return wndProc;
-}
-*/
-
 
 public:
-/*
-// Returns the old wndProc.
-// This is the old, unsafe, unicode-unfriendly function for superclassing.
-deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
-{
-	return _superClass(hinst, className, newClassName, getInfo);
-}
-
-
-deprecated WNDPROC superClass(HINSTANCE hinst, string className, string newClassName) // package
-{
-	WNDCLASSA info;
-	return _superClass(hinst, className, newClassName, info);
-}
-*/
 
 // Returns the old wndProc.
 WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package

@@ -3369,7 +3369,7 @@ class Control: Object, IWindow // docmain
 	{
 		return this.text == wstr;
 	}
-	
+
 	
 	override int opCmp(Object o)
 	{

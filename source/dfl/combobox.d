@@ -618,7 +618,7 @@ class ComboBox: ListControl // docmain
 		{
 			if(lbox.isHandleCreated)
 			{
-				lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toString().ptr); // Can this be unsafeAnsiz()?
+				lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toWString().ptr);
 			}
 		}
 		
@@ -645,9 +645,9 @@ class ComboBox: ListControl // docmain
 		public:
 
 		mixin ListWrapArray!(Control, _items,
-			&_blankListCallback!(Control), &_added,
-			&_blankListCallback!(Control), &_removed,
-			true, false, false, false) _wraparray;
+			_blankListCallback!(Control), _added,
+			_blankListCallback!(Control), _removed,
+            true, false, false, false) _wraparray;
 	}
 	
 	
@@ -964,7 +964,7 @@ class ComboBox: ListControl // docmain
 	LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
 	{
 		//return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
-		return CallWindowProcA(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
+		return CallWindowProcW(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
 	}
 }
 
