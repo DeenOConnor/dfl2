@@ -215,18 +215,18 @@ class TabPageCollection
 		
 		// Note: duplicate code.
 		//TC_ITEMA tci;
-		TC_ITEMA tci;
-		m.msg = TCM_INSERTITEMA; // <--
+		TCITEMW tciw;
+		m.msg = TCM_INSERTITEMW; // <--
 		foreach(size_t i, TabPage page; _pages)
 		{
 			// TODO: TCIF_RTLREADING flag based on rightToLeft property.
-			tci.mask = TCIF_TEXT | TCIF_PARAM;
-			tci.pszText = cast(typeof(tci.pszText))page.text.ptr; // <--
-			static assert(tci.lParam.sizeof >= (void*).sizeof);
-			tci.lParam = cast(LPARAM)cast(void*)page;
+			tciw.mask = TCIF_TEXT | TCIF_PARAM;
+			tciw.pszText = cast(wchar*)page.text.ptr; // <--
+			static assert(tciw.lParam.sizeof >= (void*).sizeof);
+			tciw.lParam = cast(LPARAM)cast(void*)page;
 
 			m.wParam = i;
-			m.lParam = cast(LPARAM)&tci;
+			m.lParam = cast(LPARAM)&tciw;
 			tc.prevWndProc(m);
 			assert(cast(int)m.result != -1);
 		}
@@ -258,13 +258,13 @@ class TabPageCollection
 		{
 			Message m;
 			//TC_ITEMA tci;
-			TcItem tci;
+			TCITEMW tciw;
 			// TODO: TCIF_RTLREADING flag based on rightToLeft property.
-			tci.mask = TCIF_TEXT | TCIF_PARAM;
-			static assert(tci.lParam.sizeof >= (void*).sizeof);
-			tci.lParam = cast(LPARAM)cast(void*)val;
-			tci.tcia.pszText = cast(typeof(tci.tcia.pszText))val.text.ptr;
-			m = Message(tc.handle, TCM_INSERTITEMA, idx, cast(LPARAM)&tci.tcia);
+			tciw.mask = TCIF_TEXT | TCIF_PARAM;
+			static assert(tciw.lParam.sizeof >= (void*).sizeof);
+			tciw.lParam = cast(LPARAM)cast(void*)val;
+			tciw.pszText = cast(wchar*)val.text.ptr;
+			m = Message(tc.handle, TCM_INSERTITEMW, idx, cast(LPARAM)&tciw);
 			tc.prevWndProc(m);
 			assert(cast(int)m.result != -1);
 			
@@ -479,7 +479,7 @@ class TabControlBase: ControlSuperClass
 	protected override void prevWndProc(ref Message msg)
 	{
 		//msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = CallWindowProcA(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(tabcontrolPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -973,11 +973,10 @@ class TabControl: TabControlBase // docmain
 		assert(-1 != i);
 		
 		//TC_ITEMA tci;
-		TCITEMW tci;
-		tci.mask = TCIF_TEXT;
-		Message m;
-		tci.pszText = cast(typeof(tci.pszText))newText.ptr;
-		m = Message(hwnd, TCM_SETITEMA, cast(WPARAM)i, cast(LPARAM)&tci);
+		TCITEMW tciw;
+		tciw.mask = TCIF_TEXT;
+		tciw.pszText = cast(wchar*)newText.ptr;
+		Message m = Message(hwnd, TCM_SETITEMW, cast(WPARAM)i, cast(LPARAM)&tciw);
 		prevWndProc(m);
 		
 		// Updating a tab's text could cause tab rows to be adjusted,
