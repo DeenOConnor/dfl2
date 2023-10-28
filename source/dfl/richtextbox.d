@@ -46,21 +46,21 @@ private {
 class LinkClickedEventArgs: EventArgs
 {
 	///
-	this(string linkText)
+	this(wstring linkText)
 	{
 		_linktxt = linkText;
 	}
 	
 	
 	///
-	final @property string linkText() // getter
+	final @property wstring linkText() // getter
 	{
 		return _linktxt;
 	}
 	
 	
 	private:
-	string _linktxt;
+	wstring _linktxt;
 }
 
 
@@ -259,7 +259,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_COLOR;
@@ -331,7 +331,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_OFFSET;
@@ -345,7 +345,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_OFFSET;
 			_getFormat(&cf);
@@ -361,7 +361,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_COLOR;
@@ -378,7 +378,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_COLOR;
@@ -401,7 +401,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_BACKCOLOR;
@@ -418,7 +418,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_BACKCOLOR;
@@ -441,7 +441,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
@@ -452,7 +452,7 @@ class RichTextBox: TextBoxBase // docmain
 		else
 		{
 			// Make sure it doesn't accidentally unset superscript.
-			CHARFORMAT2A cf2get;
+			CHARFORMAT2W cf2get;
 			cf2get.cbSize = cf2get.sizeof;
 			cf2get.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
 			_getFormat(&cf2get);
@@ -470,7 +470,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
@@ -488,7 +488,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
@@ -499,7 +499,7 @@ class RichTextBox: TextBoxBase // docmain
 		else
 		{
 			// Make sure it doesn't accidentally unset subscript.
-			CHARFORMAT2A cf2get;
+			CHARFORMAT2W cf2get;
 			cf2get.cbSize = cf2get.sizeof;
 			cf2get.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
 			_getFormat(&cf2get);
@@ -517,7 +517,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_SUPERSCRIPT | CFM_SUBSCRIPT;
@@ -539,8 +539,8 @@ class RichTextBox: TextBoxBase // docmain
 		{
 			// To-do: support Unicode font names.
 			
-			CHARFORMAT2A cf;
-			LOGFONTA lf;
+			CHARFORMAT2W cf;
+			LOGFONTW lf;
 			
 			f._info(&lf);
 			
@@ -558,7 +558,7 @@ class RichTextBox: TextBoxBase // docmain
 				cf.dwEffects |= CFE_UNDERLINE;
 			cf.yHeight = cast(typeof(cf.yHeight))Font.getEmSize(lf.lfHeight, GraphicsUnit.TWIP);
 			cf.bCharSet = lf.lfCharSet;
-			strcpy(cf.szFaceName.ptr, lf.lfFaceName.ptr);
+			cf.szFaceName = lf.lfFaceName.dup;
 			cf.bUnderlineType = CFU_UNDERLINE;
 			cf.wWeight = cast(WORD)lf.lfWeight;
 			
@@ -572,7 +572,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = FONT_MASK;
@@ -580,7 +580,7 @@ class RichTextBox: TextBoxBase // docmain
 			
 			if((cf.dwMask & FONT_MASK) == FONT_MASK)
 			{
-				LOGFONTA lf;
+				LOGFONTW lf;
 				with(lf)
 				{
 					lfHeight = -Font.getLfHeight(cast(float)cf.yHeight, GraphicsUnit.TWIP);
@@ -597,14 +597,14 @@ class RichTextBox: TextBoxBase // docmain
 					lfUnderline = (cf.dwEffects & CFE_UNDERLINE) != 0;
 					lfStrikeOut = (cf.dwEffects & CFE_STRIKEOUT) != 0;
 					lfCharSet = cf.bCharSet;
-					strcpy(lfFaceName.ptr, cf.szFaceName.ptr);
+					lfFaceName = cf.szFaceName.dup;
 					lfOutPrecision = OUT_DEFAULT_PRECIS;
 					lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 					lf.lfQuality = DEFAULT_QUALITY;
 					lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 				}
 				//return new Font(Font._create(&lf));
-				LOGFONTA _lf;
+				LOGFONTW _lf;
 				return new Font(Font._create(_lf));
 			}
 		}
@@ -619,7 +619,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_BOLD;
@@ -635,7 +635,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_BOLD;
@@ -653,7 +653,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!created)
 			return;
 		
-		CHARFORMAT2A cf;
+		CHARFORMAT2W cf;
 		
 		cf.cbSize = cf.sizeof;
 		cf.dwMask = CFM_UNDERLINE;
@@ -669,7 +669,7 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		if(created)
 		{
-			CHARFORMAT2A cf;
+			CHARFORMAT2W cf;
 			
 			cf.cbSize = cf.sizeof;
 			cf.dwMask = CFM_UNDERLINE;
@@ -761,7 +761,7 @@ class RichTextBox: TextBoxBase // docmain
 	}
 	
 	
-	private void _getFormat(CHARFORMAT2A* cf, BOOL selection = TRUE)
+	private void _getFormat(CHARFORMAT2W* cf, BOOL selection = TRUE)
 	in
 	{
 		assert(created);
@@ -770,11 +770,11 @@ class RichTextBox: TextBoxBase // docmain
 	{
 		//SendMessageA(handle, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
 		//CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
-		CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
+		CallWindowProcW(richtextboxPrevWndProc, hwnd, EM_GETCHARFORMAT, selection, cast(LPARAM)cf);
 	}
 	
 	
-	private void _setFormat(CHARFORMAT2A* cf, WPARAM scf = SCF_SELECTION)
+	private void _setFormat(CHARFORMAT2W* cf, WPARAM scf = SCF_SELECTION)
 	in
 	{
 		assert(created);
@@ -787,7 +787,7 @@ class RichTextBox: TextBoxBase // docmain
 		if(!CallWindowProc(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf))
 			throw new DflException("Unable to set text formatting");
 		+/
-		CallWindowProcA(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf);
+		CallWindowProcW(richtextboxPrevWndProc, hwnd, EM_SETCHARFORMAT, scf, cast(LPARAM)cf);
 	}
 	
 	
@@ -856,7 +856,7 @@ class RichTextBox: TextBoxBase // docmain
 	///
 	final @property void rtf(string newRtf) // setter
 	{
-		_streamIn(SF_RTF, rtf);
+		_streamIn(SF_RTF, newRtf);
 	}
 	
 	/// ditto
@@ -938,7 +938,7 @@ class RichTextBox: TextBoxBase // docmain
 	}
 	
 	
-	private string _getRange(LONG min, LONG max)
+	private wstring _getRange(LONG min, LONG max)
 	in
 	{
 		assert(created);
@@ -950,18 +950,16 @@ class RichTextBox: TextBoxBase // docmain
 		if(min == max)
 			return null;
 		
-		TEXTRANGEA tr;
-		char[] s;
+		TEXTRANGEW tr;
+		max = max - min + 1;
+		wchar[] s = new wchar[max];
 		
 		tr.chrg.cpMin = min;
 		tr.chrg.cpMax = max;
-		max = max - min + 1;
-		s = new char[max];
 		tr.lpstrText = s.ptr;
 		
-		//max = SendMessageA(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
-		max = cast(int)SendMessageA(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
-		return to!string(s.dup);
+		max = cast(int)SendMessageW(handle, EM_GETTEXTRANGE, 0, cast(LPARAM)&tr);
+		return to!wstring(s.dup);
 	}
 	
 	

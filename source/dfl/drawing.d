@@ -965,11 +965,11 @@ class Bitmap: Image // docmain
 {
 	///
 	// Load from a bmp file.
-	this(string fileName)
+	this(wstring fileName)
 	{
-		this.hbm = cast(HBITMAP)LoadImageA(null, fileName.ptr, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		this.hbm = cast(HBITMAP)LoadImageW(null, fileName.ptr, IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 		if(!this.hbm)
-			throw new DflException("Unable to load bitmap from file '" ~ fileName ~ "'");
+			throw new DflException("Unable to load bitmap from file '" ~ to!string(fileName) ~ "'");
 	}
 
 	// Used internally.
@@ -1141,11 +1141,11 @@ class Picture: Image // docmain
 
 	/// ditto
 	// Throws exception on failure.
-	this(string fileName)
+	this(wstring fileName)
 	{
 		this.ipic = _fromFileName(fileName);
 		if(!this.ipic)
-			throw new DflException("Unable to load picture from file '" ~ fileName ~ "'");
+			throw new DflException("Unable to load picture from file '" ~ to!string(fileName) ~ "'");
 	}
 
 
@@ -1179,7 +1179,7 @@ class Picture: Image // docmain
 
 	///
 	// Returns null on failure instead of throwing exception.
-	static Picture fromFile(string fileName)
+	static Picture fromFile(wstring fileName)
 	{
 		auto ipic = _fromFileName(fileName);
 		if(!ipic)
@@ -1461,7 +1461,7 @@ private:
 		return null;
 	}
 
-	static IPicture _fromFileName(string fileName)
+	static IPicture _fromFileName(wstring fileName)
 	{
 		// alias dfl.internal.winapi.HANDLE HANDLE; // Otherwise, odd conflict with wine.
 
@@ -1470,7 +1470,7 @@ private:
 		void* pg;
 		DWORD dwsz, dw;
 
-		hf = CreateFileA(fileName.ptr, GENERIC_READ, FILE_SHARE_READ, null,
+		hf = CreateFileW(fileName.ptr, GENERIC_READ, FILE_SHARE_READ, null,
                          OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, null);
 		if(!hf)
 			return null;
@@ -3061,11 +3061,11 @@ class Icon: Image // docmain
 
 	///
 	// Load from an ico file.
-	this(string fileName)
+	this(wstring fileName)
 	{
-		this.hi = cast(HICON)LoadImageA(null, fileName.ptr, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
+		this.hi = cast(HICON)LoadImageW(null, fileName.ptr, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
 		if(!this.hi)
-			throw new DflException("Unable to load icon from file '" ~ fileName ~ "'");
+			throw new DflException("Unable to load icon from file '" ~ to!string(fileName) ~ "'");
 	}
 
 
@@ -3328,7 +3328,7 @@ enum FontSmoothing
 class Font // docmain
 {
 	// Used internally.
-	this(HFONT hf, ref LOGFONTA lf, bool owned = true) // package // deprecated
+	this(HFONT hf, ref LOGFONTW lf, bool owned = true) // package // deprecated
 	{
 		this.hf = hf;
 		this.owned = owned;
@@ -3359,7 +3359,7 @@ class Font // docmain
 		this.owned = owned;
 		this._unit = GraphicsUnit.POINT;
 
-		LOGFONTA lf;
+		LOGFONTW lf;
 		_info(lf);
 
 		_fstyle = _style(lf);
@@ -3368,7 +3368,7 @@ class Font // docmain
 
 
 	// Used internally.
-	this(ref LOGFONTA lf, bool owned = true) // package // deprecated
+	this(ref LOGFONTW lf, bool owned = true) // package // deprecated
 	{		
 		this(_create(lf), lf, owned);
 	}
@@ -3383,17 +3383,17 @@ class Font // docmain
 	*/
 
 
-	package static HFONT _create(ref LOGFONTA lf)
+	package static HFONT _create(ref LOGFONTW lf)
 	{
 		HFONT result;
-		result = CreateFontIndirectA(&lf);
+		result = CreateFontIndirectW(&lf);
 		if(!result)
 			throw new DflException("Unable to create font");
 		return result;
 	}
 
 
-	private static void _style(ref LOGFONTA lf, FontStyle style)
+	private static void _style(ref LOGFONTW lf, FontStyle style)
 	{
 		lf.lfWeight = (style & FontStyle.BOLD) ? FW_BOLD : FW_NORMAL;
 		lf.lfItalic = (style & FontStyle.ITALIC) ? TRUE : FALSE;
@@ -3402,7 +3402,7 @@ class Font // docmain
 	}
 
 
-	private static FontStyle _style(ref LOGFONTA lf)
+	private static FontStyle _style(ref LOGFONTW lf)
 	{
 		FontStyle style = FontStyle.REGULAR;
 
@@ -3419,7 +3419,7 @@ class Font // docmain
 	}
 
 
-	package void _info(LOGFONTA* lf) // deprecated
+	deprecated package void _info(LOGFONTA* lf) // deprecated
 	{
 		if(GetObjectA(hf, LOGFONTA.sizeof, lf) != LOGFONTA.sizeof)
 			throw new DflException("Unable to get font information");
@@ -3434,9 +3434,9 @@ class Font // docmain
 	}
 
 
-	package void _info(ref LOGFONTA lf)
+	package void _info(ref LOGFONTW lf)
 	{
-		if(GetObjectA(hf, LOGFONTA.sizeof, &lf) != LOGFONTA.sizeof)
+		if(GetObjectW(hf, LOGFONTW.sizeof, &lf) != LOGFONTW.sizeof)
 			throw new DflException("Unable to get font information");
 	}
 
@@ -3554,7 +3554,7 @@ class Font // docmain
 	///
 	this(Font font, FontStyle style)
 	{
-		LOGFONTA lf;
+		LOGFONTW lf;
 		_unit = font._unit;
 		font._info(lf);
 		_style(lf, style);
@@ -3565,14 +3565,14 @@ class Font // docmain
 	}
 
 	/// ditto
-	this(string name, float emSize, GraphicsUnit unit)
+	this(wstring name, float emSize, GraphicsUnit unit)
 	{
 		this(name, emSize, FontStyle.REGULAR, unit);
 	}
 
 
 	/// ditto
-	this(string name, float emSize, FontStyle style = FontStyle.REGULAR,
+	this(wstring name, float emSize, FontStyle style = FontStyle.REGULAR,
          GraphicsUnit unit = GraphicsUnit.POINT)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, FontSmoothing.DEFAULT);
@@ -3580,7 +3580,7 @@ class Font // docmain
 
 
 	/// ditto
-	this(string name, float emSize, FontStyle style,
+	this(wstring name, float emSize, FontStyle style,
          GraphicsUnit unit, FontSmoothing smoothing)
 	{
 		this(name, emSize, style, unit, DEFAULT_CHARSET, smoothing);
@@ -3589,17 +3589,17 @@ class Font // docmain
 	// /// ditto
 	// This is a somewhat internal function.
 	// -gdiCharSet- is one of *_CHARSET from wingdi.h
-	this(string name, float emSize, FontStyle style,
+	this(wstring name, float emSize, FontStyle style,
          GraphicsUnit unit, ubyte gdiCharSet,
          FontSmoothing smoothing = FontSmoothing.DEFAULT)
 	{
-		LOGFONTA lf;
+		LOGFONTW lf;
 
-		char[] faceName;
+		wchar[] faceName;
         if (name.length > 32) {
-			faceName = cast(char[])name[0..31].dup;
+			faceName = cast(wchar[])name[0..31].dup;
         } else {
-			faceName = cast(char[])name[0..name.length-1].dup;
+			faceName = cast(wchar[])name[0..name.length-1].dup;
         }
         faceName.length = 32;
 
@@ -3615,7 +3615,7 @@ class Font // docmain
 
 	// /// ditto
 	// This is a somewhat internal function.
-	this(ref LOGFONTA lf, float emSize, FontStyle style, GraphicsUnit unit)
+	this(ref LOGFONTW lf, float emSize, FontStyle style, GraphicsUnit unit)
 	{
 		_unit = unit;
 
@@ -3688,7 +3688,7 @@ class Font // docmain
 
 
 	///
-	final @property string name() // getter
+	final @property wstring name() // getter
 	{
 		return lfName;
 	}
@@ -3701,7 +3701,7 @@ class Font // docmain
 
 
 	/+
-	private void _initLf(LOGFONTA* lf)
+	private void _initLf(LOGFONTW* lf)
 	{
     this.lfHeight = lf.lfHeight;
     this.lfName = stringFromStringz(lf.lfFaceName.ptr).dup;
@@ -3709,16 +3709,16 @@ class Font // docmain
 	}
 	+/
 
-	private void _initLf(ref LOGFONTA lf)
+	private void _initLf(ref LOGFONTW lf)
 	{
 		this.lfHeight = lf.lfHeight;
-		this.lfName = to!string(lf.lfFaceName.dup);
+		this.lfName = lf.lfFaceName.dup;
 		this.lfCharSet = lf.lfCharSet;
 	}
 
 
 	/+
-	private void _initLf(Font otherfont, LOGFONTA* lf)
+	private void _initLf(Font otherfont, LOGFONTW* lf)
 	{
     this.lfHeight = otherfont.lfHeight;
     this.lfName = otherfont.lfName;
@@ -3726,7 +3726,7 @@ class Font // docmain
 	}
 	+/
 
-	private void _initLf(Font otherfont, ref LOGFONTA lf)
+	private void _initLf(Font otherfont, ref LOGFONTW lf)
 	{
 		this.lfHeight = otherfont.lfHeight;
 		this.lfName = otherfont.lfName;
@@ -3741,7 +3741,7 @@ private:
 	FontStyle _fstyle;
 
 	LONG lfHeight;
-	string lfName;
+	wstring lfName;
 	ubyte lfCharSet;
 }
 

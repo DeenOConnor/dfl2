@@ -348,7 +348,7 @@ class FontDialog: CommonDialog
 	
 	private void _update()
 	{
-		LOGFONTA lf;		
+		LOGFONTW lf;		
 		_fon = new Font(Font._create(lf), true);
 	}
 	
