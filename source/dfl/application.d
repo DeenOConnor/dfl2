@@ -193,20 +193,21 @@ final class Application // docmain
 		DWORD pathlen;
 		wchar[MAX_PATH] pathbuf = void;
 		pathlen = GetTempPathW(pathbuf.length, pathbuf.ptr);
-		if(pathlen)
+		if(pathlen != 0)
 		{
 			DWORD manifestlen;
 			wchar[MAX_PATH] manifestbuf = void;
 			manifestlen = GetTempFileNameW(pathbuf.ptr, "dmf", 0, manifestbuf.ptr);
-			if(manifestlen)
+			if(manifestlen != 0)
 			{
 				HANDLE hf;
 				hf = CreateFileW(manifestbuf.ptr, GENERIC_WRITE, 0, null, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN, HANDLE.init);
-				if(hf != INVALID_HANDLE_VALUE)
+				if(hf != INVALID_HANDLE_VALUE && hf !is null)
 				{
-                    scope(exit) CloseHandle(hf);
 					DWORD written;
-					if(WriteFile(hf, MANIFEST.ptr, MANIFEST.length, &written, null))
+					auto wfStatus = WriteFile(hf, MANIFEST.ptr, MANIFEST.length, &written, null);
+                    CloseHandle(hf);
+					if(wfStatus != 0)
 					{
 						ACTCTXW ac;
 						HANDLE hac;
@@ -221,8 +222,11 @@ final class Application // docmain
 							ULONG_PTR ul;
 							ActivateActCtx(hac, &ul);
 
-							_initCommonControls(ICC_STANDARD_CLASSES); // Yes.
-							//InitCommonControls(); // No. Doesn't work with common controls version 6!
+							INITCOMMONCONTROLSEX icce;
+                            icce.dwSize = INITCOMMONCONTROLSEX.sizeof;
+                            icce.dwICC = ICC_STANDARD_CLASSES;
+							//_initCommonControls(ICC_STANDARD_CLASSES); // Redundant
+							InitCommonControlsEx(&icce); // import core.sys.windows.commctrl
 
 							// Ensure the actctx is actually associated with the message queue...
 							PostMessageA(null, wmDfl, 0, 0);
@@ -237,8 +241,8 @@ final class Application // docmain
 							writeln("CreateActCtxW failed.");
 						}
 					}
+					DeleteFileW(manifestbuf.ptr);
 				}
-				DeleteFileW(manifestbuf.ptr);
 			}
 		}
 	}
@@ -2335,18 +2339,21 @@ extern(Windows)
 	{
 		if(!richtextboxPrevWndProc)
 		{
+			bool rich5 = true;
 			if(!hmodRichtextbox)
 			{
-				hmodRichtextbox = LoadLibraryA("riched20.dll");
-				if(!hmodRichtextbox)
-					throw new DflException("Unable to load 'riched20.dll'");
+				hmodRichtextbox = LoadLibraryA("msftedit.dll");
+				if(!hmodRichtextbox) {
+					rich5 = false;
+					// Fallback
+                    hmodRichtextbox = LoadLibraryA("riched20.dll");
+					if(!hmodRichtextbox) {
+                        throw new DflException("Unable to load 'riched20.dll'");
+                    }
+                }
 			}
 			
-			string classname;
-			//if(useUnicode)
-				//classname = "RichEdit20W";
-			//else
-				classname = "RichEdit20A";
+			string classname = rich5 ? "RICHEDIT50W" : "RichEdit20W";
 			
 			WNDCLASSA info;
 			richtextboxPrevWndProc = superClass(HINSTANCE.init, classname, RICHTEXTBOX_CLASSNAME, info);
