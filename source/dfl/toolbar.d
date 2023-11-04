@@ -686,7 +686,7 @@ private
 		{
 			_initCommonControls(ICC_BAR_CLASSES);
 			
-			WNDCLASSA info;
+			WNDCLASSW info;
 			toolbarPrevWndProc = superClass(HINSTANCE.init, "ToolbarWindow32", TOOLBAR_CLASSNAME, info);
 			if(!toolbarPrevWndProc)
 				_unableToInit(TOOLBAR_CLASSNAME);

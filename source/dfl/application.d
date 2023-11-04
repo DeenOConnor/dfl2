@@ -2287,20 +2287,20 @@ extern(Windows)
 	{
 		if(!textBoxPrevWndProc)
 		{
-			WNDCLASSA info;
+			WNDCLASSW info;
 			textBoxPrevWndProc = superClass(HINSTANCE.init, "EDIT", TEXTBOX_CLASSNAME, info);
 			if(!textBoxPrevWndProc)
 				_unableToInit(TEXTBOX_CLASSNAME);
 			textBoxClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initListbox()
 	{
 		if(!listboxPrevWndProc)
 		{
-			WNDCLASSA info;
+			WNDCLASSW info;
 			listboxPrevWndProc = superClass(HINSTANCE.init, "LISTBOX", LISTBOX_CLASSNAME, info);
 			if(!listboxPrevWndProc)
 				_unableToInit(LISTBOX_CLASSNAME);
@@ -2308,33 +2308,33 @@ extern(Windows)
 		}
 	}
 
-	
+
 	void _initButton()
 	{
 		if(!buttonPrevWndProc)
 		{
-			WNDCLASSA info;
+			WNDCLASSW info;
 			buttonPrevWndProc = superClass(HINSTANCE.init, "BUTTON", BUTTON_CLASSNAME, info);
 			if(!buttonPrevWndProc)
 				_unableToInit(BUTTON_CLASSNAME);
 			buttonClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initMdiclient()
 	{
 		if(!mdiclientPrevWndProc)
 		{
-			WNDCLASSA info;
+			WNDCLASSW info;
 			mdiclientPrevWndProc = superClass(HINSTANCE.init, "MDICLIENT", MDICLIENT_CLASSNAME, info);
 			if(!mdiclientPrevWndProc)
 				_unableToInit(MDICLIENT_CLASSNAME);
 			mdiclientClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initRichtextbox()
 	{
 		if(!richtextboxPrevWndProc)
@@ -2345,105 +2345,104 @@ extern(Windows)
 				hmodRichtextbox = LoadLibraryA("msftedit.dll");
 				if(!hmodRichtextbox) {
 					rich5 = false;
-					// Fallback
                     hmodRichtextbox = LoadLibraryA("riched20.dll");
 					if(!hmodRichtextbox) {
                         throw new DflException("Unable to load 'riched20.dll'");
                     }
                 }
 			}
-			
-			string classname = rich5 ? "RICHEDIT50W" : "RichEdit20W";
-			
-			WNDCLASSA info;
+
+			wstring classname = rich5 ? "RICHEDIT50W"w : "RichEdit20W"w;
+
+			WNDCLASSW info;
 			richtextboxPrevWndProc = superClass(HINSTANCE.init, classname, RICHTEXTBOX_CLASSNAME, info);
 			if(!richtextboxPrevWndProc)
 				_unableToInit(RICHTEXTBOX_CLASSNAME);
 			richtextboxClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initCombobox()
 	{
 		if(!comboboxPrevWndProc)
 		{
-			WNDCLASSA info;
+			WNDCLASSW info;
 			comboboxPrevWndProc = superClass(HINSTANCE.init, "COMBOBOX", COMBOBOX_CLASSNAME, info);
 			if(!comboboxPrevWndProc)
 				_unableToInit(COMBOBOX_CLASSNAME);
 			comboboxClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initTreeview()
 	{
 		if(!treeviewPrevWndProc)
 		{
 			_initCommonControls(ICC_TREEVIEW_CLASSES);
-			
-			WNDCLASSA info;
+
+			WNDCLASSW info;
 			treeviewPrevWndProc = superClass(HINSTANCE.init, "SysTreeView32", TREEVIEW_CLASSNAME, info);
 			if(!treeviewPrevWndProc)
 				_unableToInit(TREEVIEW_CLASSNAME);
 			treeviewClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initTabcontrol()
 	{
 		if(!tabcontrolPrevWndProc)
 		{
 			_initCommonControls(ICC_TAB_CLASSES);
-			
-			WNDCLASSA info;
+
+			WNDCLASSW info;
 			tabcontrolPrevWndProc = superClass(HINSTANCE.init, "SysTabControl32", TABCONTROL_CLASSNAME, info);
 			if(!tabcontrolPrevWndProc)
 				_unableToInit(TABCONTROL_CLASSNAME);
 			tabcontrolClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initListview()
 	{
 		if(!listviewPrevWndProc)
 		{
 			_initCommonControls(ICC_LISTVIEW_CLASSES);
-			
-			WNDCLASSA info;
+
+			WNDCLASSW info;
 			listviewPrevWndProc = superClass(HINSTANCE.init, "SysListView32", LISTVIEW_CLASSNAME, info);
 			if(!listviewPrevWndProc)
 				_unableToInit(LISTVIEW_CLASSNAME);
 			listviewClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initStatusbar()
 	{
 		if(!statusbarPrevWndProc)
 		{
 			_initCommonControls(ICC_WIN95_CLASSES);
-			
-			WNDCLASSA info;
+
+			WNDCLASSW info;
 			statusbarPrevWndProc = superClass(HINSTANCE.init, "msctls_statusbar32", STATUSBAR_CLASSNAME, info);
 			if(!statusbarPrevWndProc)
 				_unableToInit(STATUSBAR_CLASSNAME);
 			statusbarClassStyle = info.style;
 		}
 	}
-	
-	
+
+
 	void _initProgressbar()
 	{
 		if(!progressbarPrevWndProc)
 		{
 			_initCommonControls(ICC_PROGRESS_CLASS);
-			
-			WNDCLASSA info;
+
+			WNDCLASSW info;
 			progressbarPrevWndProc = superClass(HINSTANCE.init, "msctls_progress32", PROGRESSBAR_CLASSNAME, info);
 			if(!progressbarPrevWndProc)
 				_unableToInit(PROGRESSBAR_CLASSNAME);
@@ -2456,22 +2455,22 @@ extern(Windows)
 public:
 
 // Returns the old wndProc.
-WNDPROC superClass(HINSTANCE hinst, string className, string newClassName, out WNDCLASSA getInfo) // package
+WNDPROC superClass(HINSTANCE hinst, wstring className, wstring newClassName, out WNDCLASSW getInfo) // package
 {
 	WNDPROC wndProc;
-	
-	if(!GetClassInfoA(hinst, className.ptr, &getInfo))
-		throw new DflException("Unable to obtain information for window class '" ~ className ~ "'");
-	
+
+	if(!GetClassInfoW(hinst, className.ptr, &getInfo))
+		throw new DflException("Unable to obtain information for window class '" ~ to!string(className) ~ "'");
+
 	wndProc = getInfo.lpfnWndProc;
 	getInfo.lpfnWndProc = &dflWndProc;
-	
+
 	getInfo.style &= ~CS_GLOBALCLASS;
 	getInfo.hCursor = HCURSOR.init;
 	getInfo.lpszClassName = newClassName.ptr;
 	getInfo.hInstance = Application.getInstance();
-	
-	if(RegisterClassA(&getInfo) == 0)
+
+	if(RegisterClassW(&getInfo) == 0)
 		//throw new DflException("Unable to register window class '" ~ newClassName ~ "'");
 		return null;
 	return wndProc;
