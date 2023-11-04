@@ -844,7 +844,6 @@ final class Application // docmain
                 writef("Error: %s\n", e.toString());
 
                 abort();
-                return;
             }
 
             except = true;
