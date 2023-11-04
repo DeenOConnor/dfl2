@@ -135,6 +135,7 @@ class CommandButton : ButtonBase {
         super.onHandleCreated(ea);
 
         setImg(_bstyle());
+        note(note());
     }
 
 

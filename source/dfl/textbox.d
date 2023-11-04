@@ -283,7 +283,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(created)
 		{
-			SendMessageA(handle, EM_REPLACESEL, FALSE, cast(LPARAM)sel.ptr);
+			SendMessageW(handle, EM_REPLACESEL, FALSE, cast(LPARAM)sel.ptr);
 		}
 	}
 
@@ -292,7 +292,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{		
 		if(created) {
 			size_t selStart, selEnd;
-			auto len = SendMessageA(handle, EM_GETSEL, cast(WPARAM)&selStart, cast(WPARAM)&selEnd);
+			auto len = SendMessageW(handle, EM_GETSEL, cast(WPARAM)&selStart, cast(WPARAM)&selEnd);
 			if (len != 0) {
 				return this.text[selStart..selEnd];
             }
@@ -307,9 +307,9 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		if(created)
 		{
 			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
+			SendMessageW(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
 			v2 = v1 + len;
-			SendMessageA(handle, EM_SETSEL, v1, v2);
+			SendMessageW(handle, EM_SETSEL, v1, v2);
 		}
 	}
 
@@ -322,7 +322,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		if(created)
 		{
 			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
+			SendMessageW(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
 			assert(v2 >= v1);
 			return v2 - v1;
 		}
@@ -336,10 +336,10 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		if(created)
 		{
 			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
+			SendMessageW(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
 			assert(v2 >= v1);
 			v2 = pos + (v2 - v1);
-			SendMessageA(handle, EM_SETSEL, pos, v2);
+			SendMessageW(handle, EM_SETSEL, pos, v2);
 		}
 	}
 	
@@ -352,7 +352,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		if(created)
 		{
 			uint v1, v2;
-			SendMessageA(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
+			SendMessageW(handle, EM_GETSEL, cast(WPARAM)&v1, cast(LPARAM)&v2);
 			return v1;
 		}
 		return 0;
@@ -368,7 +368,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	@property uint textLength() // getter
 	{
 		if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && created())
-			return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+			return cast(uint)SendMessageW(handle, WM_GETTEXTLENGTH, 0, 0);
 		return to!uint(wtext.length);
 	}
 	
@@ -466,7 +466,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(created)
 		{
-			SendMessageA(handle, WM_COPY, 0, 0);
+			SendMessageW(handle, WM_COPY, 0, 0);
 		}
 		else
 		{
@@ -490,7 +490,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(created)
 		{
-			SendMessageA(handle, WM_CUT, 0, 0);
+			SendMessageW(handle, WM_CUT, 0, 0);
 		}
 		else
 		{
@@ -514,7 +514,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(created)
 		{
-			SendMessageA(handle, WM_PASTE, 0, 0);
+			SendMessageW(handle, WM_PASTE, 0, 0);
 		}
 		else
 		{
@@ -527,7 +527,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	final void scrollToCaret()
 	{
 		if(created)
-			SendMessageA(handle, EM_SCROLLCARET, 0, 0);
+			SendMessageW(handle, EM_SCROLLCARET, 0, 0);
 	}
 	
 	
@@ -535,7 +535,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	final void select(uint start, uint length)
 	{
 		if(created)
-			SendMessageA(handle, EM_SETSEL, start, start + length);
+			SendMessageW(handle, EM_SETSEL, start, start + length);
 	}
 	
 	alias Control.select select; // Overload.
@@ -545,7 +545,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	final void selectAll()
 	{
 		if(created)
-			SendMessageA(handle, EM_SETSEL, 0, -1);
+			SendMessageW(handle, EM_SETSEL, 0, -1);
 	}
 	
 	
@@ -559,13 +559,28 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		return text; // ?
 	}
+
+	override @property void text(wstring txt)
+    {
+		// Internally it calls SetWindowTextW, so it's fine
+		super.text = txt;
+    }
+
+    // For a text box control we care about the contents, not the internal variable
+	override @property wstring text() {
+		auto len = textLength() + 1; // For some reason the length is always off by 1
+		wchar[] txt;
+		txt.length = len;
+		GetWindowTextW(hwnd, txt.ptr, len);
+		return to!wstring(txt);
+    }
 	
 	
 	///
 	final void undo()
 	{
 		if(created)
-			SendMessageA(handle, EM_UNDO, 0, 0);
+			SendMessageW(handle, EM_UNDO, 0, 0);
 	}
 	
 	
@@ -813,7 +828,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			return -1; // ...
 		if(line < 0)
 			return -1;
-		return cast(int)SendMessageA(hwnd,EM_LINEINDEX, line, 0L);
+		return cast(int)SendMessageW(hwnd,EM_LINEINDEX, line, 0L);
 	}
 	
 	/// ditto
@@ -821,7 +836,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 	{
 		if(!isHandleCreated)
 			return -1; // ...
-		return  cast(int)SendMessageA(hwnd, EM_LINEINDEX, -1,  0L);
+		return  cast(int)SendMessageW(hwnd, EM_LINEINDEX, -1,  0L);
 	}
 	
 	
@@ -832,7 +847,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			return -1; // ...
 		if(charIndex < 0)
 			return -1;
-		return cast(int)SendMessageA(hwnd, EM_LINEFROMCHAR, charIndex, 0);
+		return cast(int)SendMessageW(hwnd, EM_LINEFROMCHAR, charIndex, 0);
 	}
 	
 	
@@ -844,7 +859,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		if(charIndex < 0)
 			return Point(0, 0);
 		POINT point;
-		SendMessageA(hwnd, EM_POSFROMCHAR, cast(WPARAM)&point, charIndex);
+		SendMessageW(hwnd, EM_POSFROMCHAR, cast(WPARAM)&point, charIndex);
 		return Point(point.x, point.y);
 	}
 	
@@ -855,7 +870,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 			return -1; // ...
 		if(!multiline)
 			return 0;
-		auto lresult = SendMessageA(hwnd, EM_CHARFROMPOS, 0, MAKELPARAM(pt.x, pt.y));
+		auto lresult = SendMessageW(hwnd, EM_CHARFROMPOS, 0, MAKELPARAM(pt.x, pt.y));
 		if(-1 == lresult)
 			return -1;
 		return cast(int)cast(short)(lresult & 0xFFFF);
@@ -925,7 +940,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 		}
 		
 		//msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
-		msg.result = CallWindowProcA(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
+		msg.result = CallWindowProcW(textBoxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
 	}
 	
 	
@@ -950,7 +965,7 @@ abstract class TextBoxBase: ControlSuperClass // docmain
 								//selectedText = "\t";
 								//SendMessageA(handle, EM_REPLACESEL, TRUE, cast(LPARAM)"\t".ptr); // Allow undo. // Crashes DMD 0.161.
 								auto str = "\t".ptr;
-								SendMessageA(handle, EM_REPLACESEL, TRUE, cast(LPARAM)str); // Allow undo.
+								SendMessageW(handle, EM_REPLACESEL, TRUE, cast(LPARAM)str); // Allow undo.
 							}
 						}
 						return true; // Handled.

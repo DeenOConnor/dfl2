@@ -510,6 +510,7 @@
   <File path="dfl\collections.d" />
   <File path="dfl\colordialog.d" />
   <File path="dfl\combobox.d" />
+  <File path="dfl\commandbutton.d" />
   <File path="dfl\commondialog.d" />
   <File path="dfl\control.d" />
   <File path="dfl\data.d" />
