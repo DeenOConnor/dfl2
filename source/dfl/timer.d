@@ -16,8 +16,8 @@ class Timer // docmain
 {
     //EventHandler tick;
     Event!(Timer, EventArgs) tick; ///
-    
-    
+
+
     ///
     @property void enabled(bool on) // setter
     {
@@ -26,24 +26,24 @@ class Timer // docmain
         else
             stop();
     }
-    
+
     /// ditto
     @property bool enabled() // getter
     {
         return timerId != 0;
     }
-    
-    
+
+
     ///
     final @property void interval(uint timeout) // setter
     {
         if(!timeout)
             throw new DflException("Invalid timer interval");
-        
+
         if(this._timeout != timeout)
         {
             this._timeout = timeout;
-            
+
             if(timerId)
             {
                 // I don't know if this is the correct behavior.
@@ -53,46 +53,45 @@ class Timer // docmain
             }
         }
     }
-    
+
     /// ditto
     final @property size_t interval() // getter
     {
         return _timeout;
     }
-    
-    
+
+
     ///
     final void start()
     {
         if(timerId)
             return;
-        
+
         assert(_timeout > 0);
-        
+
         timerId = SetTimer(null, 0, _timeout, &timerProc);
         if(!timerId)
             throw new DflException("Unable to start timer");
         allTimers[timerId] = this;
     }
-    
+
     /// ditto
     final void stop()
     {
         if(timerId)
         {
-            //delete allTimers[timerId];
             allTimers.remove(timerId);
             KillTimer(null, timerId);
             timerId = 0;
         }
     }
-    
-    
+
+
     ///
     this()
     {
     }
-    
+
     /// ditto
     this(void delegate(Timer) dg)
     {
@@ -103,53 +102,53 @@ class Timer // docmain
             tick.addHandler(&_dgcall);
         }
     }
-    
+
     /// ditto
     this(void delegate(Object, EventArgs) dg)
     {
         assert(dg !is null);
-        
+
         this();
         tick.addHandler(dg);
     }
-    
+
     /// ditto
     this(void delegate(Timer, EventArgs) dg)
     {
         assert(dg !is null);
-        
+
         this();
         tick.addHandler(dg);
     }
-    
-    
+
+
     ~this()
     {
         dispose();
     }
-    
-    
+
+
     protected:
-    
+
     void dispose()
     {
         stop();
     }
-    
-    
+
+
     ///
     void onTick(EventArgs ea)
     {
         tick(this, ea);
     }
-    
-    
+
+
     private:
     uint _timeout = 100;
     ulong timerId = 0;
     void delegate(Timer) _dg;
-    
-    
+
+
     void _dgcall(Object sender, EventArgs ea)
     {
         assert(_dg !is null);

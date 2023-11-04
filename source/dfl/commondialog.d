@@ -23,18 +23,18 @@ abstract class CommonDialog // docmain
 {
     ///
     abstract void reset();
-    
+
     ///
     // Uses currently active window of the application as owner.
     abstract DialogResult showDialog();
-    
+
     /// ditto
     abstract DialogResult showDialog(IWindow owner);
-    
-    
+
+
     ///
     Event!(CommonDialog, HelpEventArgs) helpRequest;
-    
+
     ///
     // See the CDN_* Windows notification messages.
     LRESULT hookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -54,37 +54,37 @@ abstract class CommonDialog // docmain
                                 onHelpRequest(new HelpEventArgs(pt));
                             }
                             break;
-                        
+
                         default:
                     }
                 }
                 break;
-            
+
             default:
         }
-        
+
         return 0;
     }
-    
-    
+
+
     protected:
-    
-    
+
+
     // TODO: implement.
     //LRESULT ownerWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-    
-    
+
+
     ///
     void onHelpRequest(HelpEventArgs ea)
     {
         helpRequest(this, ea);
     }
-    
-    
+
+
     ///
     abstract bool runDialog(HWND owner);
-    
-    
+
+
     package final void _cantrun()
     {
         throw new DflException("Error running dialog");

@@ -25,7 +25,7 @@ enum MsgBoxButtons
 enum MsgBoxIcon
 {
     NONE = 0, ///
-    
+
     ASTERISK = MB_ICONASTERISK, /// ditto
     ERROR = MB_ICONERROR, /// ditto
     EXCLAMATION = MB_ICONEXCLAMATION, /// ditto
@@ -42,7 +42,7 @@ enum MsgBoxDefaultButton
     BUTTON1 = MB_DEFBUTTON1, ///
     BUTTON2 = MB_DEFBUTTON2, /// ditto
     BUTTON3 = MB_DEFBUTTON3, /// ditto
-    
+
     // Extra.
     BUTTON4 = MB_DEFBUTTON4,
 }
@@ -59,82 +59,82 @@ enum MsgBoxOptions
 
 
 ///
-DialogResult msgBox(string txt) // docmain
+DialogResult msgBox(wstring txt) // docmain
 {
-    return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, "\0", MB_OK);
+    return cast(DialogResult)MessageBoxW(GetActiveWindow(), txt.ptr, "\0", MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt) // docmain
+DialogResult msgBox(IWindow owner, wstring txt) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, "\0", MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(string txt, string caption) // docmain
+DialogResult msgBox(wstring txt, wstring caption) // docmain
 {
-    return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, caption.ptr, MB_OK);
+    return cast(DialogResult)MessageBoxW(GetActiveWindow(), txt.ptr, caption.ptr, MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt, string caption) // docmain
+DialogResult msgBox(IWindow owner, wstring txt, wstring caption) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, caption.ptr, MB_OK);
 }
 
 /// ditto
-DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons) // docmain
+DialogResult msgBox(wstring txt, wstring caption, MsgBoxButtons buttons) // docmain
 {
-    return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr, caption.ptr, buttons);
+    return cast(DialogResult)MessageBoxW(GetActiveWindow(), txt.ptr, caption.ptr, buttons);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt, string caption,
+DialogResult msgBox(IWindow owner, wstring txt, wstring caption,
     MsgBoxButtons buttons) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, caption.ptr, buttons);
 }
 
 /// ditto
-DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons,
+DialogResult msgBox(wstring txt, wstring caption, MsgBoxButtons buttons,
     MsgBoxIcon icon) // docmain
 {
-    return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr,
+    return cast(DialogResult)MessageBoxW(GetActiveWindow(), txt.ptr,
         caption.ptr, buttons | icon);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, wstring txt, wstring caption, MsgBoxButtons buttons,
     MsgBoxIcon icon) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, caption.ptr, buttons | icon);
 }
 
 /// ditto
-DialogResult msgBox(string txt, string caption, MsgBoxButtons buttons, MsgBoxIcon icon,
+DialogResult msgBox(wstring txt, wstring caption, MsgBoxButtons buttons, MsgBoxIcon icon,
     MsgBoxDefaultButton defaultButton) // docmain
 {
-    return cast(DialogResult)MessageBoxA(GetActiveWindow(), txt.ptr,
+    return cast(DialogResult)MessageBoxW(GetActiveWindow(), txt.ptr,
         caption.ptr, buttons | icon | defaultButton);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, wstring txt, wstring caption, MsgBoxButtons buttons,
     MsgBoxIcon icon, MsgBoxDefaultButton defaultButton) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, caption.ptr, buttons | icon | defaultButton);
 }
 
 /// ditto
-DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons buttons,
+DialogResult msgBox(IWindow owner, wstring txt, wstring caption, MsgBoxButtons buttons,
     MsgBoxIcon icon, MsgBoxDefaultButton defaultButton, MsgBoxOptions options) // docmain
 {
-    return cast(DialogResult)MessageBoxA(owner ? owner.handle : GetActiveWindow(),
+    return cast(DialogResult)MessageBoxW(owner ? owner.handle : GetActiveWindow(),
         txt.ptr, caption.ptr, buttons | icon | defaultButton | options);
 }
 
@@ -142,8 +142,8 @@ DialogResult msgBox(IWindow owner, string txt, string caption, MsgBoxButtons but
 deprecated final class MessageBox
 {
     private this() {}
-    
-    
+
+
     static:
     deprecated alias msgBox show;
 }

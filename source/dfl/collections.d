@@ -53,7 +53,6 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
         static if (COW) {
             Array = Array.dup;
         } else {
-            //Array[index] = TValue.init;
         }
         ItemRemovedCallback(index, oldval); // Removed.
 
@@ -122,13 +121,6 @@ template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected,
                         static if (CLEAR_EACH) {
                             ItemRemovingCallback(iw, oldval); // Removing.
                         }
-                        /+static if(COW)
-                        {
-                        }
-                        else
-                        {
-                            //Array[iw] = TValue.init;
-                        }+/
                         debug {
                             Array = Array[0 .. iw]; // 'Temporarily' removes it for ItemRemovedCallback.
                         }

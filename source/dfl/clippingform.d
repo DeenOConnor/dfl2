@@ -16,13 +16,13 @@ private extern (Windows)
         DWORD64 nRgnSize;//DWORD64
         RECT rcBound;
     }
-    
+
     struct RGNDATA
     {
         RGNDATAHEADER rdh;
         ubyte[1] Buffer;
     }
-    
+
     struct XFORM
     {
         FLOAT eM11;
@@ -32,11 +32,11 @@ private extern (Windows)
         FLOAT eDx;
         FLOAT eDy;
     }
-    
+
     enum {RDH_RECTANGLES = 1}
     enum {BI_RGB = 0}
     enum {DIB_RGB_COLORS = 0}
-    
+
     HRGN ExtCreateRegion(void*, DWORD64, RGNDATA*);
     int GetDIBits(HDC, HBITMAP, UINT, UINT, PVOID, LPBITMAPINFO, UINT);
 }
@@ -51,23 +51,23 @@ private:
     INT _width = 0;
     INT _height = 0;
 public:
-    
-    
+
+
     const @property
     size_t width()
     {
         return _width;
     }
-    
-    
+
+
     ///
     const @property
     size_t height()
     {
         return _height;
     }
-    
-    
+
+
     ///
     void clear()
     {
@@ -80,8 +80,8 @@ public:
         _width = 0;
         _height = 0;
     }
-    
-    
+
+
     ///
     void add(RECT rc)
     {
@@ -100,22 +100,22 @@ public:
         }
         (cast(RECT*)_rgn.Buffer.ptr)[cast(uint)(_rgn.rdh.nCount++)] = rc;
     }
-    
-    
+
+
     /// ditto
     void add(int l, int t, int r, int b)
     {
         add(RECT(l, t, r, b));
     }
-    
-    
+
+
     /// ditto
     void opCatAssign(RECT rc)
     {
         add(rc);
     }
-    
-    
+
+
     ///
     @property
     Region region()
@@ -134,8 +134,8 @@ public:
         }
         throw new Exception("Failed to make a region data.");
     }
-    
-    
+
+
     private Region createClippingRegionFromHDC(HBITMAP hBitmap)
     {
         HDC hDC = CreateCompatibleDC(null);
@@ -171,8 +171,8 @@ public:
         }
         return region;
     }
-    
-    
+
+
     ///
     Region create(MemoryGraphics g)
     {
@@ -181,8 +181,8 @@ public:
         _height = g.height;
         return createClippingRegionFromHDC(cast(HBITMAP)g.hbitmap);
     }
-    
-    
+
+
     /// ditto
     Region create(Image img)
     {
@@ -213,22 +213,22 @@ protected:
         cp.style = WS_EX_TOPMOST | WS_EX_TOOLWINDOW;
     }
 public:
-    
-    
+
+
     ///
     @property Image clipping()
     {
         return m_Image;
     }
-    
-    
+
+
     /// ditto
     @property void clipping(Image img)
     {
         m_Image = img;
     }
-    
-    
+
+
     ///
     override void onHandleCreated(EventArgs ea)
     {
@@ -238,8 +238,8 @@ public:
         }
         super.onHandleCreated(ea);
     }
-    
-    
+
+
     ///
     override void onPaint(PaintEventArgs pea)
     {

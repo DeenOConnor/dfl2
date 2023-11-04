@@ -208,9 +208,9 @@ class ProgressBar: ControlSuperClass // docmain
 
     protected override void prevWndProc(ref Message msg)
     {
-        //msg.result = CallWindowProcA(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
         msg.result = CallWindowProcW(progressbarPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
     }
+
 
     final @property ProgressBar.STYLES style() {
         return this.currentStyle;
@@ -238,8 +238,8 @@ class ProgressBar: ControlSuperClass // docmain
         }
         bool isMarquee = newStyle == STYLES.MARQUEE;
         prevwproc(PBM_SETMARQUEE, isMarquee, this.speed * (isMarquee ? 1 : 0));
-        //SetWindowLongPtrA(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
     }
+
 
     final @property int animationSpeed() {
         return this.speed;
@@ -252,6 +252,7 @@ class ProgressBar: ControlSuperClass // docmain
         }
     }
 
+
     final @property ProgressBar.STATE state() {
         return this.currentState;
     }
@@ -261,11 +262,13 @@ class ProgressBar: ControlSuperClass // docmain
         prevwproc(WM_USER+16, this.state, 0); // PBM_SETSTATE message
     }
 
+
     static enum STYLES {
         BLOCKS = 0,
         SMOOTH = PBS_SMOOTH,
         MARQUEE = PBS_MARQUEE
     }
+
 
     static enum  STATE : int {
         NORMAL = 1, // PBST_NORMAL
@@ -273,7 +276,7 @@ class ProgressBar: ControlSuperClass // docmain
         PAUSED = 3 // PBST_PAUSED
     }
 
-private:
+    private:
 
     enum MIN_INIT = 0;
     enum MAX_INIT = 100;
@@ -286,12 +289,9 @@ private:
     int _min = MIN_INIT, _max = MAX_INIT, _step = STEP_INIT, _val = VAL_INIT;
 
 
-package:
-final:
-    LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
-{
-    //return CallWindowProcA(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
-    return CallWindowProcW(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
-}
+    package final LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
+    {
+        return CallWindowProcW(progressbarPrevWndProc, hwnd, msg, wparam, lparam);
+    }
 }
 

@@ -141,8 +141,7 @@ class CommandButton : ButtonBase {
 
 private:
     wstring lowtext = ""; // For BCM_SETNOTE
-    //DialogResult dresult = DialogResult.NONE;
     Image _img = null;
     bool isdefault = false;
-    
+
 }

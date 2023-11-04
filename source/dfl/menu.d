@@ -59,7 +59,6 @@ version (DFL_NO_MENUS) {
             case WM_INITMENU:
                 assert(cast(HMENU) m.wParam == handle);
 
-                //onPopup(EventArgs.empty);
                 popup(this, EventArgs.empty);
                 break;
 
@@ -83,7 +82,7 @@ version (DFL_NO_MENUS) {
                 _type(_type() | MFT_SEPARATOR);
             } else {
                 if (mparent) {
-                    MENUITEMINFOA mii;
+                    MENUITEMINFOW mii;
 
                     if (fType & MFT_SEPARATOR)
                         fType = ~MFT_SEPARATOR;
@@ -91,7 +90,6 @@ version (DFL_NO_MENUS) {
                     mii.fMask = MIIM_TYPE | MIIM_STATE; // Not setting the state can cause implicit disabled/gray if the text was empty.
                     mii.fType = fType;
                     mii.fState = fState;
-                    //mii.dwTypeData = stringToStringz(txt);
 
                     mparent._setInfo(mid, false, &mii, txt);
                 }
@@ -130,7 +128,7 @@ version (DFL_NO_MENUS) {
         }
 
         private void _setParent() {
-            MENUITEMINFOA mii;
+            MENUITEMINFOW mii;
             MenuItem miparent;
 
             mii.cbSize = mii.sizeof;
@@ -139,14 +137,12 @@ version (DFL_NO_MENUS) {
             mii.fState = fState;
             mii.wID = mid;
             mii.hSubMenu = handle;
-            //if(!(fType & MFT_SEPARATOR))
-            //    mii.dwTypeData = stringToStringz(mtext);
             miparent = cast(MenuItem) mparent;
             if (miparent && !miparent.hmenu) {
                 miparent.hmenu = CreatePopupMenu();
 
                 if (miparent.parent() && miparent.parent.hmenu) {
-                    MENUITEMINFOA miiPopup;
+                    MENUITEMINFOW miiPopup;
 
                     miiPopup.cbSize = miiPopup.sizeof;
                     miiPopup.fMask = MIIM_SUBMENU;
@@ -168,7 +164,7 @@ version (DFL_NO_MENUS) {
 
                 miparent = cast(MenuItem) mparent;
                 if (miparent && miparent.hmenu) {
-                    MENUITEMINFOA miiPopup;
+                    MENUITEMINFOW miiPopup;
 
                     miiPopup.cbSize = miiPopup.sizeof;
                     miiPopup.fMask = MIIM_SUBMENU;
@@ -180,11 +176,8 @@ version (DFL_NO_MENUS) {
             }
 
             mparent = null;
-
-            if (!Menu._compat092) {
-                mindex = -1;
-            }
         }
+
 
         ///
         final @property void barBreak(bool byes) // setter
@@ -201,7 +194,6 @@ version (DFL_NO_MENUS) {
             return (_type() & MFT_MENUBARBREAK) != 0;
         }
 
-        // Can't be break().
 
         ///
         final @property void breakItem(bool byes) // setter
@@ -218,6 +210,7 @@ version (DFL_NO_MENUS) {
             return (_type() & MFT_MENUBREAK) != 0;
         }
 
+
         ///
         final @property void checked(bool byes) // setter
         {
@@ -232,6 +225,7 @@ version (DFL_NO_MENUS) {
         {
             return (_state() & MFS_CHECKED) != 0;
         }
+
 
         ///
         final @property void defaultItem(bool byes) // setter
@@ -248,6 +242,7 @@ version (DFL_NO_MENUS) {
             return (_state() & MFS_DEFAULT) != 0;
         }
 
+
         ///
         final @property void enabled(bool byes) // setter
         {
@@ -263,6 +258,7 @@ version (DFL_NO_MENUS) {
             return (_state() & MFS_GRAYED) == 0;
         }
 
+
         ///
         final @property void index(int idx) // setter
         { // Note: probably fails when the parent exists because mparent is still set and menuItems.insert asserts it's null.
@@ -270,20 +266,9 @@ version (DFL_NO_MENUS) {
                 if (cast(uint) idx > mparent.menuItems.length)
                     throw new DflException("Invalid menu index");
 
-                //RemoveMenu(mparent.handle, mid, MF_BYCOMMAND);
                 mparent._remove(mid, MF_BYCOMMAND);
                 mparent.menuItems._delitem(mindex);
-
-                /+
-                mindex = idx;
-                _setParent();
-                mparent.menuItems._additem(this);
-                +/
                 mparent.menuItems.insert(idx, this);
-            }
-
-            if (Menu._compat092) {
-                mindex = idx;
             }
         }
 
@@ -293,19 +278,19 @@ version (DFL_NO_MENUS) {
             return mindex;
         }
 
+
         override @property bool isParent() // getter
         {
             return handle != null; // ?
         }
 
+
         deprecated final @property void mergeOrder(int ord) // setter
         {
-            //mergeord = ord;
         }
 
         deprecated final @property int mergeOrder() // getter
         {
-            //return mergeord;
             return 0;
         }
 
@@ -334,15 +319,15 @@ version (DFL_NO_MENUS) {
 
         /+
         // TODO: implement owner drawn menus.
-        
+
         final @property void ownerDraw(bool byes) // setter
         {
-            
+
         }
-        
+
         final @property bool ownerDraw() // getter
         {
-            
+
         }
         +/
 
@@ -373,13 +358,13 @@ version (DFL_NO_MENUS) {
 
         /+
         // TODO: need to fake this ?
-        
+
         final @property void visible(bool byes) // setter
         {
             // ?
             mvisible = byes;
         }
-        
+
         final @property bool visible() // getter
         {
             return mvisible;
@@ -391,10 +376,12 @@ version (DFL_NO_MENUS) {
             onClick(EventArgs.empty);
         }
 
+
         ///
         final void performSelect() {
             onSelect(EventArgs.empty);
         }
+
 
         // Used internally.
         this(HMENU hmenu, bool owned = true) // package
@@ -402,6 +389,7 @@ version (DFL_NO_MENUS) {
             super(hmenu, owned);
             _init();
         }
+
 
         ///
         this(MenuItem[] items) {
@@ -416,12 +404,14 @@ version (DFL_NO_MENUS) {
             menuItems.addRange(items);
         }
 
+
         /// ditto
         this(wstring text) {
             _init();
 
             this.text = text;
         }
+
 
         /// ditto
         this(wstring text, MenuItem[] items) {
@@ -438,10 +428,12 @@ version (DFL_NO_MENUS) {
             menuItems.addRange(items);
         }
 
+
         /// ditto
         this() {
             _init();
         }
+
 
         ~this() {
             Application.removeMenu(this);
@@ -450,6 +442,7 @@ version (DFL_NO_MENUS) {
                 cprintf("~MenuItem\n");
         }
 
+
         override string toString() {
             return to!string(text);
         }
@@ -457,6 +450,7 @@ version (DFL_NO_MENUS) {
         wstring toWString() {
             return text;
         }
+
 
         override bool opEquals(Object o) {
             return this.toString() == o.toString();
@@ -474,6 +468,7 @@ version (DFL_NO_MENUS) {
             return icmp(text, val);
         }
 
+
         protected override void onReflectedMessage(ref Message m) {
             super.onReflectedMessage(m);
 
@@ -490,9 +485,7 @@ version (DFL_NO_MENUS) {
 
             case WM_INITMENUPOPUP:
                 assert(!HIWORD(m.lParam));
-                //assert(cast(HMENU)msg.wParam == mparent.handle);
                 assert(cast(HMENU) m.wParam == handle);
-                //assert(GetMenuItemID(mparent.handle, LOWORD(msg.lParam)) == mid);
 
                 onPopup(EventArgs.empty);
                 break;
@@ -501,11 +494,9 @@ version (DFL_NO_MENUS) {
             }
         }
 
-        //EventHandler click;
+
         Event!(MenuItem, EventArgs) click; ///
-        //EventHandler popup;
         Event!(MenuItem, EventArgs) popup; ///
-        //EventHandler select;
         Event!(MenuItem, EventArgs) select; ///
 
     protected:
@@ -543,7 +534,6 @@ version (DFL_NO_MENUS) {
         UINT fType = 0; // MFT_*
         UINT fState = 0;
         int mindex = -1; //0;
-        //int mergeord = 0;
 
         enum SEPARATOR_TEXT = "-";
 
@@ -551,17 +541,14 @@ version (DFL_NO_MENUS) {
         static assert(!MFT_STRING);
 
         void _init() {
-            if (Menu._compat092) {
-                mindex = 0;
-            }
-
             mid = Application.addMenuItem(this);
         }
+
 
         @property void _type(UINT newType) // setter
         {
             if (mparent) {
-                MENUITEMINFOA mii;
+                MENUITEMINFOW mii;
 
                 mii.cbSize = mii.sizeof;
                 mii.fMask = MIIM_TYPE;
@@ -579,10 +566,11 @@ version (DFL_NO_MENUS) {
             return fType;
         }
 
+
         @property void _state(UINT newState) // setter
         {
             if (mparent) {
-                MENUITEMINFOA mii;
+                MENUITEMINFOW mii;
 
                 mii.cbSize = mii.sizeof;
                 mii.fMask = MIIM_STATE;
@@ -604,26 +592,6 @@ version (DFL_NO_MENUS) {
     ///
     abstract class Menu : Object // docmain
     {
-        // Retain DFL 0.9.2 compatibility.
-        deprecated static void setDFL092() {
-            version (SET_DFL_092) {
-                pragma(msg, "DFL: DFL 0.9.2 compatibility set at compile time");
-            } else {
-                //_compat092 = true;
-                Application.setCompat(DflCompat.MENU_092);
-            }
-        }
-
-        version (SET_DFL_092)
-            private enum _compat092 = true;
-        else version (DFL_NO_COMPAT)
-            private enum _compat092 = false;
-        else
-            private static @property bool _compat092() // getter
-            {
-            return 0 != (Application._compat & DflCompat.MENU_092);
-        }
-
         ///
         static class MenuItemCollection {
             protected this(Menu owner) {
@@ -651,24 +619,8 @@ version (DFL_NO_MENUS) {
                 }
             }
 
-            /+
-            void insert(int index, MenuItem mi)
-            {
-                mi.mindex = index;
-                mi._setParent(_owner);
-                _additem(mi);
-            }
-            +/
-
             void add(MenuItem mi) {
-                if (!Menu._compat092) {
-                    mi.mindex = cast(int) length;
-                }
-
-                /+
-                mi._setParent(_owner);
-                _additem(mi);
-                +/
+                mi.mindex = cast(int) length;
                 insert(mi.mindex, mi);
             }
 
@@ -677,21 +629,11 @@ version (DFL_NO_MENUS) {
             }
 
             void addRange(MenuItem[] items) {
-                if (!Menu._compat092)
-                    return _wraparray.addRange(items);
-
-                foreach (MenuItem it; items) {
-                    insert(cast(int) length, it);
-                }
+                return _wraparray.addRange(items);
             }
 
             void addRange(wstring[] items) {
-                if (!Menu._compat092)
-                    _wraparray.addRange(items);
-
-                foreach (wstring it; items) {
-                    insert(cast(int) length, it);
-                }
+                _wraparray.addRange(items);
             }
 
             // TODO: finish.
@@ -712,8 +654,6 @@ version (DFL_NO_MENUS) {
                 {
                 } else {
                     val._unsetParent();
-                    //RemoveMenu(_owner.handle, val._menuID, MF_BYCOMMAND);
-                    //_owner._remove(val._menuID, MF_BYCOMMAND);
                     _owner._remove(idx, MF_BYPOSITION);
                     _delitem(idx);
                 }
@@ -764,17 +704,6 @@ version (DFL_NO_MENUS) {
 
         // Don't call directly.
         @disable this(MenuItem[] items);
-        /+{
-            /+
-            this.owned = true;
-            
-            _init();
-            
-            menuItems.addRange(items);
-            +/
-            
-            assert(0);
-        }+/
 
         ~this() {
             if (owned)
@@ -820,24 +749,24 @@ version (DFL_NO_MENUS) {
         }
 
         /+ package +/
-        protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
+        protected void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOW lpmii, wstring typeData = null) // package
         {
             if (typeData !is null) {
                 lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
-                SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
+                SetMenuItemInfoW(hmenu, uItem, fByPosition, lpmii);
             } else {
-                SetMenuItemInfoA(hmenu, uItem, fByPosition, lpmii);
+                SetMenuItemInfoW(hmenu, uItem, fByPosition, lpmii);
             }
         }
 
         /+ package +/
-        protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
+        protected void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOW lpmii, wstring typeData = null) // package
         {
             if (typeData !is null) {
                 lpmii.dwTypeData = cast(typeof(lpmii.dwTypeData)) typeData.ptr;
-                InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
+                InsertMenuItemW(hmenu, uItem, fByPosition, lpmii);
             } else {
-                InsertMenuItemA(hmenu, uItem, fByPosition, lpmii);
+                InsertMenuItemW(hmenu, uItem, fByPosition, lpmii);
             }
         }
 
@@ -874,7 +803,7 @@ version (DFL_NO_MENUS) {
         }
 
         /+ package +/
-        protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
+        protected override void _setInfo(UINT uItem, BOOL fByPosition, LPMENUITEMINFOW lpmii, wstring typeData = null) // package
         {
             Menu._setInfo(uItem, fByPosition, lpmii, typeData);
 
@@ -883,7 +812,7 @@ version (DFL_NO_MENUS) {
         }
 
         /+ package +/
-        protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOA lpmii, wstring typeData = null) // package
+        protected override void _insert(UINT uItem, BOOL fByPosition, LPMENUITEMINFOW lpmii, wstring typeData = null) // package
         {
             Menu._insert(uItem, fByPosition, lpmii, typeData);
 

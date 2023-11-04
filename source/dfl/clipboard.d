@@ -16,10 +16,10 @@ private import core.sys.windows.windows;
 class Clipboard // docmain
 {
     private this() {}
-    
-    
+
+
     static:
-    
+
     ///
     IDflDataObject getDataObject()
     {
@@ -32,32 +32,22 @@ class Clipboard // docmain
         comd = comdobj;
         return dd = new ComToDdataObject(comdobj);
     }
-    
+
     /// ditto
     void setDataObject(Data obj, bool persist = false)
     {
         comd = null;
-        /+
-        Object ddd;
-        ddd = cast(Object)dd;
-        delete ddd;
-        +/
         dd = null;
         objref = null;
-        
+
         if(obj.info)
         {
             if(cast(TypeInfo_Class)obj.info)
             {
                 Object foo;
                 foo = obj.getObject();
-                
-                /+
-                if(cast(Bitmap)foo)
-                {
-                    // ...
-                }
-                else +/ if(cast(IDflDataObject)foo)
+
+                if(cast(IDflDataObject)foo)
                 {
                     dd = cast(IDflDataObject)foo;
                     objref = foo;
@@ -85,17 +75,16 @@ class Clipboard // docmain
                 objref = foo;
                 dd.setData(obj);
             }
-            
+
             assert(!(dd is null));
             comd = new DtoComDataObject(dd);
             if(S_OK != OleSetClipboard(comd))
             {
                 comd = null;
-                //delete dd;
                 dd = null;
                 goto err_set;
             }
-            
+
             if(persist)
                 OleFlushClipboard();
         }
@@ -105,25 +94,25 @@ class Clipboard // docmain
             if(S_OK != OleSetClipboard(null))
                 goto err_set;
         }
-        
+
         return;
         err_set:
         throw new DflException("Unable to set clipboard data");
     }
-    
+
     /// ditto
     void setDataObject(IDataObject obj, bool persist = false)
     {
         setDataObject(Data(obj), persist);
     }
-    
-    
+
+
     ///
     void setString(string str, bool persist = false)
     {
         setDataObject(Data(str), persist);
     }
-    
+
     /// ditto
     string getString()
     {
@@ -133,15 +122,15 @@ class Clipboard // docmain
             return ido.getData(DataFormats.utf8).getString();
         return null; // ?
     }
-    
-    
+
+
     ///
     // ANSI text.
     void setText(ubyte[] ansiText, bool persist = false)
     {
         setDataObject(Data(ansiText), persist);
     }
-    
+
     /// ditto
     ubyte[] getText()
     {
@@ -151,21 +140,11 @@ class Clipboard // docmain
             return ido.getData(DataFormats.text).getText();
         return null; // ?
     }
-    
-    
+
+
     private:
     IDataObject comd;
     IDflDataObject dd;
     Object objref; // Prevent dd from being garbage collected!
-    
-    
-    /+
-    static ~this()
-    {
-        Object ddd;
-        ddd = cast(Object)dd;
-        delete ddd;
-    }
-    +/
 }
 

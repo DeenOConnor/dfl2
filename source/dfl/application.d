@@ -32,13 +32,11 @@ private import std.path : dirName;
 private import std.stdio : writef, writefln, writeln;
 
 
-//debug = APP_PRINT;
-//debug = SHOW_MESSAGE_INFO; // Slow.
 
 debug(APP_PRINT)
 {
     pragma(msg, "DFL: debug app print");
-    
+
     version(DFL_LIB)
         static assert(0);
 }
@@ -51,8 +49,8 @@ class ApplicationContext // docmain
     this()
     {
     }
-    
-    
+
+
     ///
     // If onMainFormClose isn't overridden, the message
     // loop terminates when the main form is destroyed.
@@ -61,55 +59,54 @@ class ApplicationContext // docmain
         mform = mainForm;
         mainForm.closed.addHandler(&onMainFormClosed);
     }
-    
-    
+
+
     ///
     final @property void mainForm(Form mainForm) // setter
     {
         if(mform)
             mform.closed.addHandler(&onMainFormClosed);
-        
+
         mform = mainForm;
-        
+
         if(mainForm)
             mainForm.closed.addHandler(&onMainFormClosed);
     }
-    
+
     /// ditto
     final @property Form mainForm() nothrow // getter
     {
         return mform;
     }
-    
-    
+
+
     ///
     Event!(Object, EventArgs) threadExit;
-    
-    
+
+
     ///
     final void exitThread()
     {
         exitThreadCore();
     }
-    
-    
+
+
     protected:
-    
+
     ///
     void exitThreadCore()
     {
         threadExit(this, EventArgs.empty);
-        //ExitThread(0);
     }
-    
-    
+
+
     ///
     void onMainFormClosed(Object sender, EventArgs args)
     {
         exitThreadCore();
     }
-    
-    
+
+
     private:
     Form mform; // The context form.
 }
@@ -139,22 +136,22 @@ else
 enum DflCompat
 {
     NONE = 0,
-    
+
     // Adding to menus is the old way.
     MENU_092 = 0x1,
-    
+
     // Controls don't recreate automatically when necessary.
     CONTROL_RECREATE_095 = 0x2,
-    
+
     // Nothing.
     CONTROL_KEYEVENT_096 = 0x4,
-    
+
     // When a Form is in showDialog, changing the dialogResult from NONE doesn't close the form.
     FORM_DIALOGRESULT_096 = 0x8,
-    
+
     // Call onLoad/load and focus a control at old time.
     FORM_LOAD_096 = 0x10,
-    
+
     // Parent controls now need to be container-controls; this removes that limit.
     CONTROL_PARENT_096 = 0x20,
 }
@@ -164,10 +161,10 @@ enum DflCompat
 final class Application // docmain
 {
     private this() {}
-    
-    
+
+
     static:
-    
+
     ///
     // Enables visual styles through writing and applying a manifest file
     // Left for compatibility with Entice Designer
@@ -225,7 +222,6 @@ final class Application // docmain
                             INITCOMMONCONTROLSEX icce;
                             icce.dwSize = INITCOMMONCONTROLSEX.sizeof;
                             icce.dwICC = ICC_STANDARD_CLASSES;
-                            //_initCommonControls(ICC_STANDARD_CLASSES); // Redundant
                             InitCommonControlsEx(&icce); // import core.sys.windows.commctrl
 
                             // Ensure the actctx is actually associated with the message queue...
@@ -344,33 +340,22 @@ final class Application // docmain
             DwmSetWindowAttribute(form.handle(), 20, &yes_please, yes_please.sizeof);
         }
     }
-    
-    
-    /+
-    // ///
-    @property bool visualStyles() nothrow // getter
-    {
-        // IsAppThemed:
-        // "Do not call this function during DllMain or global objects contructors.
-        // This may cause invalid return values in Microsoft Windows Vista and may cause Windows XP to become unstable."
-    }
-    +/
-    
-    
+
+
     /// Path of the executable including its file name.
     @property string executablePath() // getter
     {
         return thisExePath();
     }
-    
-    
+
+
     /// Directory containing the executable.
     @property string startupPath() // getter
     {
         return dirName(thisExePath());
     }
-    
-    
+
+
     // Used internally.
     string getSpecialPath(string name) // package
     {
@@ -394,32 +379,30 @@ final class Application // docmain
 
         return to!string(fromStringz(s));
     }
-    
-    
+
+
     /// Application data base directory path, usually `C:\Documents and Settings\<user>\Application Data`; this directory might not exist yet.
     @property string userAppDataBasePath() // getter
     {
         return getSpecialPath("AppData");
     }
-    
-    
+
+
     ///
     @property bool messageLoop() nothrow // getter
     {
         return (threadFlags & TF.RUNNING) != 0;
     }
-    
-    
+
+
     ///
     void addMessageFilter(IMessageFilter mf)
     {
-        //filters ~= mf;
-        
         IMessageFilter[] fs = filters;
         fs ~= mf;
         filters = fs;
     }
-    
+
     /// ditto
     void removeMessageFilter(IMessageFilter mf)
     {
@@ -438,22 +421,21 @@ final class Application // docmain
             }
         }
     }
-    
-    
+
+
     package bool _doEvents(bool* keep)
     {
         if(threadFlags & (TF.STOP_RUNNING | TF.QUIT))
             return false;
-        
+
         try
         {
             Message msg;
-            
-            //while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
+
             while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
             {
                 gotMessage(msg);
-                
+
                 if(msg.msg == WM_QUIT)
                 {
                     threadFlags = threadFlags | TF.QUIT;
@@ -468,25 +450,25 @@ final class Application // docmain
                     break;
                 }
             }
-            
+
             // Execution continues after this so it's not idle.
         }
         catch(Throwable e)
         {
             onThreadException(e);
         }
-        
+
         return (threadFlags & TF.QUIT) == 0;
     }
-    
-    
+
+
     /// Process all messages in the message queue. Returns false if the application should exit.
     bool doEvents()
     {
         bool keep = true;
         return _doEvents(&keep);
     }
-    
+
     /// ditto
     bool doEvents(uint msDelay)
     {
@@ -507,20 +489,20 @@ final class Application // docmain
         }
         return true;
     }
-    
-    
+
+
     /// Run the application.
     void run()
     {
         run(new ApplicationContext);
     }
-    
+
     /// ditto
     void run(void delegate() whileIdle)
     {
         run(new ApplicationContext, whileIdle);
     }
-    
+
     /// ditto
     void run(ApplicationContext appcon)
     {
@@ -528,11 +510,11 @@ final class Application // docmain
         {
             waitForEvent();
         }
-        
-        
+
+
         run(appcon, &whileIdle);
     }
-    
+
     /// ditto
     // -whileIdle- is called repeatedly while there are no messages in the queue.
     // Application.idle events are suppressed; however, the -whileIdle- handler
@@ -541,15 +523,14 @@ final class Application // docmain
     {
         if(threadFlags & TF.RUNNING)
         {
-            //throw new DflException("Cannot have more than one message loop per thread");
             assert(0, "Cannot have more than one message loop per thread");
         }
-        
+
         if(threadFlags & TF.QUIT)
         {
             assert(0, "The application is shutting down");
         }
-        
+
         version(CUSTOM_MSG_HOOK)
         {
             HHOOK _msghook = SetWindowsHookExA(WH_CALLWNDPROCRET, &globalMsgHook, null, GetCurrentThreadId());
@@ -557,26 +538,25 @@ final class Application // docmain
                 throw new DflException("Unable to get window messages");
             msghook = _msghook;
         }
-        
-        
+
+
         void threadJustExited(Object sender, EventArgs ea)
         {
             exitThread();
         }
-        
-        
+
+
         ctx = appcon;
         ctx.threadExit.addHandler(&threadJustExited);
         try
         {
             threadFlags = threadFlags | TF.RUNNING;
-            
+
             if(ctx.mainForm)
             {
-                //ctx.mainForm.createControl();
                 ctx.mainForm.show();
             }
-            
+
             for(;;)
             {
                 try
@@ -585,25 +565,24 @@ final class Application // docmain
                     while(!(threadFlags & (TF.QUIT | TF.STOP_RUNNING)))
                     {
                         Message msg;
-                        
-                        //while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
+
                         while(PeekMessageA(&msg._winMsg, HWND.init, 0, 0, PM_REMOVE))
                         {
                             gotMessage(msg);
-                            
+
                             if(msg.msg == WM_QUIT)
                             {
                                 threadFlags = threadFlags | TF.QUIT;
                                 break still_running;
                             }
-                            
+
                             if(threadFlags & (TF.QUIT | TF.STOP_RUNNING))
                                 break still_running;
                         }
-                        
+
                         whileIdle();
                     }
-                    
+
                     // Stopped running.
                     threadExit(typeid(Application), EventArgs.empty);
                     threadFlags = threadFlags & ~(TF.RUNNING | TF.STOP_RUNNING);
@@ -618,58 +597,56 @@ final class Application // docmain
         finally
         {
             threadFlags = threadFlags & ~(TF.RUNNING | TF.STOP_RUNNING);
-            
+
             ApplicationContext tctx;
             tctx = ctx;
             ctx = null;
-            
+
             version(CUSTOM_MSG_HOOK)
                 UnhookWindowsHookEx(msghook);
-            
+
             tctx.threadExit.removeHandler(&threadJustExited);
         }
     }
-    
+
     /// ditto
     // Makes the form -mainForm- visible.
     void run(Form mainForm, void delegate() whileIdle)
     {
         ApplicationContext appcon = new ApplicationContext(mainForm);
-        //mainForm.show(); // Interferes with -running-.
         run(appcon, whileIdle);
     }
-    
+
     /// ditto
     void run(Form mainForm)
     {
         ApplicationContext appcon = new ApplicationContext(mainForm);
-        //mainForm.show(); // Interferes with -running-.
         run(appcon);
     }
-    
-    
+
+
     ///
     void exit()
     {
         PostQuitMessage(0);
     }
-    
-    
+
+
     /// Exit the thread's message loop and return from run.
     // Actually only stops the current run() loop.
     void exitThread()
     {
         threadFlags = threadFlags | TF.STOP_RUNNING;
     }
-    
-    
+
+
     // Will be null if not in a successful Application.run.
     package @property ApplicationContext context() nothrow // getter
     {
         return ctx;
     }
-    
-    
+
+
     ///
     HINSTANCE getInstance()
     {
@@ -677,7 +654,7 @@ final class Application // docmain
             _initInstance();
         return hinst;
     }
-    
+
     /// ditto
     void setInstance(HINSTANCE inst)
     {
@@ -687,7 +664,7 @@ final class Application // docmain
                 throw new DflException("Instance is already set");
             return;
         }
-        
+
         if(inst)
         {
             _initInstance(inst);
@@ -697,49 +674,47 @@ final class Application // docmain
             _initInstance(); // ?
         }
     }
-    
-    
+
+
     // ApartmentState oleRequired() ...
-    
-    
+
+
     private static class ErrForm: Form
     {
         protected override void onLoad(EventArgs ea)
         {
             okBtn.focus();
         }
-        
-        
+
+
         protected override void onClosing(CancelEventArgs cea)
         {
             cea.cancel = !errdone;
         }
-        
-        
+
+
         enum PADDING = 10;
-        
-        
+
+
         void onOkClick(Object sender, EventArgs ea)
         {
             errdone = true;
             ctnu = true;
-            //close();
             dispose();
         }
-        
-        
+
+
         void onCancelClick(Object sender, EventArgs ea)
         {
             errdone = true;
             ctnu = false;
-            //close();
             dispose();
         }
-        
+
         this(string errmsg) {
             this(to!wstring(errmsg));
         }
-        
+
         this(wstring errmsg)
         {
             text = "Error";
@@ -749,7 +724,7 @@ final class Application // docmain
             minimizeBox = false;
             maximizeBox = false;
             controlBox = false;
-            
+
             Label label;
             with(label = new Label)
             {
@@ -758,7 +733,7 @@ final class Application // docmain
                     "the application to ignore this error and attempt to continue."w;
                 parent = this;
             }
-            
+
             with(errBox = new TextBox)
             {
                 text = errmsg;
@@ -768,7 +743,7 @@ final class Application // docmain
                 multiline = true;
                 parent = this;
             }
-            
+
             with(okBtn = new Button)
             {
                 width = 100;
@@ -779,7 +754,7 @@ final class Application // docmain
                 click.addHandler(&onOkClick);
             }
             acceptButton = okBtn;
-            
+
             with(new Button)
             {
                 width = 100;
@@ -789,17 +764,17 @@ final class Application // docmain
                 parent = this;
                 click.addHandler(&onCancelClick);
             }
-            
+
             autoScale = true;
         }
 
-        
+
         bool doContinue()
         {
             assert(!isHandleCreated);
-            
+
             show();
-            
+
             Message msg;
             for(;;)
             {
@@ -808,29 +783,29 @@ final class Application // docmain
                 {
                     gotMessage(msg);
                 }
-                
+
                 if(!isHandleCreated)
                     break;
             }
-            
+
             return ctnu;
         }
-        
-        
+
+
         override string toString()
         {
             return to!string(errBox.text);
         }
-        
-        
+
+
         private:
         bool errdone = false;
         bool ctnu = false;
         Button okBtn;
         TextBox errBox;
     }
-    
-    
+
+
     ///
     bool showDefaultExceptionDialog(Object e)
     {
@@ -840,18 +815,18 @@ final class Application // docmain
                 return true;
             }
         }
-        
+
         return false;
     }
-    
-    
+
+
     ///
     void onThreadException(Throwable e) nothrow
     {
         try
         {
             static bool except = false;
-            
+
             version(WINDOWS_HUNG_WORKAROUND)
             {
                 version(WINDOWS_HUNG_WORKAROUND_NO_IGNORE)
@@ -863,15 +838,15 @@ final class Application // docmain
                         return;
                 }
             }
-            
+
             if(except)
             {
                 writef("Error: %s\n", e.toString());
-                
+
                 abort();
                 return;
             }
-            
+
             except = true;
             if(threadException.hasHandlers)
             {
@@ -895,16 +870,16 @@ final class Application // docmain
         {
         }
     }
-    
-    
+
+
     ///
     Event!(Object, EventArgs) idle; // Finished processing and is now idle.
     ///
     Event!(Object, ThreadExceptionEventArgs) threadException;
     ///
     Event!(Object, EventArgs) threadExit;
-    
-    
+
+
     ///
     void addHotkey(Keys k,void delegate(Object sender, KeyEventArgs ea) dg)
     {
@@ -947,8 +922,8 @@ final class Application // docmain
             }
         }
     }
-    
-    
+
+
     ///
     void removeHotkey(Keys k, void delegate(Object sender, KeyEventArgs ea) dg)
     {
@@ -967,8 +942,8 @@ final class Application // docmain
             }
         }
     }
-    
-    
+
+
     ///
     void removeHotkey(Keys k)
     {
@@ -988,63 +963,63 @@ final class Application // docmain
             hotkeyId.remove(k);
         }
     }
-    
-    
+
+
     ///
     struct HotkeyRegister
     {
     static:
         ///
         alias void delegate(Object c, KeyEventArgs e) Handler;
-        
-        
+
+
         ///
         void addHandler(Keys k, Handler dg)
         {
             addHotkey(k, dg);
         }
-        
-        
+
+
         ///
         struct IndexedCatAssigner
         {
             Keys k;
-            
-            
+
+
             ///
             void opCatAssign(Handler dg)
             {
                 addHandler(k, dg);
             }
         }
-        
-        
+
+
         ///
         IndexedCatAssigner opIndex(Keys k)
         {
             return IndexedCatAssigner(k);
         }
-        
-        
+
+
         ///
         void removeHandler(Keys k, Handler dg)
         {
             removeHotkey(k, dg);
         }
-        
-        
+
+
         ///
         void removeHandler(Keys k)
         {
             removeHotkey(k);
         }
     }
-    
-    
+
+
     /// helper
     HotkeyRegister hotkeys;
-    
-    
+
+
     static ~this()
     {
         foreach (key; hotkeyId.keys)
@@ -1053,7 +1028,7 @@ final class Application // docmain
         }
         hotkeyId = null;
     }
-    
+
     // Returns null if not found.
     package Control lookupHwnd(HWND hwnd) nothrow
     {
@@ -1062,23 +1037,23 @@ final class Application // docmain
             return *pc;
         return null;
     }
-    
-    
+
+
     // Also makes a great zombie.
     package void removeHwnd(HWND hwnd)
     {
         //delete controls[hwnd];
         controls.remove(hwnd);
     }
-    
-    
+
+
     version(DFL_NO_ZOMBIE_FORM)
     {
     }
     else
     {
         package enum ZOMBIE_PROP = "DFL_Zombie";
-        
+
         // Doesn't do any good since the child controls still reference this control.
         package void zombieHwnd(Control c)
         in
@@ -1092,8 +1067,8 @@ final class Application // docmain
             SetPropA(c.handle, ZOMBIE_PROP.ptr, cast(HANDLE)cast(void*)c);
             removeHwnd(c.handle);
         }
-        
-        
+
+
         package void unzombieHwnd(Control c)
         in
         {
@@ -1106,8 +1081,8 @@ final class Application // docmain
             RemovePropA(c.handle, ZOMBIE_PROP.ptr);
             controls[c.handle] = c;
         }
-        
-        
+
+
         // Doesn't need to be a zombie.
         package void zombieKill(Control c)
         in
@@ -1122,8 +1097,8 @@ final class Application // docmain
             }
         }
     }
-    
-    
+
+
     version(DFL_NO_MENUS)
     {
     }
@@ -1134,11 +1109,11 @@ final class Application // docmain
         {
             if(nmenus == END_MENU_ID - FIRST_MENU_ID)
                 throw new DflException("Out of menus");
-            
+
             typeof(menus) tempmenus;
-            
+
             // TODO: sort menu IDs in 'menus' so that looking for free ID is much faster.
-            
+
             prevMenuID++;
             if(prevMenuID >= END_MENU_ID || prevMenuID <= FIRST_MENU_ID)
             {
@@ -1165,44 +1140,42 @@ final class Application // docmain
             tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * (nmenus + 1));
             if(!tempmenus)
             {
-                //throw new OutOfMemory;
                 throw new DflException("Out of memory");
             }
             menus = tempmenus;
-            
+
             menus[nmenus++] = menu;
-            
+
             return prevMenuID;
         }
-        
-        
+
+
         package void addContextMenu(ContextMenu menu)
         {
             if(nmenus == END_MENU_ID - FIRST_MENU_ID)
                 throw new DflException("Out of menus");
-            
+
             typeof(menus) tempmenus;
             int idx;
-            
+
             idx = nmenus;
             nmenus++;
             tempmenus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
             if(!tempmenus)
             {
                 nmenus--;
-                //throw new OutOfMemory;
                 throw new DflException("Out of memory");
             }
             menus = tempmenus;
-            
+
             menus[idx] = menu;
         }
-        
-        
+
+
         package void removeMenu(Menu menu)
         {
             uint idx;
-            
+
             for(idx = 0; idx != nmenus; idx++)
             {
                 if(menus[idx] is menu)
@@ -1211,7 +1184,7 @@ final class Application // docmain
                 }
             }
             return;
-            
+
             found:
             if(nmenus == 1)
             {
@@ -1223,19 +1196,19 @@ final class Application // docmain
             {
                 if(idx != nmenus - 1)
                     menus[idx] = menus[nmenus - 1]; // Move last one in its place
-                
+
                 nmenus--;
                 menus = cast(Menu*)GC.realloc(menus, Menu.sizeof * nmenus);
                 assert(menus != null); // Memory shrink shouldn't be a problem.
             }
         }
-        
-        
+
+
         package MenuItem lookupMenuID(int menuID)
         {
             uint idx;
             MenuItem mi;
-            
+
             for(idx = 0; idx != nmenus; idx++)
             {
                 mi = cast(MenuItem)menus[idx];
@@ -1244,12 +1217,12 @@ final class Application // docmain
             }
             return null;
         }
-        
-        
+
+
         package Menu lookupMenu(HMENU hmenu)
         {
             uint idx;
-            
+
             for(idx = 0; idx != nmenus; idx++)
             {
                 if(menus[idx].handle == hmenu)
@@ -1258,14 +1231,14 @@ final class Application // docmain
             return null;
         }
     }
-    
-    
+
+
     package void creatingControl(Control ctrl) nothrow
     {
         TlsSetValue(tlsControl, cast(Control*)ctrl);
     }
-    
-    
+
+
     version(DFL_NO_RESOURCES)
     {
     }
@@ -1275,7 +1248,7 @@ final class Application // docmain
         @property Resources resources() // getter
         {
             static Resources rc = null;
-            
+
             if(!rc)
             {
                 synchronized
@@ -1289,12 +1262,12 @@ final class Application // docmain
             return rc;
         }
     }
-    
-    
+
+
     private UINT gctimer = 0;
     private DWORD gcinfo = 1;
-    
-    
+
+
     ///
     @property void autoCollect(bool byes) // setter
     {
@@ -1315,26 +1288,26 @@ final class Application // docmain
             }
         }
     }
-    
+
     /// ditto
     @property bool autoCollect() nothrow // getter
     {
         return gcinfo > 0;
     }
-    
-    
+
+
     package void _waitMsg()
     {
         if(threadFlags & (TF.STOP_RUNNING | TF.QUIT))
             return;
-        
+
         idle(typeid(Application), EventArgs.empty);
         WaitMessage();
     }
-    
+
     package deprecated alias _waitMsg waitMsg;
-    
-    
+
+
     ///
     // Because waiting for an event enters an idle state,
     // this function fires the -idle- event.
@@ -1345,29 +1318,29 @@ final class Application // docmain
             _waitMsg();
             return;
         }
-        
+
         if(1 == gcinfo)
         {
             gcinfo = gcinfo.max;
             assert(!gctimer);
             gctimer = to!int(SetTimer(HWND.init, 0, 200, &_gcTimeout));
         }
-        
+
         _waitMsg();
-        
+
         if(GetTickCount() > gcinfo)
         {
             gcinfo = 1;
         }
     }
-    
-    
+
+
     version(DFL_NO_COMPAT)
         package enum _compat = DflCompat.NONE;
     else
         package DflCompat _compat = DflCompat.NONE;
-    
-    
+
+
     deprecated void setCompat(DflCompat dflcompat)
     {
         version(DFL_NO_COMPAT)
@@ -1380,18 +1353,18 @@ final class Application // docmain
             {
                 assert(0, "setCompat"); // Called too late, must enable compatibility sooner.
             }
-            
+
             _compat |= dflcompat;
         }
     }
-    
-    
+
+
     private static size_t _doref(void* p, int by)
     {
         assert(1 == by || -1 == by);
-        
+
         size_t result;
-        
+
         synchronized
         {
             auto pref = p in _refs;
@@ -1399,14 +1372,14 @@ final class Application // docmain
             {
                 size_t count;
                 count = *pref;
-                
+
                 assert(count || -1 != by);
-                
+
                 if(-1 == by)
                     count--;
                 else
                     count++;
-                
+
                 if(!count)
                 {
                     result = 0;
@@ -1424,38 +1397,36 @@ final class Application // docmain
                 result = 1;
             }
         }
-        
+
         return result;
     }
-    
-    
+
+
     package size_t refCountInc(void* p)
     {
         return _doref(p, 1);
     }
-    
-    
+
+
     // Returns the new ref count.
     package size_t refCountDec(void* p)
     {
         return _doref(p, -1);
     }
-    
-    
+
+
     package void ppin(void* p)
     {
-        // TODO : Figure out what this is supposed to do
-        //gcPin(p);
+        // It seems that at the moment of writing this there's no need for pinning
     }
-    
-    
+
+
     package void punpin(void* p)
     {
-        // TODO : Figure out what this is supposed to do
-        //gcUnpin(p);
+        // It seems that at the moment of writing this there's no need for unpinning
     }
-    
-    
+
+
     private:
     static:
     size_t[void*] _refs;
@@ -1470,7 +1441,7 @@ final class Application // docmain
     ApplicationContext ctx = null;
     int[Keys] hotkeyId;
     Event!(Object, KeyEventArgs)[int] hotkeyHandler;
-    
+
     version(DFL_NO_MENUS)
     {
     }
@@ -1479,18 +1450,17 @@ final class Application // docmain
         // Menus.
         enum short FIRST_MENU_ID = 200;
         enum short END_MENU_ID = 10000;
-        
+
         // Controls.
         enum ushort FIRST_CTRL_ID = END_MENU_ID + 1;
         enum ushort LAST_CTRL_ID = 65500;
-        
-        
+
+
         ushort prevMenuID = FIRST_MENU_ID;
-        // malloc() is needed so the menus can be garbage collected.
         uint nmenus = 0; // Number of -menus-.
         Menu* menus = null; // WARNING: malloc()'d memory!
-        
-        
+
+
         // Destroy all menu handles at program exit because Windows will not
         // unless it is assigned to a window.
         // Note that this is probably just a 16bit issue, but it still appeared in the 32bit docs.
@@ -1505,35 +1475,35 @@ final class Application // docmain
             menus = null;
         }
     }
-    
-    
+
+
     private struct TlsFilterValue
     {
         IMessageFilter[] filters;
     }
-        
-    
+
+
     version(CUSTOM_MSG_HOOK)
     {
         @property void msghook(HHOOK hhook) // setter
         {
             TlsSetValue(tlsHook, cast(LPVOID)hhook);
         }
-        
-        
+
+
         @property HHOOK msghook() nothrow // getter
         {
             return cast(HHOOK)TlsGetValue(tlsHook);
         }
     }
-    
-    
+
+
     Control getCreatingControl() nothrow
     {
         return cast(Control)cast(Control*)TlsGetValue(tlsControl);
     }
-    
-    
+
+
     // Thread flags.
     enum TF: DWORD
     {
@@ -1541,21 +1511,21 @@ final class Application // docmain
         STOP_RUNNING = 2,
         QUIT = 4, // Received WM_QUIT.
     }
-    
-    
+
+
     @property TF threadFlags() nothrow // getter
     {
         return cast(TF)cast(DWORD)TlsGetValue(tlsThreadFlags);
     }
-    
-    
+
+
     @property void threadFlags(TF flags) // setter
     {
         if(!TlsSetValue(tlsThreadFlags, cast(LPVOID)cast(DWORD)flags))
             assert(0);
     }
-    
-    
+
+
     void gotMessage(ref Message msg)
     {
         void handleHotkey()
@@ -1576,7 +1546,7 @@ final class Application // docmain
                 // Keep a local reference so that handlers
                 // may be added and removed during filtering.
                 IMessageFilter[] local = filters;
-                
+
                 foreach(IMessageFilter mf; local)
                 {
                     // Returning true prevents dispatching.
@@ -1622,7 +1592,7 @@ extern(Windows) void _gcTimeout(HWND hwnd, UINT uMsg, size_t idEvent, DWORD dwTi
 {
     KillTimer(hwnd, Application.gctimer);
     Application.gctimer = 0;
-    
+
     debug {
         writeln("Auto-collecting");
     }
@@ -1631,7 +1601,7 @@ extern(Windows) void _gcTimeout(HWND hwnd, UINT uMsg, size_t idEvent, DWORD dwTi
     } catch (Exception ex) {
         // Do nothing
     }
-    
+
     Application.gcinfo = GetTickCount() + 4000;
 }
 
@@ -1640,16 +1610,16 @@ extern(Windows) void _gcTimeout(HWND hwnd, UINT uMsg, size_t idEvent, DWORD dwTi
 debug(SHOW_MESSAGE_INFO)
 {
     private import std.stdio, std.string;
-    
-    
+
+
     void showMessageInfo(ref Message m)
     {
         void writeWm(string wmName)
         {
             writef("Message %s=%d(0x%X)\n", wmName, m.msg, m.msg);
         }
-        
-        
+
+
         switch(m.msg)
         {
             case WM_NULL: writeWm("WM_NULL"); break;
@@ -1781,7 +1751,7 @@ debug(SHOW_MESSAGE_INFO)
             case WM_PRINT: writeWm("WM_PRINT"); break;
             case WM_PRINTCLIENT: writeWm("WM_PRINTCLIENT"); break;
             case WM_MEASUREITEM: writeWm("WM_MEASUREITEM"); break;
-            
+
             default:
                 if(m.msg >= WM_USER && m.msg <= 0x7FFF)
                 {
@@ -1796,7 +1766,7 @@ debug(SHOW_MESSAGE_INFO)
                     writeWm("?");
                 }
         }
-        
+
         Control ctrl;
         ctrl = Application.lookupHwnd(m.hWnd);
         writef("HWND=%d(0x%X) %s WPARAM=%d(0x%X) LPARAM=%d(0x%X)\n\n",
@@ -1804,7 +1774,7 @@ debug(SHOW_MESSAGE_INFO)
             ctrl ? ("DFLname='" ~ ctrl.name ~ "'") : "<nonDFL>",
             m.wParam, m.wParam,
             m.lParam, m.lParam);
-        
+
         debug(MESSAGE_PAUSE)
         {
             Sleep(50);
@@ -1840,7 +1810,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                     }
                 }
                 return LRESULT_DFL_INVOKE;
-            
+
             case WPARAM_DFL_INVOKE_SIMPLE:
                 {
                     InvokeSimpleData* pinv;
@@ -1862,7 +1832,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                     }
                 }
                 return LRESULT_DFL_INVOKE;
-            
+
             case WPARAM_DFL_DELAY_INVOKE:
                 try
                 {
@@ -1873,7 +1843,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                     Application.onThreadException(e);
                 }
                 break;
-            
+
             case WPARAM_DFL_DELAY_INVOKE_PARAMS:
                 {
                     DflInvokeParam* p;
@@ -1889,17 +1859,17 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
                     GC.free(p);
                 }
                 break;
-            
+
             default:
         }
     }
-    
+
     Message dm = Message(hwnd, msg, wparam, lparam);
     Control ctrl;
-    
+
     debug(SHOW_MESSAGE_INFO)
         showMessageInfo(dm);
-    
+
     if(msg == WM_NCCREATE)
     {
         ctrl = Application.getCreatingControl();
@@ -1910,7 +1880,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
             return dm.result;
         }
         Application.creatingControl(null); // Reset.
-        
+
         Application.controls[hwnd] = ctrl;
         ctrl.hwnd = hwnd;
         debug(APP_PRINT)
@@ -1918,13 +1888,12 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 
         goto do_msg;
     }
-    
+
     ctrl = Application.lookupHwnd(hwnd);
-    
+
     if(!ctrl)
     {
         // Zombie...
-        //return 1; // Returns correctly for most messages. e.g. WM_QUERYENDSESSION, WM_NCACTIVATE.
         dm.result = 1;
         version(DFL_NO_ZOMBIE_FORM)
         {
@@ -1942,7 +1911,7 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
         }
         return dm.result;
     }
-    
+
     if(ctrl)
     {
         do_msg:
@@ -1964,8 +1933,8 @@ extern(Windows) LRESULT dflWndProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lp
 version(CUSTOM_MSG_HOOK)
 {
     alias CWPRETSTRUCT CustomMsg;
-    
-    
+
+
     // Needs to be re-entrant.
     extern(Windows) LRESULT globalMsgHook(int code, WPARAM wparam, LPARAM lparam)
     {
@@ -1973,13 +1942,13 @@ version(CUSTOM_MSG_HOOK)
         {
             CustomMsg* msg = cast(CustomMsg*)lparam;
             Control ctrl;
-            
+
             switch(msg.message)
             {
                 // ...
             }
         }
-        
+
         return CallNextHookEx(Application.msghook, code, wparam, lparam);
     }
 }
@@ -2102,12 +2071,6 @@ LONG progressbarClassStyle;
 
 HMODULE hmodRichtextbox;
 
-// DMD 0.93: CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS is not an expression
-//enum UINT WNDCLASS_STYLE = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
-//enum UINT WNDCLASS_STYLE = 11;
-
-//enum UINT WNDCLASS_STYLE = CS_DBLCLKS;
-// DMD 0.106: CS_DBLCLKS is not an expression
 enum UINT WNDCLASS_STYLE = 0x0008;
 
 
@@ -2123,32 +2086,30 @@ void _initCommonControls(DWORD dwControls)
     version(SUPPORTS_COMMON_CONTROLS_EX)
     {
         pragma(msg, "DFL: extended common controls supported at compile time");
-        
+
         alias InitCommonControlsEx initProc;
     }
     else
     {
         // Make sure InitCommonControlsEx() is in comctl32.dll,
         // otherwise use the old InitCommonControls().
-        
+
         HMODULE hmodCommonControls;
         InitCommonControlsExProc initProc;
-        
+
         hmodCommonControls = LoadLibraryA("comctl32.dll");
         if(!hmodCommonControls)
-        //    throw new DflException("Unable to load 'comctl32.dll'");
             goto no_comctl32;
-        
+
         initProc = cast(InitCommonControlsExProc)GetProcAddress(hmodCommonControls, "InitCommonControlsEx");
         if(!initProc)
         {
-            //FreeLibrary(hmodCommonControls);
             no_comctl32:
             InitCommonControls();
             return;
         }
     }
-    
+
     INITCOMMONCONTROLSEX icce;
     icce.dwSize = INITCOMMONCONTROLSEX.sizeof;
     icce.dwICC = dwControls;
@@ -2162,8 +2123,8 @@ extern(C)
     {
         return Application._doref(p, 1);
     }
-    
-    
+
+
     // Returns the new ref count.
     size_t C_refCountDec(void* p)
     {
@@ -2174,19 +2135,16 @@ extern(C)
 
 static this()
 {
-    // Not needed, modules will be already loaded through the use of pragmas - D.O
-    //_utfinit();
-    
     Application.tlsThreadFlags = TlsAlloc();
     Application.tlsControl = TlsAlloc();
     Application.tlsFilter = TlsAlloc();
     version(CUSTOM_MSG_HOOK)
         Application.tlsHook = TlsAlloc();
-    
+
     wmDfl = RegisterWindowMessageA("WM_DFL");
     if(!wmDfl)
         wmDfl = WM_USER + 0x7CD;
-    
+
     version(DFL_NO_WM_GETCONTROLNAME)
     {
     }
@@ -2194,26 +2152,25 @@ static this()
     {
         wmGetControlName = RegisterWindowMessageA("WM_GETCONTROLNAME");
     }
-    
-    //InitCommonControls(); // Done later. Needs to be linked with comctl32.lib.
+
     OleInitialize(null); // Needs to be linked with ole32.lib.
-    
+
     HMODULE user32 = GetModuleHandleA("user32.dll");
-    
+
     version(SUPPORTS_MOUSE_TRACKING)
     {
         pragma(msg, "DFL: mouse tracking supported at compile time");
-        
+
         trackMouseEvent = &TrackMouseEvent;
     }
     else
     {
     }
-    
+
     version(SUPPORTS_OPACITY)
     {
         pragma(msg, "DFL: opacity supported at compile time");
-        
+
         setLayeredWindowAttributes = &SetLayeredWindowAttributes;
     }
     else
@@ -2231,7 +2188,7 @@ static ~this()
     {
         Application.sdtorFreeAllMenus();
     }
-    
+
     if(hmodRichtextbox)
         FreeLibrary(hmodRichtextbox);
 }
@@ -2239,10 +2196,7 @@ static ~this()
 
 void _unableToInit(string what)
 {
-    /+if(what.length > 4
-        && what[0] == 'D' && what[1] == 'F'
-        && what[2] == 'L' && what[3] == '_')+/
-        what = what[4 .. what.length];
+    what = what[4 .. what.length];
     throw new DflException("Unable to initialize " ~ what);
 }
 
@@ -2262,17 +2216,17 @@ in
 do
 {
     Application.hinst = inst;
-    
+
     WNDCLASSA wc;
     wc.style = WNDCLASS_STYLE;
     wc.hInstance = inst;
     wc.lpfnWndProc = &dflWndProc;
-    
+
     // Control wndclass.
     wc.lpszClassName = CONTROL_CLASSNAME.ptr;
     if(!RegisterClassA(&wc))
         _unableToInit(CONTROL_CLASSNAME);
-    
+
     // Form wndclass.
     wc.cbWndExtra = DLGWINDOWEXTRA;
     wc.lpszClassName = FORM_CLASSNAME.ptr;
@@ -2471,7 +2425,6 @@ WNDPROC superClass(HINSTANCE hinst, wstring className, wstring newClassName, out
     getInfo.hInstance = Application.getInstance();
 
     if(RegisterClassW(&getInfo) == 0)
-        //throw new DflException("Unable to register window class '" ~ newClassName ~ "'");
         return null;
     return wndProc;
 }

@@ -22,24 +22,24 @@ class Panel: ContainerControl // docmain
                 _style(_style() & ~WS_BORDER);
                 _exStyle(_exStyle() | WS_EX_CLIENTEDGE);
                 break;
-                
+
             case BorderStyle.FIXED_SINGLE:
                 _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
                 _style(_style() | WS_BORDER);
                 break;
-                
+
             case BorderStyle.NONE:
                 _style(_style() & ~WS_BORDER);
                 _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
                 break;
         }
-        
+
         if(created)
         {
             redrawEntire();
         }
     }
-    
+
     /// ditto
     @property BorderStyle borderStyle() // getter
     {
@@ -49,14 +49,11 @@ class Panel: ContainerControl // docmain
             return BorderStyle.FIXED_SINGLE;
         return BorderStyle.NONE;
     }
-    
-    
+
+
     this()
     {
-        //ctrlStyle |= ControlStyles.SELECTABLE | ControlStyles.CONTAINER_CONTROL;
         ctrlStyle |= ControlStyles.CONTAINER_CONTROL;
-        /+ wstyle |= WS_TABSTOP; +/ // Should WS_TABSTOP be set?
-        //wexstyle |= WS_EX_CONTROLPARENT; // Allow tabbing through children. ?
     }
 }
 

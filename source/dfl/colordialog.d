@@ -18,7 +18,7 @@ class ColorDialog: CommonDialog // docmain
     this()
     {
         Application.ppin(cast(void*)this);
-        
+
         cc.lStructSize = cc.sizeof;
         cc.Flags = INIT_FLAGS;
         cc.rgbResult = Color.empty.toArgb();
@@ -26,8 +26,8 @@ class ColorDialog: CommonDialog // docmain
         cc.lpfnHook = cast(typeof(cc.lpfnHook))&ccHookProc;
         _initcust();
     }
-    
-    
+
+
     ///
     @property void allowFullOpen(bool byes) // setter
     {
@@ -36,14 +36,14 @@ class ColorDialog: CommonDialog // docmain
         else
             cc.Flags |= CC_PREVENTFULLOPEN;
     }
-    
+
     /// ditto
     @property bool allowFullOpen() // getter
     {
         return (cc.Flags & CC_PREVENTFULLOPEN) != CC_PREVENTFULLOPEN;
     }
-    
-    
+
+
     ///
     @property void anyColor(bool byes) // setter
     {
@@ -52,14 +52,14 @@ class ColorDialog: CommonDialog // docmain
         else
             cc.Flags &= ~CC_ANYCOLOR;
     }
-    
+
     /// ditto
     @property bool anyColor() // getter
     {
         return (cc.Flags & CC_ANYCOLOR) == CC_ANYCOLOR;
     }
-    
-    
+
+
     ///
     @property void solidColorOnly(bool byes) // setter
     {
@@ -68,27 +68,27 @@ class ColorDialog: CommonDialog // docmain
         else
             cc.Flags &= ~CC_SOLIDCOLOR;
     }
-    
+
     /// ditto
     @property bool solidColorOnly() // getter
     {
         return (cc.Flags & CC_SOLIDCOLOR) == CC_SOLIDCOLOR;
     }
-    
-    
+
+
     ///
     final @property void color(Color c) // setter
     {
         cc.rgbResult = c.toRgb();
     }
-    
+
     /// ditto
     final @property Color color() // getter
     {
         return Color.fromRgb(cc.rgbResult);
     }
-    
-    
+
+
     ///
     final @property void customColors(COLORREF[] colors) // setter
     {
@@ -97,14 +97,14 @@ class ColorDialog: CommonDialog // docmain
         else
             _cust[0 .. colors.length] = colors[];
     }
-    
+
     /// ditto
     final @property COLORREF[] customColors() // getter
     {
         return _cust;
     }
-    
-    
+
+
     ///
     @property void fullOpen(bool byes) // setter
     {
@@ -113,14 +113,14 @@ class ColorDialog: CommonDialog // docmain
         else
             cc.Flags &= ~CC_FULLOPEN;
     }
-    
+
     /// ditto
     @property bool fullOpen() // getter
     {
         return (cc.Flags & CC_FULLOPEN) == CC_FULLOPEN;
     }
-    
-    
+
+
     ///
     @property void showHelp(bool byes) // setter
     {
@@ -129,29 +129,29 @@ class ColorDialog: CommonDialog // docmain
         else
             cc.Flags &= ~CC_SHOWHELP;
     }
-    
+
     /// ditto
     @property bool showHelp() // getter
     {
         return (cc.Flags & CC_SHOWHELP) == CC_SHOWHELP;
     }
-    
-    
+
+
     ///
     override DialogResult showDialog()
     {
         return runDialog(GetActiveWindow()) ?
             DialogResult.OK : DialogResult.CANCEL;
     }
-    
+
     /// ditto
     override DialogResult showDialog(IWindow owner)
     {
         return runDialog(owner ? owner.handle : GetActiveWindow()) ?
             DialogResult.OK : DialogResult.CANCEL;
     }
-    
-    
+
+
     ///
     override void reset()
     {
@@ -159,8 +159,8 @@ class ColorDialog: CommonDialog // docmain
         cc.rgbResult = Color.empty.toArgb();
         _initcust();
     }
-    
-    
+
+
     ///
     protected override bool runDialog(HWND owner)
     {
@@ -172,8 +172,8 @@ class ColorDialog: CommonDialog // docmain
         }
         return true;
     }
-    
-    
+
+
     private BOOL _runDialog(HWND owner)
     {
         if(cc.rgbResult == Color.empty.toArgb())
@@ -184,15 +184,15 @@ class ColorDialog: CommonDialog // docmain
         cc.lpCustColors = _cust.ptr;
         return ChooseColorA(&cc);
     }
-    
-    
+
+
     private:
     enum DWORD INIT_FLAGS = CC_ENABLEHOOK;
-    
+
     CHOOSECOLORA cc;
     COLORREF[16] _cust;
-    
-    
+
+
     void _initcust()
     {
         COLORREF cdef;
@@ -241,7 +241,7 @@ private extern(Windows) UINT ccHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
     enum PROP_STR = "DFL_ColorDialog";
     ColorDialog cd;
     UINT result = 0;
-    
+
     try
     {
         if(msg == WM_INITDIALOG)
@@ -255,7 +255,7 @@ private extern(Windows) UINT ccHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
         {
             cd = cast(ColorDialog)cast(void*)GetPropA(hwnd, PROP_STR.ptr);
         }
-        
+
         if(cd)
         {
             // If IntelliSense highlights the following line as an error, it's on mushrooms again
@@ -266,7 +266,7 @@ private extern(Windows) UINT ccHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPAR
     {
         Application.onThreadException(e);
     }
-    
+
     return result;
 }
 

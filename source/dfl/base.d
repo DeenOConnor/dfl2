@@ -48,14 +48,14 @@ class StringObject: Object
 {
     ///
     wstring value;
-    
-    
+
+
     ///
     this(wstring str) pure nothrow
     {
         this.value = str;
     }
-    
+
     wstring toWString() {
         return value;
     }
@@ -64,26 +64,26 @@ class StringObject: Object
     {
         return to!string(value);
     }
-    
-    
+
+
     override bool opEquals(Object o)
     {
         return to!string(value) == o.toString(); // ?
     }
-    
-    
+
+
     bool opEquals(StringObject s)
     {
         return value == s.value;
     }
-    
-    
+
+
     override int opCmp(Object o)
     {
         return icmp(value, to!wstring(o.toString())); // ?
     }
-    
-    
+
+
     int opCmp(StringObject s)
     {
         return icmp(value, s.value);
@@ -95,13 +95,13 @@ class StringObject: Object
 enum Keys: uint // docmain
 {
     NONE =     0, /// No keys specified.
-    
+
     ///
     SHIFT =    0x10000, /// Modifier keys.
     CONTROL =  0x20000, /// ditto
     ALT =      0x40000, /// ditto
     WINDOWS =  0x80000, /// ditto
-    
+
     A = 'A', /// Letters.
     B = 'B', /// ditto
     C = 'C', /// ditto
@@ -128,7 +128,7 @@ enum Keys: uint // docmain
     X = 'X', /// ditto
     Y = 'Y', /// ditto
     Z = 'Z', /// ditto
-    
+
     D0 = '0', /// Digits.
     D1 = '1', /// ditto
     D2 = '2', /// ditto
@@ -139,7 +139,7 @@ enum Keys: uint // docmain
     D7 = '7', /// ditto
     D8 = '8', /// ditto
     D9 = '9', /// ditto
-    
+
     F1 = 112, /// F - function keys.
     F2 = 113, /// ditto
     F3 = 114, /// ditto
@@ -164,7 +164,7 @@ enum Keys: uint // docmain
     F22 = 133, /// ditto
     F23 = 134, /// ditto
     F24 = 135, /// ditto
-    
+
     NUM_PAD0 = 96, /// Numbers on keypad.
     NUM_PAD1 = 97, /// ditto
     NUM_PAD2 = 98, /// ditto
@@ -175,7 +175,7 @@ enum Keys: uint // docmain
     NUM_PAD7 = 103, /// ditto
     NUM_PAD8 = 104, /// ditto
     NUM_PAD9 = 105, /// ditto
-    
+
     ADD = 107, ///
     APPS = 93, /// Application.
     ATTN = 246, ///
@@ -251,7 +251,7 @@ enum Keys: uint // docmain
     TAB = 9, ///
     UP = 38, /// Up arrow.
     ZOOM = 251, ///
-    
+
     // Windows 2000+
     BROWSER_BACK = 166, ///
     BROWSER_FAVORITES = 171, /// ditto
@@ -283,10 +283,10 @@ enum Keys: uint // docmain
     VOLUME_DOWN = 174, ///
     VOLUME_MUTE = 173, /// ditto
     VOLUME_UP = 175, /// ditto
-    
+
     /// Bit mask to extract key code from key value.
     KEY_CODE = 0xFFFF,
-    
+
     /// Bit mask to extract modifiers from key value.
     MODIFIERS = 0xFFFF0000,
 }
@@ -297,11 +297,11 @@ enum MouseButtons: uint // docmain
 {
     /// No mouse buttons specified.
     NONE =      0,
-    
+
     LEFT =      0x100000, ///
     RIGHT =     0x200000, /// ditto
     MIDDLE =    0x400000, /// ditto
-    
+
     // Windows 2000+
     //XBUTTON1 =  0x800000,
     //XBUTTON2 =  0x1000000,
@@ -329,12 +329,12 @@ struct Message // docmain
             WPARAM wParam; /// ditto
             LPARAM lParam; /// ditto
         }
-        
+
         package MSG _winMsg; // .time and .pt are not always valid.
     }
     LRESULT result; ///
-    
-    
+
+
     /// Construct a Message struct.
     this(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) pure nothrow
     {
@@ -361,65 +361,59 @@ abstract class WaitHandle
 {
     enum WAIT_TIMEOUT = 258; // dfl.internal.winapi.WAIT_TIMEOUT; // DMD 1.028: needs fqn, otherwise conflicts with std.thread
     enum INVALID_HANDLE = .INVALID_HANDLE_VALUE;
-    
-    
+
+
     this()
     {
         h = INVALID_HANDLE;
     }
-    
-    
+
+
     // Used internally.
     this(HANDLE h, bool owned = true)
     {
         this.h = h;
         this.owned = owned;
     }
-    
-    
+
+
     @property HANDLE handle() nothrow // getter
     {
         return h;
     }
-    
-    
+
+
     @property void handle(HANDLE h) // setter
     {
         this.h = h;
     }
-    
-    
+
+
     void close()
     {
         CloseHandle(h);
         h = INVALID_HANDLE;
     }
-    
-    
+
+
     ~this()
     {
         if(owned)
             close();
     }
-    
-    
+
+
     private static DWORD _wait(WaitHandle[] handles, BOOL waitall, DWORD msTimeout)
     {
-        // Some implementations fail with > 64 handles, but that will return WAIT_FAILED;
-        // all implementations fail with >= 128 handles due to WAIT_ABANDONED_0 being 128.
-        ////if(handles.length >= 128)
-            ////goto fail;
-        
         DWORD result;
         HANDLE* hs;
-        //hs = new HANDLE[handles.length];
         hs = cast(HANDLE*)alloca(HANDLE.sizeof * handles.length);
-        
+
         foreach(size_t i, WaitHandle wh; handles)
         {
             hs[i] = wh.handle;
         }
-        
+
         result = WaitForMultipleObjects(cast(DWORD)handles.length, hs, waitall, msTimeout);
         if(WAIT_FAILED == result)
         {
@@ -428,40 +422,40 @@ abstract class WaitHandle
         }
         return result;
     }
-    
-    
+
+
     static void waitAll(WaitHandle[] handles)
     {
         return waitAll(handles, INFINITE);
     }
-    
-    
+
+
     static void waitAll(WaitHandle[] handles, DWORD msTimeout)
     {
         _wait(handles, true, msTimeout);
     }
-    
-    
+
+
     static int waitAny(WaitHandle[] handles)
     {
         return waitAny(handles, INFINITE);
     }
-    
-    
+
+
     static int waitAny(WaitHandle[] handles, DWORD msTimeout)
     {
         DWORD result;
         result = _wait(handles, false, msTimeout);
         return cast(int)result; // Same return info.
     }
-    
-    
+
+
     void waitOne()
     {
         return waitOne(INFINITE);
     }
-    
-    
+
+
     void waitOne(DWORD msTimeout)
     {
         DWORD result;
@@ -469,8 +463,8 @@ abstract class WaitHandle
         if(WAIT_FAILED == result)
             throw new DflException("Wait failure");
     }
-    
-    
+
+
     private:
     HANDLE h;
     bool owned = true;
@@ -480,20 +474,13 @@ abstract class WaitHandle
 interface IAsyncResult
 {
     @property WaitHandle asyncWaitHandle(); // getter
-    
+
     // Usually just returns false.
     @property bool completedSynchronously(); // getter
-    
+
     // When true, it is safe to release its resources.
     @property bool isCompleted(); // getter
 }
-
-
-/+
-class AsyncResult: IAsyncResult
-{
-}
-+/
 
 
 ///
@@ -503,10 +490,10 @@ interface IButtonControl // docmain
     @property DialogResult dialogResult(); // getter
     /// ditto
     @property void dialogResult(DialogResult); // setter
-    
+
     ///
     void notifyDefault(bool); // True if default button.
-    
+
     ///
     void performClick(); // Raise click event.
 }
@@ -516,7 +503,7 @@ interface IButtonControl // docmain
 enum DialogResult: ubyte // docmain
 {
     NONE, ///
-    
+
     ABORT = IDABORT, ///
     CANCEL = IDCANCEL, ///
     IGNORE = IDIGNORE, ///
@@ -524,7 +511,7 @@ enum DialogResult: ubyte // docmain
     OK = IDOK, ///
     RETRY = IDRETRY, ///
     YES = IDYES, ///
-    
+
     // Extra.
     CLOSE = IDCLOSE,
     HELP = IDHELP,
@@ -544,7 +531,7 @@ interface IDialogResult
 enum SortOrder: ubyte
 {
     NONE, ///
-    
+
     ASCENDING, ///
     DESCENDING, /// ditto
 }
@@ -592,7 +579,7 @@ enum ColumnHeaderStyle: ubyte
 enum BorderStyle: ubyte
 {
     NONE, ///
-    
+
     FIXED_3D, ///
     FIXED_SINGLE, /// ditto
 }
@@ -645,7 +632,7 @@ enum CharacterCasing: ubyte
 enum ScrollBars: ubyte
 {
     NONE, ///
-    
+
     HORIZONTAL, ///
     VERTICAL, /// ditto
     BOTH, /// ditto
@@ -716,22 +703,22 @@ class PaintEventArgs: EventArgs
         g = graphics;
         cr = clipRect;
     }
-    
-    
+
+
     ///
     final @property Graphics graphics() pure nothrow // getter
     {
         return g;
     }
-    
-    
+
+
     ///
     final @property Rect clipRectangle() pure nothrow // getter
     {
         return cr;
     }
-    
-    
+
+
     private:
     Graphics g;
     Rect cr;
@@ -747,27 +734,27 @@ class CancelEventArgs: EventArgs
     {
         cncl = false;
     }
-    
+
     /// ditto
     this(bool cancel) pure nothrow
     {
         cncl = cancel;
     }
-    
-    
+
+
     ///
     final @property void cancel(bool byes) pure nothrow // setter
     {
         cncl = byes;
     }
-    
+
     /// ditto
     final @property bool cancel() pure nothrow // getter
     {
         return cncl;
     }
-    
-    
+
+
     private:
     bool cncl;
 }
@@ -781,78 +768,78 @@ class KeyEventArgs: EventArgs
     {
         ks = keys;
     }
-    
-    
+
+
     ///
     final @property bool alt() pure nothrow // getter
     {
         return (ks & Keys.ALT) != 0;
     }
-    
-    
+
+
     ///
     final @property bool control() pure nothrow // getter
     {
         return (ks & Keys.CONTROL) != 0;
     }
-    
-    
+
+
     ///
     final @property void handled(bool byes) pure nothrow // setter
     {
         hand = byes;
     }
-    
+
     ///
     final @property bool handled() pure nothrow // getter
     {
         return hand;
     }
-    
-    
+
+
     ///
     final @property Keys keyCode() pure nothrow // getter
     {
         return ks & Keys.KEY_CODE;
     }
-    
-    
+
+
     ///
     final @property Keys keyData() pure nothrow // getter
     {
         return ks;
     }
-    
-    
+
+
     ///
     // -keyData- as an int.
     final @property int keyValue() pure nothrow // getter
     {
         return cast(int)ks;
     }
-    
-    
+
+
     ///
     final @property Keys modifiers() pure nothrow // getter
     {
         return ks & Keys.MODIFIERS;
     }
-    
-    
+
+
     ///
     final @property bool shift() pure nothrow // getter
     {
         return (ks & Keys.SHIFT) != 0;
     }
-    
-    
+
+
     ///
     final @property bool windows() pure nothrow // getter
     {
         return (ks & Keys.WINDOWS) != 0;
     }
-    
-    
+
+
     private:
     Keys ks;
     bool hand = false;
@@ -867,7 +854,7 @@ class KeyPressEventArgs: KeyEventArgs
     {
         this(ch, (ch >= 'A' && ch <= 'Z') ? Keys.SHIFT : Keys.NONE);
     }
-    
+
     /// ditto
     this(dchar ch, Keys modifiers)
     in
@@ -877,21 +864,21 @@ class KeyPressEventArgs: KeyEventArgs
     do
     {
         _keych = ch;
-        
+
         int vk;
         vk = 0xFF & VkKeyScanA(cast(char)ch);
-        
+
         super(cast(Keys)(vk | modifiers));
     }
-    
-    
+
+
     ///
     final @property dchar keyChar() // getter
     {
         return _keych;
     }
-    
-    
+
+
     private:
     dchar _keych;
 }
@@ -910,104 +897,49 @@ class MouseEventArgs: EventArgs
         _y = y;
         dlt = delta;
     }
-    
-    
+
+
     ///
     final @property MouseButtons button() pure nothrow // getter
     {
         return btn;
     }
-    
-    
+
+
     ///
     final @property int clicks() pure nothrow // getter
     {
         return clks;
     }
-    
-    
+
+
     ///
     final @property int delta() pure nothrow // getter
     {
         return dlt;
     }
-    
-    
+
+
     ///
     final @property int x() pure nothrow // getter
     {
         return _x;
     }
-    
-    
+
+
     ///
     final @property int y() pure nothrow // getter
     {
         return _y;
     }
-    
-    
+
+
     private:
     MouseButtons btn;
     int clks;
     int _x, _y;
     int dlt;
 }
-
-
-/+
-///
-class LabelEditEventArgs: EventArgs
-{
-    ///
-    this(int index)
-    {
-        
-    }
-    
-    /// ditto
-    this(int index, string labelText)
-    {
-        this.idx = index;
-        this.ltxt = labelText;
-    }
-    
-    
-    ///
-    final @property void cancelEdit(bool byes) // setter
-    {
-        cancl = byes;
-    }
-    
-    /// ditto
-    final @property bool cancelEdit() // getter
-    {
-        return cancl;
-    }
-    
-    
-    ///
-    // The text of the label's edit.
-    final @property string label() // getter
-    {
-        return ltxt;
-    }
-    
-    
-    ///
-    // Gets the item's index.
-    final @property int item() // getter
-    {
-        return idx;
-    }
-    
-    
-    private:
-    int idx;
-    string ltxt;
-    bool cancl = false;
-}
-+/
 
 
 ///
@@ -1018,15 +950,15 @@ class ColumnClickEventArgs: EventArgs
     {
         this.col = col;
     }
-    
-    
+
+
     ///
     final @property int column() pure nothrow // getter
     {
         return col;
     }
-    
-    
+
+
     private:
     int col;
 }
@@ -1040,7 +972,7 @@ class DrawItemEventArgs: EventArgs
     {
         this(g, f, r, i , dis, Color.empty, Color.empty);
     }
-    
+
     /// ditto
     this(Graphics g, Font f, Rect r, int i, DrawItemState dis, Color fc, Color bc) pure nothrow
     {
@@ -1052,80 +984,64 @@ class DrawItemEventArgs: EventArgs
         fcolor = fc;
         bcolor = bc;
     }
-    
-    
+
+
     ///
     final @property Color backColor() pure nothrow // getter
     {
         return bcolor;
     }
-    
-    
+
+
     ///
     final @property Rect bounds() pure nothrow // getter
     {
         return rect;
     }
-    
-    
+
+
     ///
     final @property Font font() pure nothrow // getter
     {
         return fnt;
     }
-    
-    
+
+
     ///
     final @property Color foreColor() pure nothrow // getter
     {
         return fcolor;
     }
-    
-    
+
+
     ///
     final @property Graphics graphics() pure nothrow // getter
     {
         return gpx;
     }
-    
-    
+
+
     ///
     final @property int index() pure nothrow // getter
     {
         return idx;
     }
-    
-    
+
+
     ///
     final @property DrawItemState state() pure nothrow // getter
     {
         return distate;
     }
-    
-    
+
+
     ///
     void drawBackground()
     {
-        /+
-        HBRUSH hbr;
-        RECT _rect;
-        
-        hbr = bcolor.createBrush();
-        try
-        {
-            rect.getRect(&_rect);
-            FillRect(gpx.handle, &_rect, hbr);
-        }
-        finally
-        {
-            DeleteObject(hbr);
-        }
-        +/
-        
         gpx.fillRectangle(bcolor, rect);
     }
-    
-    
+
+
     ///
     void drawFocusRectangle()
     {
@@ -1136,8 +1052,8 @@ class DrawItemEventArgs: EventArgs
             DrawFocusRect(gpx.handle, &_rect);
         }
     }
-    
-    
+
+
     private:
     Graphics gpx;
     Font fnt; // Suggestion; the parent's font.
@@ -1158,54 +1074,54 @@ class MeasureItemEventArgs: EventArgs
         idx = index;
         iheight = itemHeight;
     }
-    
+
     /// ditto
     this(Graphics g, int index)
     {
         this(g, index, 0);
     }
-    
-    
+
+
     ///
     final @property Graphics graphics() // getter
     {
         return gpx;
     }
-    
-    
+
+
     ///
     final @property int index() // getter
     {
         return idx;
     }
-    
-    
+
+
     ///
     final @property void itemHeight(int height) // setter
     {
         iheight = height;
     }
-    
+
     /// ditto
     final @property int itemHeight() // getter
     {
         return iheight;
     }
-    
-    
+
+
     ///
     final @property void itemWidth(int width) // setter
     {
         iwidth = width;
     }
-    
+
     /// ditto
     final @property int itemWidth() // getter
     {
         return iwidth;
     }
-    
-    
+
+
     private:
     Graphics gpx;
     int idx, iheight, iwidth = 0;
@@ -1216,23 +1132,23 @@ class MeasureItemEventArgs: EventArgs
 class Cursor // docmain
 {
     private static Cursor _cur;
-    
-    
+
+
     // Used internally.
     this(HCURSOR hcur, bool owned = true)
     {
         this.hcur = hcur;
         this.owned = owned;
     }
-    
-    
+
+
     ~this()
     {
         if(owned)
             dispose();
     }
-    
-    
+
+
     ///
     void dispose()
     {
@@ -1240,25 +1156,25 @@ class Cursor // docmain
         DestroyCursor(hcur);
         hcur = HCURSOR.init;
     }
-    
-    
+
+
     ///
     static @property void current(Cursor cur) // setter
     {
         // Keep a reference so that it doesn't get garbage collected until set again.
         _cur = cur;
-        
+
         SetCursor(cur ? cur.hcur : HCURSOR.init);
     }
-    
+
     /// ditto
     static @property Cursor current() // getter
     {
         HCURSOR hcur = GetCursor();
         return hcur ? new Cursor(hcur, false) : null;
     }
-    
-    
+
+
     ///
     static @property void clip(Rect r) // setter
     {
@@ -1266,7 +1182,7 @@ class Cursor // docmain
         r.getRect(&rect);
         ClipCursor(&rect);
     }
-    
+
     /// ditto
     static @property Rect clip() // getter
     {
@@ -1274,48 +1190,23 @@ class Cursor // docmain
         GetClipCursor(&rect);
         return Rect(&rect);
     }
-    
-    
+
+
     ///
     final @property HCURSOR handle() // getter
     {
         return hcur;
     }
-    
-    
-    /+
-    // TODO:
-    final @property Size size() // getter
-    {
-        Size result;
-        ICONINFO iinfo;
-        
-        if(GetIconInfo(hcur, &iinfo))
-        {
-            
-        }
-        
-        return result;
-    }
-    +/
-    
-    
+
+
     ///
     // Uses the actual size.
     final void draw(Graphics g, Point pt)
     {
         DrawIconEx(g.handle, pt.x, pt.y, hcur, 0, 0, 0, HBRUSH.init, DI_NORMAL);
     }
-    
-    /+
-    /// ditto
-    // Should not stretch if bigger, but should crop if smaller.
-    final void draw(Graphics g, Rect r)
-    {
-    }
-    +/
-    
-    
+
+
     ///
     final void drawStretched(Graphics g, Rect r)
     {
@@ -1327,11 +1218,11 @@ class Cursor // docmain
         int height = r.height;
         if(!height)
             return;
-        
+
         DrawIconEx(g.handle, r.x, r.y, hcur, width, height, 0, HBRUSH.init, DI_NORMAL);
     }
-    
-    
+
+
     override bool opEquals(Object o)
     {
         Cursor cur = cast(Cursor)o;
@@ -1339,35 +1230,35 @@ class Cursor // docmain
             return 0; // Not equal.
         return opEquals(cur);
     }
-    
-    
+
+
     bool opEquals(Cursor cur)
     {
         return hcur == cur.hcur;
     }
-    
-    
+
+
     /// Show/hide the current mouse cursor; reference counted.
     // show/hide are ref counted.
     static void hide()
     {
         ShowCursor(false);
     }
-    
+
     /// ditto
     // show/hide are ref counted.
     static void show()
     {
         ShowCursor(true);
     }
-    
-    
+
+
     /// The position of the current mouse cursor.
     static @property void position(Point pt) // setter
     {
         SetCursorPos(pt.x, pt.y);
     }
-    
+
     /// ditto
     static @property Point position() // getter
     {
@@ -1375,8 +1266,8 @@ class Cursor // docmain
         GetCursorPos(&pt.point);
         return pt;
     }
-    
-    
+
+
     private:
     HCURSOR hcur;
     bool owned = true;
@@ -1387,27 +1278,27 @@ class Cursor // docmain
 class Cursors // docmain
 {
     private this() {}
-    
-    
+
+
     static:
-    
+
     ///
     @property Cursor appStarting() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_APPSTARTING), false); }
-    
+
     ///
     @property Cursor arrow() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_ARROW), false); }
-    
+
     ///
     @property Cursor cross() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_CROSS), false); }
-    
+
     ///
     //@property Cursor default() // getter
     @property Cursor defaultCursor() // getter
     { return arrow; }
-    
+
     ///
     @property Cursor hand() // getter
     {
@@ -1418,7 +1309,7 @@ class Cursors // docmain
         else
         {
             static HCURSOR hcurHand;
-            
+
             if(!hcurHand)
             {
                 hcurHand = LoadCursorW(HINSTANCE.init, IDC_HAND);
@@ -1426,7 +1317,7 @@ class Cursors // docmain
                 {
                     UINT len;
                     char[MAX_PATH] winhlppath = void;
-                    
+
                     len = GetWindowsDirectoryA(winhlppath.ptr, winhlppath.length - 16);
                     if(!len || len > winhlppath.length - 16)
                     {
@@ -1434,12 +1325,12 @@ class Cursors // docmain
                         return arrow; // Just fall back to a normal arrow.
                     }
                     strcpy(winhlppath.ptr + len, "\\winhlp32.exe");
-                    
+
                     HINSTANCE hinstWinhlp;
                     hinstWinhlp = LoadLibraryExA(winhlppath.ptr, HANDLE.init, LOAD_LIBRARY_AS_DATAFILE);
                     if(!hinstWinhlp)
                         goto load_failed;
-                    
+
                     HCURSOR hcur;
                     hcur = LoadCursorA(hinstWinhlp, cast(char*)106);
                     if(!hcur) // No such cursor resource.
@@ -1451,20 +1342,19 @@ class Cursors // docmain
                     if(!hcurHand)
                     {
                         FreeLibrary(hinstWinhlp);
-                        //throw new DflException("Unable to copy cursor resource");
                         goto load_failed;
                     }
-                    
+
                     FreeLibrary(hinstWinhlp);
                 }
             }
-            
+
             assert(hcurHand);
             // Copy the cursor and own it here so that it's safe to dispose it.
             return new Cursor(CopyCursor(hcurHand));
         }
     }
-    
+
     ///
     @property Cursor help() // getter
     {
@@ -1474,61 +1364,51 @@ class Cursors // docmain
             return arrow;
         return new Cursor(hcur);
     }
-    
+
     ///
     @property Cursor hSplit() // getter
     {
         // ...
         return sizeNS;
     }
-    
+
     /// ditto
     @property Cursor vSplit() // getter
     {
         // ...
         return sizeWE;
     }
-    
-    
+
+
     ///
     @property Cursor iBeam() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_IBEAM), false); }
-    
+
     ///
     @property Cursor no() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_NO), false); }
-    
-    
+
+
     ///
     @property Cursor sizeAll() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZEALL), false); }
-    
+
     /// ditto
     @property Cursor sizeNESW() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENESW), false); }
-    
+
     /// ditto
     @property Cursor sizeNS() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENS), false); }
-    
+
     /// ditto
     @property Cursor sizeNWSE() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZENWSE), false); }
-    
+
     /// ditto
     @property Cursor sizeWE() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_SIZEWE), false); }
-    
-    
-    /+
-    ///
-    // Insertion point.
-    @property Cursor upArrow() // getter
-    {
-        // ...
-    }
-    +/
-    
+
     ///
     @property Cursor waitCursor() // getter
     { return new Cursor(LoadCursorW(HINSTANCE.init, IDC_WAIT), false); }

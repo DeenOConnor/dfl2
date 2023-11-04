@@ -381,19 +381,6 @@ struct Rect // docmain
         this.x += pt.x;
         this.y += pt.y;
     }
-
-
-    /+
-    // Modify -this- to include only the intersection
-    // of -this- and -r-.
-    void intersect(Rect r)
-    {
-    }
-    +/
-
-
-    // void offset(Point), void offset(int, int)
-    // static Rect union(Rect, Rect)
 }
 
 
@@ -580,10 +567,6 @@ struct Color // docmain
     // The new blended color is returned; -this- Color is not modified.
     Color solidColor(Color backColor) nothrow
     {
-        //if(0x7F == this.color.alpha)
-        //    return blendColor(backColor);
-        //if(Dthisval(this) == Color.empty) // Checked if(0 == this.color.alpha)
-        //    return backColor;
         if(0 == this.color.alpha)
             return backColor;
         if(backColor == Color.empty)
@@ -650,7 +633,6 @@ private:
         if(sysIndex != INVAILD_SYSTEM_COLOR_INDEX)
         {
             color.cref = GetSysColor(sysIndex);
-            //color.alpha = 0xFF; // Should already be set.
         }
     }
 }
@@ -869,62 +851,13 @@ static:
 }
 
 
-/+
-class ImageFormat
-{
-/+
-this(guid)
-{
-
-}
-
-
-final @property guid() // getter
-{
-return guid;
-}
-+/
-
-
-static:
-
-@property ImageFormat bmp() // getter
-{
-return null;
-}
-
-
-@property ImageFormat icon() // getter
-{
-return null;
-}
-}
-+/
-
-
 ///
 abstract class Image // docmain
 {
-    //flags(); // getter ???
-
-
-    /+
-    final @property ImageFormat rawFormat(); // getter
-    +/
-
-
     static Bitmap fromHBitmap(HBITMAP hbm) // package
     {
         return new Bitmap(hbm, false); // Not owned. Up to caller to manage or call dispose().
     }
-
-
-    /+
-    static Image fromFile(string file)
-    {
-    return new Image(LoadImageA());
-    }
-    +/
 
 
     ///
@@ -1127,18 +1060,6 @@ class Picture: Image // docmain
 {
     // Note: requires OleInitialize(null).
 
-
-    ///
-    // Throws exception on failure.
-    /*
-    this(Stream stm)
-    {
-    this.ipic = _fromDStream(stm);
-    if(!this.ipic)
-    throw new DflException("Unable to load picture from stream");
-    }
-    */
-
     /// ditto
     // Throws exception on failure.
     this(wstring fileName)
@@ -1162,19 +1083,6 @@ class Picture: Image // docmain
     {
         this.ipic = ipic;
     }
-
-
-    ///
-    // Returns null on failure instead of throwing exception.
-    /*
-    static Picture fromStream(Stream stm)
-    {
-    auto ipic = _fromDStream(stm);
-    if(!ipic)
-    return null;
-    return new Picture(ipic);
-    }
-    */
 
 
     ///
@@ -2248,12 +2156,9 @@ class Graphics // docmain
 
         norm = SystemColors.control;
         light = SystemColors.controlLightLight.blendColor(norm); // center
-        //dark = SystemColors.controlDark.blendColor(norm); // top
         ubyte ubmin(int ub) { if(ub <= 0) return 0; return cast(ubyte)ub; }
         dark = Color(ubmin(cast(int)norm.r - 0x10), ubmin(cast(int)norm.g - 0x10), ubmin(cast(int)norm.b - 0x10));
-        //ddark = SystemColors.controlDarkDark; // bottom
         ddark = SystemColors.controlDark.blendColor(Color(0x10, 0x10, 0x10)); // bottom
-        //scope Pen lightPen = new Pen(light);
         scope Pen darkPen = new Pen(dark);
         scope Pen ddarkPen = new Pen(ddark);
 
@@ -2285,7 +2190,6 @@ class Graphics // docmain
         if(vSplit)
         {
             x = cast(int)(movableArea.x + (movableArea.width / 2 - MWIDTH / 2));
-            //y = movableArea.height / 2 - ((MWIDTH * count) + (MSPACE * (count - 1))) / 2;
             y = cast(int)(movableArea.y + (movableArea.height / 2 - ((MWIDTH * count) + (MSPACE * count)) / 2));
 
             for(iw = 0; iw != count; iw++)
@@ -2296,7 +2200,6 @@ class Graphics // docmain
         }
         else // hSplit
         {
-            //x = movableArea.width / 2 - ((MHEIGHT * count) + (MSPACE * (count - 1))) / 2;
             x = cast(int)(movableArea.x + (movableArea.width / 2 - ((MHEIGHT * count) + (MSPACE * count)) / 2));
             y = movableArea.y + (movableArea.height / 2 - MHEIGHT / 2);
 
@@ -2339,11 +2242,8 @@ class Graphics // docmain
                     fmt._trim | fmt._flags | fmt._align, &fmt._params);
 
         // Reset stuff.
-        //if(CLR_INVALID != prevColor)
         SetTextColor(hdc, prevColor);
-        //if(prevFont)
         SelectObject(hdc, prevFont);
-        //if(prevBkMode)
         SetBkMode(hdc, prevBkMode);
     }
 
@@ -2358,8 +2258,6 @@ class Graphics // docmain
     final void drawTextDisabled(wstring text, Font font, Color color, Color backColor, Rect r, TextFormat fmt)
     {
         r.offset(1, 1);
-        //drawText(text, font, Color(24, color).solidColor(backColor), r, fmt); // Lighter, lower one.
-        //drawText(text, font, Color.fromRgb(~color.toRgb() & 0xFFFFFF), r, fmt); // Lighter, lower one.
         drawText(text, font, Color(192, Color.fromRgb(~color.toRgb() & 0xFFFFFF)).solidColor(backColor), r, fmt); // Lighter, lower one.
         r.offset(-1, -1);
         drawText(text, font, Color(128, color).solidColor(backColor), r, fmt);
@@ -2370,24 +2268,6 @@ class Graphics // docmain
     {
         return drawTextDisabled(text, font, color, backColor, r, getCachedTextFormat());
     }
-
-
-    /+
-    final Size measureText(string text, Font font)
-    {
-    SIZE sz;
-    HFONT prevFont;
-
-    prevFont = cast(HFONT)SelectObject(hdc, font ? font.handle : null);
-
-    GetTextExtentPoint32(hdc, text, &sz);
-
-    //if(prevFont)
-    SelectObject(hdc, prevFont);
-
-    return Size(sz.cx, sz.cy);
-    }
-    +/
 
 
     private enum int DEFAULT_MEASURE_SIZE = short.max; // Has to be smaller because it's 16-bits on win9x.
@@ -2417,7 +2297,6 @@ class Graphics // docmain
             rect.bottom = 0;
         }
 
-        //if(prevFont)
         SelectObject(hdc, prevFont);
 
         return Size(rect.right - rect.left, rect.bottom - rect.top);
@@ -2440,18 +2319,6 @@ class Graphics // docmain
     {
         return measureText(text, font, DEFAULT_MEASURE_SIZE, getCachedTextFormat());
     }
-
-
-    /+
-    // ///
-    final string getTrimmedText(string text, Font font, Rect r, TextTrimming trim)
-    {
-    scope fmt = new TextFormat(TextFormatFlags.NO_PREFIX | TextFormatFlags.WORD_BREAK |
-    TextFormatFlags.NO_CLIP | TextFormatFlags.LINE_LIMIT);
-    fmt.trimming = trim;
-    return getTrimmedText(text, font, r, fmt);
-    }
-    +/
 
 
     ///
@@ -2516,7 +2383,6 @@ class Graphics // docmain
         ExtTextOutA(hdc, x, y, ETO_OPAQUE, &rect, "", 0, null);
 
         // Reset stuff.
-        //if(CLR_INVALID != prevBkColor)
         SetBkColor(hdc, prevBkColor);
     }
 
@@ -2647,7 +2513,6 @@ class Graphics // docmain
         if(points.length < 1 || (points.length - 1) % 3)
         {
             assert(0); // Bad number of points.
-            //return; // Let PolyBezier() do what it wants with the bad number.
         }
 
         HPEN prevPen;
@@ -2744,20 +2609,6 @@ class Graphics // docmain
         SelectObject(hdc, prevPen);
         SelectObject(hdc, prevBrush);
     }
-
-
-    /+
-    final void drawRectangle(Color c, Rect r)
-    {
-    drawRectangle(c, r.x, r.y, r.width, r.height);
-    }
-
-
-    final void drawRectangle(Color c, int x, int y, int width, int height)
-    {
-
-    }
-    +/
 
 
     ///
@@ -2885,7 +2736,6 @@ class MemoryGraphics: Graphics // docmain
     {
         if(cast(MemoryGraphics)graphicsCompatible)
         {
-            //throw new DflException("Graphics cannot be compatible with memory");
             assert(0, "Graphics cannot be compatible with memory");
         }
         this(width, height, graphicsCompatible.handle);
@@ -2904,7 +2754,6 @@ class MemoryGraphics: Graphics // docmain
         scope(failure)
         {
             DeleteObject(hbm);
-            //hbm = HBITMAP.init;
         }
 
         HDC hdcc;
@@ -3227,84 +3076,6 @@ enum GraphicsUnit: ubyte // docmain ?
 }
 
 
-/+
-// TODO: check if correct implementation.
-enum GenericFontFamilies
-{
-MONOSPACE = FF_MODERN,
-SANS_SERIF = FF_ROMAN,
-SERIF = FF_SWISS,
-}
-+/
-
-
-/+
-abstract class FontCollection
-{
-abstract @property FontFamily[] families(); // getter
-}
-
-
-class FontFamily
-{
-/+
-this(GenericFontFamilies genericFamily)
-{
-
-}
-+/
-
-
-this(string name)
-{
-
-}
-
-
-this(string name, FontCollection fontCollection)
-{
-
-}
-
-
-final @property string name() // getter
-{
-
-}
-
-
-static @property FontFamily[] families() // getter
-{
-
-}
-
-
-/+
-// TODO: implement.
-
-static @property FontFamily genericMonospace() // getter
-{
-
-}
-
-
-static @property FontFamily genericSansSerif() // getter
-{
-
-}
-
-
-static @property FontFamily genericSerif() // getter
-{
-
-}
-+/
-}
-+/
-
-
-///
-// Flags.
 enum FontStyle: ubyte
 {
     REGULAR = 0, ///
@@ -3338,19 +3109,6 @@ class Font // docmain
         _initLf(lf);
     }
 
-    /*
-    // Used internally.
-    this(HFONT hf, ref LogFont lf, bool owned = true) // package
-    {
-    this.hf = hf;
-    this.owned = owned;
-    this._unit = GraphicsUnit.POINT;
-
-    _fstyle = _style(lf);
-    _initLf(lf);
-    }
-    */
-
 
     // Used internally.
     this(HFONT hf, bool owned = true) // package
@@ -3372,15 +3130,6 @@ class Font // docmain
     {        
         this(_create(lf), lf, owned);
     }
-
-
-    /*
-    // Used internally.
-    this(ref LogFont lf, bool owned = true) // package
-    {
-    this(_create(lf), lf, owned);
-    }
-    */
 
 
     package static HFONT _create(ref LOGFONTW lf)
@@ -3427,8 +3176,6 @@ class Font // docmain
 
     package void _info(LOGFONTW* lf) // deprecated
     {
-        //auto proc = cast(GetObjectWProc)GetProcAddress(GetModuleHandleA("gdi32.dll"), "GetObjectW"); // GetObjectW exists in D's GDI - D.O
-
         if(GetObjectW(hf, LOGFONTW.sizeof, lf) != LOGFONTW.sizeof)
             throw new DflException("Unable to get font information");
     }
@@ -3653,11 +3400,6 @@ class Font // docmain
     ///
     final @property float size() // getter
     {
-        /+
-        LOGFONTA lf;
-        _info(&lf);
-        return getEmSize(lf.lf.lfHeight, _unit);
-        +/
         return getEmSize(this.lfHeight, _unit);
     }
 
@@ -3665,11 +3407,6 @@ class Font // docmain
     ///
     final float getSize(GraphicsUnit unit)
     {
-        /+
-        LOGFONTA lf;
-        _info(&lf);
-        return getEmSize(lf.lf.lfHeight, unit);
-        +/
         return getEmSize(this.lfHeight, unit);
     }
 
@@ -3700,31 +3437,12 @@ class Font // docmain
     }
 
 
-    /+
-    private void _initLf(LOGFONTW* lf)
-    {
-    this.lfHeight = lf.lfHeight;
-    this.lfName = stringFromStringz(lf.lfFaceName.ptr).dup;
-    this.lfCharSet = lf.lfCharSet;
-    }
-    +/
-
     private void _initLf(ref LOGFONTW lf)
     {
         this.lfHeight = lf.lfHeight;
         this.lfName = lf.lfFaceName.dup;
         this.lfCharSet = lf.lfCharSet;
     }
-
-
-    /+
-    private void _initLf(Font otherfont, LOGFONTW* lf)
-    {
-    this.lfHeight = otherfont.lfHeight;
-    this.lfName = otherfont.lfName;
-    this.lfCharSet = otherfont.lfCharSet;
-    }
-    +/
 
     private void _initLf(Font otherfont, ref LOGFONTW lf)
     {
@@ -3844,15 +3562,6 @@ class SolidBrush: Brush // docmain
     }
 
 
-    /+
-    final @property void color(Color c) // setter
-    {
-    // delete..
-    super.hb = CreateSolidBrush(c.toRgb());
-    }
-    +/
-
-
     ///
     final @property Color color() // getter
     {
@@ -3872,6 +3581,7 @@ class SolidBrush: Brush // docmain
 // PatternBrush has the win9x/ME limitation of not supporting images larger than 8x8 pixels.
 // TextureBrush supports any size images but requires GDI+.
 
+// TODO : Needs to be implemented?
 
 /+
 class PatternBrush: Brush
@@ -3884,6 +3594,7 @@ class PatternBrush: Brush
 /+
 class TextureBrush: Brush
 {
+// Possible roadblock - it seems there are no standard D bindings to GDI+
 // GDI+ ...
 }
 +/

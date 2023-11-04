@@ -21,7 +21,7 @@ class FontDialog: CommonDialog
     this()
     {
         Application.ppin(cast(void*)this);
-        
+
         cf.lStructSize = cf.sizeof;
         cf.Flags = INIT_FLAGS;
         cf.lpLogFont = cast(typeof(cf.lpLogFont))&lfw;
@@ -29,8 +29,8 @@ class FontDialog: CommonDialog
         cf.lpfnHook = &fondHookProc;
         cf.rgbColors = 0;
     }
-    
-    
+
+
     override void reset()
     {
         _fon = null;
@@ -39,8 +39,8 @@ class FontDialog: CommonDialog
         cf.nSizeMin = 0;
         cf.nSizeMax = 0;
     }
-    
-    
+
+
     ///
     final @property void allowSimulations(bool byes) // setter
     {
@@ -49,7 +49,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags |= CF_NOSIMULATIONS;
     }
-    
+
     /// ditto
     final @property bool allowSimulations() // getter
     {
@@ -57,8 +57,8 @@ class FontDialog: CommonDialog
             return false;
         return true;
     }
-    
-    
+
+
     ///
     final @property void allowVectorFonts(bool byes) // setter
     {
@@ -67,7 +67,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags |= CF_NOVECTORFONTS;
     }
-    
+
     /// ditto
     final bool allowVectorFonts() // getter
     {
@@ -75,8 +75,8 @@ class FontDialog: CommonDialog
             return false;
         return true;
     }
-    
-    
+
+
     ///
     final @property void allowVerticalFonts(bool byes) // setter
     {
@@ -85,7 +85,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags |= CF_NOVERTFONTS;
     }
-    
+
     /// ditto
     final @property bool allowVerticalFonts() // getter
     {
@@ -93,21 +93,21 @@ class FontDialog: CommonDialog
             return false;
         return true;
     }
-    
-    
+
+
     ///
     final @property void color(Color c) // setter
     {
         cf.rgbColors = c.toRgb();
     }
-    
+
     /// ditto
     final @property Color color() // getter
     {
         return Color.fromRgb(cf.rgbColors);
     }
-    
-    
+
+
     ///
     final @property void fixedPitchOnly(bool byes) // setter
     {
@@ -116,7 +116,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_FIXEDPITCHONLY;
     }
-    
+
     /// ditto
     final @property bool fixedPitchOnly() // getter
     {
@@ -124,14 +124,14 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     ///
     final @property void font(Font f) // setter
     {
         _fon = f;
     }
-    
+
     /// ditto
     final @property Font font() // getter
     {
@@ -139,8 +139,8 @@ class FontDialog: CommonDialog
             _fon = Control.defaultFont; // ?
         return _fon;
     }
-    
-    
+
+
     ///
     final @property void fontMustExist(bool byes) // setter
     {
@@ -149,7 +149,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_FORCEFONTEXIST;
     }
-    
+
     /// ditto
     final @property bool fontMustExist() // getter
     {
@@ -157,8 +157,8 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     ///
     final @property void maxSize(int max) // setter
     {
@@ -175,7 +175,7 @@ class FontDialog: CommonDialog
             cf.nSizeMin = 0;
         }
     }
-    
+
     /// ditto
     final @property int maxSize() // getter
     {
@@ -183,8 +183,8 @@ class FontDialog: CommonDialog
             return cf.nSizeMax;
         return 0;
     }
-    
-    
+
+
     ///
     final @property void minSize(int min) // setter
     {
@@ -193,7 +193,7 @@ class FontDialog: CommonDialog
         cf.nSizeMin = min;
         cf.Flags |= CF_LIMITSIZE;
     }
-    
+
     /// ditto
     final @property int minSize() // getter
     {
@@ -201,8 +201,8 @@ class FontDialog: CommonDialog
             return cf.nSizeMin;
         return 0;
     }
-    
-    
+
+
     ///
     final @property void scriptsOnly(bool byes) // setter
     {
@@ -211,7 +211,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_SCRIPTSONLY;
     }
-    
+
     /// ditto
     final @property bool scriptsOnly() // getter
     {
@@ -219,8 +219,8 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     ///
     final @property void showApply(bool byes) // setter
     {
@@ -229,7 +229,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_APPLY;
     }
-    
+
     /// ditto
     final @property bool showApply() // getter
     {
@@ -237,8 +237,8 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     ///
     final @property void showHelp(bool byes) // setter
     {
@@ -247,7 +247,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_SHOWHELP;
     }
-    
+
     /// ditto
     final @property bool showHelp() // getter
     {
@@ -255,8 +255,8 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     ///
     final @property void showEffects(bool byes) // setter
     {
@@ -265,7 +265,7 @@ class FontDialog: CommonDialog
         else
             cf.Flags &= ~CF_EFFECTS;
     }
-    
+
     /// ditto
     final @property bool showEffects() // getter
     {
@@ -273,26 +273,26 @@ class FontDialog: CommonDialog
             return true;
         return false;
     }
-    
-    
+
+
     override DialogResult showDialog()
     {
         return runDialog(GetActiveWindow()) ?
             DialogResult.OK : DialogResult.CANCEL;
     }
-    
-    
+
+
     override DialogResult showDialog(IWindow owner)
     {
         return runDialog(owner ? owner.handle : GetActiveWindow()) ?
             DialogResult.OK : DialogResult.CANCEL;
     }
-    
-    
+
+
     ///
     EventHandler apply;
-    
-    
+
+
     protected override LRESULT hookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
         switch(msg)
@@ -304,18 +304,18 @@ class FontDialog: CommonDialog
                         _update();
                         onApply(EventArgs.empty);
                         break;
-                    
+
                     default:
                 }
                 break;
-            
+
             default:
         }
-        
+
         return super.hookProc(hwnd, msg, wparam, lparam);
     }
-    
-    
+
+
     protected override bool runDialog(HWND owner)
     {
         if(!_runDialog(owner))
@@ -326,17 +326,17 @@ class FontDialog: CommonDialog
         }
         return true;
     }
-    
-    
+
+
     private BOOL _runDialog(HWND owner)
     {
         BOOL result = FALSE;
-        
+
         cf.hwndOwner = owner;
-    
+
             font._info(&lfw); // -font- gets default font if not set.            
             result = ChooseFontW(&cfw);
-        
+
         if(result)
         {
             _update();
@@ -344,46 +344,46 @@ class FontDialog: CommonDialog
         }
         return FALSE;
     }
-    
-    
+
+
     private void _update()
     {
         LOGFONTW lf;        
         _fon = new Font(Font._create(lf), true);
     }
-    
-    
+
+
     ///
     protected void onApply(EventArgs ea)
     {
         apply(this, ea);
     }
-    
-    
+
+
     private:
-    
+
     union
     {
         CHOOSEFONTW cfw;
         CHOOSEFONTA cfa;
         alias cfw cf;
-        
+
         static assert(CHOOSEFONTW.sizeof == CHOOSEFONTA.sizeof);
         static assert(CHOOSEFONTW.Flags.offsetof == CHOOSEFONTA.Flags.offsetof);
         static assert(CHOOSEFONTW.nSizeMax.offsetof == CHOOSEFONTA.nSizeMax.offsetof);
     }
-    
+
     union
     {
         LOGFONTW lfw;
         LOGFONTA lfa;
-        
+
         static assert(LOGFONTW.lfFaceName.offsetof == LOGFONTA.lfFaceName.offsetof);
     }
-    
+
     Font _fon;
-    
-    
+
+
     enum UINT INIT_FLAGS = CF_EFFECTS | CF_ENABLEHOOK | CF_INITTOLOGFONTSTRUCT | CF_SCREENFONTS;
 }
 
@@ -396,7 +396,7 @@ private extern(Windows) ulong fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, L
     enum PROP_STR = "DFL_FontDialog";
     FontDialog fd;
     LRESULT result = 0;
-    
+
     try
     {
         if(msg == WM_INITDIALOG)
@@ -410,7 +410,7 @@ private extern(Windows) ulong fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, L
         {
             fd = cast(FontDialog)cast(void*)GetPropA(hwnd, PROP_STR.ptr);
         }
-        
+
         if(fd)
         {
             result = fd.hookProc(hwnd, msg, wparam, lparam);
@@ -420,7 +420,7 @@ private extern(Windows) ulong fondHookProc(HWND hwnd, UINT msg, WPARAM wparam, L
     {
         Application.onThreadException(e);
     }
-    
+
     return cast(ulong)result;
 }
 

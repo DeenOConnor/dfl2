@@ -20,24 +20,24 @@ private import std.string;
 final class Environment // docmain
 {
     private this() {}
-    
-    
+
+
     static:
-    
+
     ///
     @property string commandLine() // getter
     {
         return to!string(fromStringz(GetCommandLineA()));
     }
-    
-    
+
+
     ///
     @property void currentDirectory(string cd) // setter
     {
         if(!SetCurrentDirectoryA(cd.ptr))
             throw new DflException("Unable to set current directory");
     }
-    
+
     /// ditto
     @property string currentDirectory() // getter
     {
@@ -45,8 +45,8 @@ final class Environment // docmain
         GetCurrentDirectoryA(MAX_PATH, buf.ptr);
         return to!string(fromStringz(buf));
     }
-    
-    
+
+
     ///
     @property string machineName() // getter
     {
@@ -56,34 +56,34 @@ final class Environment // docmain
             throw new DflException("Unable to obtain machine name");
         return to!string(fromStringz(result));
     }
-    
-    
+
+
     ///
     @property string newLine() // getter
     {
         static import std.ascii;
         return std.ascii.newline;
     }
-    
-    
+
+
     ///
     @property OperatingSystem osVersion() // getter
     {
         OSVERSIONINFOA osi;
         Version ver;
-        
+
         osi.dwOSVersionInfoSize = osi.sizeof;
         if(!GetVersionExA(&osi))
             throw new DflException("Unable to obtain operating system version information");
-        
+
         int build;
-        
+
         switch(osi.dwPlatformId)
         {
             case VER_PLATFORM_WIN32_NT:
                 ver = new Version(osi.dwMajorVersion, osi.dwMinorVersion, osi.dwBuildNumber);
                 break;
-            
+
             case VER_PLATFORM_WIN32_WINDOWS:
                 ver = new Version(osi.dwMajorVersion, osi.dwMinorVersion, LOWORD(osi.dwBuildNumber));
                 break;
@@ -93,11 +93,11 @@ final class Environment // docmain
             default:
                 ver = new Version(osi.dwMajorVersion, osi.dwMinorVersion);
         }
-        
+
         return new OperatingSystem(cast(PlatformId)osi.dwPlatformId, ver);
     }
-    
-    
+
+
     ///
     @property string systemDirectory() // getter
     {
@@ -106,15 +106,15 @@ final class Environment // docmain
             throw new DflException("Unable to obtain system directory");
         return to!string(fromStringz(result));
     }
-    
-    
+
+
     // Should return int ?
     @property DWORD tickCount() // getter
     {
         return GetTickCount();
     }
-    
-    
+
+
     ///
     @property string userName() // getter
     {
@@ -124,8 +124,8 @@ final class Environment // docmain
             throw new DflException("Unable to obtain user name");
         return to!string(fromStringz(result));
     }
-    
-    
+
+
     ///
     void exit(int code)
     {
@@ -133,8 +133,8 @@ final class Environment // docmain
         // I'm pretty sure that C in Windows uses ExitProcess() for exit() - D.O
         ExitProcess(code);
     }
-    
-    
+
+
     ///
     string expandEnvironmentVariables(string str)
     {
@@ -152,15 +152,15 @@ final class Environment // docmain
             throw new DflException("Unable to expand environment variables");
         return to!string(fromStringz(buf));
     }
-    
-    
+
+
     ///
     string[] getCommandLineArgs()
     {
         return parseArgs(commandLine);
     }
-    
-    
+
+
     ///
     string getEnvironmentVariable(string name, bool throwIfMissing)
     {
@@ -182,18 +182,14 @@ final class Environment // docmain
             throw new DflException("Unable to obtain environment variable");
         return to!string(fromStringz(buf));
     }
-    
+
     /// ditto
     string getEnvironmentVariable(string name)
     {
         return getEnvironmentVariable(name, true);
     }
-    
-    
-    //string[string] getEnvironmentVariables()
-    //string[] getEnvironmentVariables()
-    
-    
+
+
     ///
     string[] getLogicalDrives()
     {
@@ -201,232 +197,21 @@ final class Environment // docmain
         string[] result;
         int i;
         char[4] tmp = " :\\\0";
-        
+
         for(i = 0; dr; i++)
         {
             if(dr & 1)
             {
                 char[] s = tmp.dup[0 .. 3];
                 s[0] = cast(char)('A' + i);
-                //result ~= s;
                 result ~= cast(string)s; // Needed in D2.
             }
             dr >>= 1;
         }
-        
+
         return result;
     }
 }
-
-
-/+
-enum PowerModes: ubyte
-{
-    STATUS_CHANGE,
-    RESUME,
-    SUSPEND,
-}
-
-
-class PowerModeChangedEventArgs: EventArgs
-{
-    this(PowerModes pm)
-    {
-        this._pm = pm;
-    }
-    
-    
-    @property final PowerModes mode() // getter
-    {
-        return _pm;
-    }
-    
-    
-    private:
-    PowerModes _pm;
-}
-+/
-
-
-/+
-///
-enum SessionEndReasons: ubyte
-{
-    SYSTEM_SHUTDOWN, ///
-    LOGOFF, /// ditto
-}
-
-
-///
-class SystemEndedEventArgs: EventArgs
-{
-    ///
-    this(SessionEndReasons reason)
-    {
-        this._reason = reason;
-    }
-    
-    
-    ///
-    final @property SessionEndReasons reason() // getter
-    {
-        return this._reason;
-    }
-    
-    
-    private:
-    SessionEndReasons _reason;
-}
-
-
-///
-class SessionEndingEventArgs: EventArgs
-{
-    ///
-    this(SessionEndReasons reason)
-    {
-        this._reason = reason;
-    }
-    
-    
-    ///
-    final @property SessionEndReasons reason() // getter
-    {
-        return this._reason;
-    }
-    
-    
-    ///
-    final @property void cancel(bool byes) // setter
-    {
-        this._cancel = byes;
-    }
-    
-    /// ditto
-    final @property bool cancel() // getter
-    {
-        return this._cancel;
-    }
-    
-    
-    private:
-    SessionEndReasons _reason;
-    bool _cancel = false;
-}
-+/
-
-
-/+
-final class SystemEvents // docmain
-{
-    private this() {}
-    
-    
-    static:
-    EventHandler displaySettingsChanged;
-    EventHandler installedFontsChanged;
-    EventHandler lowMemory; // GC automatically collects before this event.
-    EventHandler paletteChanged;
-    //PowerModeChangedEventHandler powerModeChanged; // WM_POWERBROADCAST
-    SystemEndedEventHandler systemEnded;
-    SessionEndingEventHandler systemEnding;
-    SessionEndingEventHandler sessionEnding;
-    EventHandler timeChanged;
-    // user preference changing/changed. WM_SETTINGCHANGE ?
-    
-    
-    /+
-    @property void useOwnThread(bool byes) // setter
-    {
-        if(byes != useOwnThread)
-        {
-            if(byes)
-            {
-                _ownthread = new Thread;
-                // idle priority..
-            }
-            else
-            {
-                // Kill thread.
-            }
-        }
-    }
-    
-    
-    @property bool useOwnThread() // getter
-    {
-        return _ownthread !is null;
-    }
-    +/
-    
-    
-    private:
-    //package Thread _ownthread = null;
-    
-    
-    SessionEndReasons sessionEndReasonFromLparam(LPARAM lparam)
-    {
-        if(ENDSESSION_LOGOFF == lparam)
-            return SessionEndReasons.LOGOFF;
-        return SessionEndReasons.SYSTEM_SHUTDOWN;
-    }
-    
-    
-    void _realCheckMessage(ref Message m)
-    {
-        switch(m.msg)
-        {
-            case WM_DISPLAYCHANGE:
-                displaySettingsChanged(typeid(SystemEvents), EventArgs.empty);
-                break;
-            
-            case WM_FONTCHANGE:
-                installedFontsChanged(typeid(SystemEvents), EventArgs.empty);
-                break;
-            
-            case WM_COMPACTING:
-                //gcFullCollect();
-                lowMemory(typeid(SystemEvents), EventArgs.empty);
-                break;
-            
-            case WM_PALETTECHANGED:
-                paletteChanged(typeid(SystemEvents), EventArgs.empty);
-                break;
-            
-            case WM_ENDSESSION:
-                if(m.wParam)
-                {
-                    scope SystemEndedEventArgs ea = new SystemEndedEventArgs(sessionEndReasonFromLparam(m.lParam));
-                    systemEnded(typeid(SystemEvents), ea);
-                }
-                break;
-            
-            case WM_QUERYENDSESSION:
-                {
-                    scope SessionEndingEventArgs ea = new SessionEndingEventArgs(sessionEndReasonFromLparam(m.lParam));
-                    systemEnding(typeid(SystemEvents), ea);
-                    if(ea.cancel)
-                        m.result = FALSE; // Stop shutdown.
-                    m.result = TRUE; // Continue shutdown.
-                }
-                break;
-            
-            case WM_TIMECHANGE:
-                timeChanged(typeid(SystemEvents), EventArgs.empty);
-                break;
-            
-            default:
-        }
-    }
-    
-    
-    package void _checkMessage(ref Message m)
-    {
-        //if(_ownthread)
-            _realCheckMessage(m);
-    }
-}
-+/
 
 
 package string[] parseArgs(string args)
@@ -436,7 +221,7 @@ package string[] parseArgs(string args)
     bool inQuote = false;
     bool findStart = true;
     uint startIndex = 0;
-    
+
     for(i = 0;; i++)
     {
         if(i == args.length)
@@ -445,7 +230,7 @@ package string[] parseArgs(string args)
                 startIndex = i;
             break;
         }
-        
+
         if(findStart)
         {
             if(args[i] == ' ' || args[i] == '\t')
@@ -453,7 +238,7 @@ package string[] parseArgs(string args)
             findStart = false;
             startIndex = i;
         }
-        
+
         if(args[i] == '"')
         {
             inQuote = !inQuote;
@@ -487,13 +272,13 @@ package string[] parseArgs(string args)
             }
         }
     }
-    
+
     if(startIndex != i)
     {
         result.length = result.length + 1;
         result[result.length - 1] = args[startIndex .. i];
     }
-    
+
     return result;
 }
 
@@ -501,23 +286,15 @@ package string[] parseArgs(string args)
 unittest
 {
     string[] args;
-    
+
     args = parseArgs(`"foo" bar`);
     assert(args.length == 2);
     assert(args[0] == "foo");
     assert(args[1] == "bar");
-    
+
     args = parseArgs(`"environment"`);
     assert(args.length == 1);
     assert(args[0] == "environment");
-    
-    /+
-    writefln("commandLine = '%s'", Environment.commandLine);
-    foreach(string arg; Environment.getCommandLineArgs())
-    {
-        writefln("\t'%s'", arg);
-    }
-    +/
 }
 
 
@@ -528,25 +305,25 @@ class Version // docmain ?
     private:
     int _major = 0, _minor = 0;
     int _build = -1, _revision = -1;
-    
-    
+
+
     public:
-    
+
     ///
     this()
     {
     }
-    
-    
+
+
     final:
-    
+
     /// ditto
     // A string containing "major.minor.build.revision".
     // 2 to 4 parts expected.
     this(string str)
     {
         string[] stuff = split(str, ".");
-        
+
         try {
             switch(stuff.length)
             {
@@ -567,14 +344,14 @@ class Version // docmain ?
             throw new DflException("Version parameter is not an integer");
         }
     }
-    
+
     /// ditto
     this(int major, int minor)
     {
         _major = major;
         _minor = minor;
     }
-    
+
     /// ditto
     this(int major, int minor, int build)
     {
@@ -582,7 +359,7 @@ class Version // docmain ?
         _minor = minor;
         _build = build;
     }
-    
+
     /// ditto
     this(int major, int minor, int build, int revision)
     {
@@ -591,53 +368,42 @@ class Version // docmain ?
         _build = build;
         _revision = revision;
     }
-    
-    
-    /+ // D2 doesn't like this without () but this invariant doesn't really even matter.
-    invariant
-    {
-        assert(_major >= 0);
-        assert(_minor >= 0);
-        assert(_build >= -1);
-        assert(_revision >= -1);
-    }
-    +/
-    
-    
+
+
     ///
     override string toString()
     {
         string result;
-        
+
         result = to!string(_major) ~ "." ~ to!string(_minor);
         if(_build != -1)
             result ~= "." ~ to!string(_build);
         if(_revision != -1)
             result ~= "." ~ to!string(_revision);
-        
+
         return result;
     }
-    
-    
+
+
     ///
     @property int major() // getter
     {
         return _major;
     }
-    
+
     /// ditto
     @property int minor() // getter
     {
         return _minor;
     }
-    
+
     /// ditto
     // -1 if no build.
     @property int build() // getter
     {
         return _build;
     }
-    
+
     /// ditto
     // -1 if no revision.
     @property int revision() // getter
@@ -669,13 +435,13 @@ final class OperatingSystem // docmain
             this.platId = platId;
             this.vers = ver;
         }
-        
-        
+
+
         ///
         override string toString()
         {
             string result;
-            
+
             // DMD 0.92 says error: cannot implicitly convert uint to PlatformId
             switch(platId)
             {
@@ -685,36 +451,36 @@ final class OperatingSystem // docmain
                 case PlatformId.WIN32_NT:
                     result = "Microsoft Windows NT ";
                     break;
-                
+
                 case PlatformId.WIN32_WINDOWS:
                     result = "Microsoft Windows 95 ";
                     break;
-                
+
                 case PlatformId.WIN32s:
                     result = "Microsoft Win32s ";
                     break;
-                
+
                 case PlatformId.WIN_CE:
                     result = "Microsoft Windows CE ";
                     break;
-                    
-                
+
+
                 default:
                     throw new DflException("Unknown platform ID");
             }
-            
+
             result ~= vers.toString();
             return result;
         }
-        
-        
+
+
         ///
         @property PlatformId platform() // getter
         {
             return platId;
         }
-        
-        
+
+
         ///
         // Should be version() :p
         @property Version ver() // getter
@@ -722,8 +488,8 @@ final class OperatingSystem // docmain
             return vers;
         }
     }
-    
-    
+
+
     private:
     PlatformId platId;
     Version vers;

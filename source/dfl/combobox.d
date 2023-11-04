@@ -35,62 +35,62 @@ class ComboBox: ListControl // docmain
     this()
     {
         _initCombobox();
-        
+
         wstyle |= WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_HASSTRINGS;
         wexstyle |= WS_EX_CLIENTEDGE;
         ctrlStyle |= ControlStyles.SELECTABLE;
         wclassStyle = comboboxClassStyle;
-        
+
         icollection = createItemCollection();
     }
-    
-    
+
+
     ///
     final @property void dropDownStyle(ComboBoxStyle ddstyle) // setter
     {
         LONG st;
         st = _style() & ~(CBS_DROPDOWN | CBS_DROPDOWNLIST | CBS_SIMPLE);
-        
+
         final switch(ddstyle)
         {
             case ComboBoxStyle.DROP_DOWN:
                 _style(st | CBS_DROPDOWN);
                 break;
-            
+
             case ComboBoxStyle.DROP_DOWN_LIST:
                 _style(st | CBS_DROPDOWNLIST);
                 break;
-            
+
             case ComboBoxStyle.SIMPLE:
                 _style(st | CBS_SIMPLE);
                 break;
         }
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     final @property ComboBoxStyle dropDownStyle() // getter
     {
         LONG st;
         st = _style() & (CBS_DROPDOWN | CBS_DROPDOWNLIST | CBS_SIMPLE);
-        
+
         switch(st)
         {
             case CBS_DROPDOWN:
                 return ComboBoxStyle.DROP_DOWN;
-            
+
             case CBS_DROPDOWNLIST:
                 return ComboBoxStyle.DROP_DOWN_LIST;
-            
+
             case CBS_SIMPLE:
                 return ComboBoxStyle.SIMPLE;
             default:
                 assert(0);
         }
     }
-    
-    
+
+
     ///
     final @property void integralHeight(bool byes) //setter
     {
@@ -98,50 +98,38 @@ class ComboBox: ListControl // docmain
             _style(_style() & ~CBS_NOINTEGRALHEIGHT);
         else
             _style(_style() | CBS_NOINTEGRALHEIGHT);
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     final @property bool integralHeight() // getter
     {
         return (_style() & CBS_NOINTEGRALHEIGHT) == 0;
     }
-    
-    
+
+
     ///
     // This function has no effect if the drawMode is OWNER_DRAW_VARIABLE.
     @property void itemHeight(int h) // setter
     {
         if(drawMode == DrawMode.OWNER_DRAW_VARIABLE)
             return;
-        
+
         iheight = h;
-        
+
         if(isHandleCreated)
             prevwproc(CB_SETITEMHEIGHT, 0, h);
     }
-    
+
     /// ditto
     // Return value is meaningless when drawMode is OWNER_DRAW_VARIABLE.
     @property int itemHeight() // getter
     {
-        /+
-        if(drawMode == DrawMode.OWNER_DRAW_VARIABLE || !isHandleCreated)
-            return iheight;
-        
-        int result = prevwproc(CB_GETITEMHEIGHT, 0, 0);
-        if(result == CB_ERR)
-            result = iheight; // ?
-        else
-            iheight = result;
-        
-        return result;
-        +/
         return iheight;
     }
-    
-    
+
+
     ///
     override @property void selectedIndex(int idx) // setter
     {
@@ -150,7 +138,7 @@ class ComboBox: ListControl // docmain
             prevwproc(CB_SETCURSEL, cast(WPARAM)idx, 0);
         }
     }
-    
+
     /// ditto
     override @property int selectedIndex() //getter
     {
@@ -163,8 +151,8 @@ class ComboBox: ListControl // docmain
         }
         return -1;
     }
-    
-    
+
+
     ///
     final @property void selectedItem(Control o) // setter
     {
@@ -173,7 +161,7 @@ class ComboBox: ListControl // docmain
         if(i != -1)
             selectedIndex = i;
     }
-    
+
     /// ditto
     final @property void selectedItem(wstring str) // setter
     {
@@ -182,7 +170,7 @@ class ComboBox: ListControl // docmain
         if(i != -1)
             selectedIndex = i;
     }
-    
+
     /// ditto
     final @property Control selectedItem() // getter
     {
@@ -192,105 +180,98 @@ class ComboBox: ListControl // docmain
             return null;
         return items[idx];
     }
-    
-    
+
+
     ///
     override @property void selectedValue(Control val) // setter
     {
         selectedItem = val;
     }
-    
+
     /// ditto
     override @property void selectedValue(wstring str) // setter
     {
         selectedItem = str;
     }
-    
+
     /// ditto
     override @property Control selectedValue() // getter
     {
         return selectedItem;
     }
-    
-    
+
+
     ///
     final @property void sorted(bool byes) // setter
     {
-        /+
-        if(byes)
-            _style(_style() | CBS_SORT);
-        else
-            _style(_style() & ~CBS_SORT);
-        +/
         _sorting = byes;
     }
-    
+
     /// ditto
     final @property bool sorted() // getter
     {
-        //return (_style() & CBS_SORT) != 0;
         return _sorting;
     }
-    
-    
+
+
     ///
     final void beginUpdate()
     {
         prevwproc(WM_SETREDRAW, false, 0);
     }
-    
+
     /// ditto
     final void endUpdate()
     {
         prevwproc(WM_SETREDRAW, true, 0);
         invalidate(true); // Show updates.
     }
-    
-    
+
+
     ///
     final int finstring(string str, int startIndex)
     {
         // TODO: find string if control not created ?
-        
+
         int result = NO_MATCHES;
-        
+
         if(isHandleCreated)
         {
             result = cast(int)prevwproc(CB_FINDSTRING, startIndex, cast(LPARAM)str.ptr);
         }
-        
+
         return result;
     }
-    
+
     /// ditto
     final int finstring(string str)
     {
         return finstring(str, -1); // Start at beginning.
     }
-    
-    
+
+
     ///
     final int finstringExact(string str, int startIndex)
     {
         // TODO: find string if control not created ?
-        
+
         int result = NO_MATCHES;
-        
+
         if(isHandleCreated)
         {
             result = cast(int)prevwproc(CB_FINDSTRINGEXACT, startIndex, cast(LPARAM)str.ptr);
         }
-        
+
         return result;
     }
-    
+
     /// ditto
     final int finstringExact(string str)
     {
         return finstringExact(str, -1); // Start at beginning.
     }
-    
-    
+
+
     ///
     final int getItemHeight(int idx)
     {
@@ -299,53 +280,53 @@ class ComboBox: ListControl // docmain
             throw new DflException("Unable to obtain item height");
         return result;
     }
-    
-    
+
+
     ///
     final @property void drawMode(DrawMode dm) // setter
     {
         LONG wl = _style() & ~(CBS_OWNERDRAWVARIABLE | CBS_OWNERDRAWFIXED);
-        
+
         final switch(dm)
         {
             case DrawMode.OWNER_DRAW_VARIABLE:
                 wl |= CBS_OWNERDRAWVARIABLE;
                 break;
-            
+
             case DrawMode.OWNER_DRAW_FIXED:
                 wl |= CBS_OWNERDRAWFIXED;
                 break;
-            
+
             case DrawMode.NORMAL:
                 break;
         }
-        
+
         _style(wl);
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     final @property DrawMode drawMode() // getter
     {
         LONG wl = _style();
-        
+
         if(wl & CBS_OWNERDRAWVARIABLE)
             return DrawMode.OWNER_DRAW_VARIABLE;
         if(wl & CBS_OWNERDRAWFIXED)
             return DrawMode.OWNER_DRAW_FIXED;
         return DrawMode.NORMAL;
     }
-    
-    
+
+
     ///
     final void selectAll()
     {
         if(isHandleCreated)
             prevwproc(CB_SETEDITSEL, 0, MAKELPARAM(0, cast(ushort)-1));
     }
-    
-    
+
+
     ///
     final @property void maxLength(uint len) // setter
     {
@@ -353,7 +334,7 @@ class ComboBox: ListControl // docmain
             lim = 0x7FFFFFFE;
         else
             lim = len;
-        
+
         if(isHandleCreated)
         {
             Message m;
@@ -361,14 +342,14 @@ class ComboBox: ListControl // docmain
             prevWndProc(m);
         }
     }
-    
+
     /// ditto
     final @property uint maxLength() // getter
     {
         return lim;
     }
-    
-    
+
+
     ///
     final @property void selectionLength(uint len) // setter
     {
@@ -380,7 +361,7 @@ class ComboBox: ListControl // docmain
             prevwproc(CB_SETEDITSEL, 0, MAKELPARAM(v1, v2));
         }
     }
-    
+
     /// ditto
     final @property uint selectionLength() // getter
     {
@@ -393,8 +374,8 @@ class ComboBox: ListControl // docmain
         }
         return 0;
     }
-    
-    
+
+
     ///
     final @property void selectionStart(uint pos) // setter
     {
@@ -407,7 +388,7 @@ class ComboBox: ListControl // docmain
             prevwproc(CB_SETEDITSEL, 0, MAKELPARAM(pos, v2));
         }
     }
-    
+
     /// ditto
     final @property uint selectionStart() // getter
     {
@@ -419,8 +400,8 @@ class ComboBox: ListControl // docmain
         }
         return 0;
     }
-    
-    
+
+
     ///
     // Number of characters in the textbox.
     // This does not necessarily correspond to the number of chars; some characters use multiple chars.
@@ -433,15 +414,15 @@ class ComboBox: ListControl // docmain
             return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
         return cast(uint)wtext.length;
     }
-    
-    
+
+
     ///
     final @property void droppedDown(bool byes) // setter
     {
         if(isHandleCreated)
             prevwproc(CB_SHOWDROPDOWN, cast(WPARAM)byes, 0);
     }
-    
+
     /// ditto
     final @property bool droppedDown() // getter
     {
@@ -449,18 +430,18 @@ class ComboBox: ListControl // docmain
             return prevwproc(CB_GETDROPPEDSTATE, 0, 0) != FALSE;
         return false;
     }
-    
-    
+
+
     ///
     final @property void dropDownWidth(int w) // setter
     {
         if(dropw == w)
             return;
-        
+
         if(w < 0)
             w = 0;
         dropw = w;
-        
+
         if(isHandleCreated)
         {
             if(dropw < width)
@@ -469,7 +450,7 @@ class ComboBox: ListControl // docmain
                 prevwproc(CB_SETDROPPEDWIDTH, dropw, 0);
         }
     }
-    
+
     /// ditto
     final @property int dropDownWidth() // getter
     {
@@ -488,19 +469,19 @@ class ComboBox: ListControl // docmain
             return dropw;
         }
     }
-    
-    
+
+
     ///
     final @property ObjectCollection items() // getter
     {
         return icollection;
     }
-    
-    
+
+
     enum DEFAULT_ITEM_HEIGHT = 13;
     enum NO_MATCHES = CB_ERR;
-    
-    
+
+
     ///
     static class ObjectCollection
     {
@@ -508,42 +489,33 @@ class ComboBox: ListControl // docmain
         {
             this.lbox = lbox;
         }
-        
-        
+
+
         protected this(ComboBox lbox, Control[] range)
         {
             this.lbox = lbox;
             addRange(range);
         }
-        
-        
+
+
         protected this(ComboBox lbox, wstring[] range)
         {
             this.lbox = lbox;
             addRange(range);
         }
-        
-        
-        /+
-        protected this(ComboBox lbox, ObjectCollection range)
-        {
-            this.lbox = lbox;
-            addRange(range);
-        }
-        +/
-        
-        
+
+
         void add(Control value)
         {
             add2(value);
         }
-        
+
         void add(wstring value)
         {
             add(new Control(value));
         }
-        
-        
+
+
         void addRange(Control[] range)
         {
             if(lbox.sorted)
@@ -558,7 +530,7 @@ class ComboBox: ListControl // docmain
                 _wraparray.addRange(range);
             }
         }
-        
+
         void addRange(wstring[] range)
         {
             foreach(wstring s; range)
@@ -566,10 +538,10 @@ class ComboBox: ListControl // docmain
                 add(s);
             }
         }
-        
-        
+
+
         private:
-        
+
         ComboBox lbox;
         Control[] _items = [];
 
@@ -577,15 +549,15 @@ class ComboBox: ListControl // docmain
         this()
         {
         }
-        
-        
+
+
         LRESULT insert2(WPARAM idx, wstring val)
         {
             insert(cast(int)idx, val);
             return idx;
         }
-        
-        
+
+
         LRESULT add2(Control val)
         {
             int i;
@@ -601,19 +573,19 @@ class ComboBox: ListControl // docmain
             {
                 i = cast(int)_items.length;
             }
-            
+
             insert(i, val);
-            
+
             return i;
         }
-        
-        
+
+
         LRESULT add2(wstring val)
         {
             return add2(new Control(val));
         }
-        
-        
+
+
         void _added(size_t idx, Control val)
         {
             if(lbox.isHandleCreated)
@@ -621,8 +593,8 @@ class ComboBox: ListControl // docmain
                 lbox.prevwproc(CB_INSERTSTRING, idx, cast(LPARAM)val.toWString().ptr);
             }
         }
-        
-        
+
+
         void _removed(size_t idx, Control val)
         {
             if(size_t.max == idx) // Clear all.
@@ -640,8 +612,8 @@ class ComboBox: ListControl // docmain
                 }
             }
         }
-        
-        
+
+
         public:
 
         mixin ListWrapArray!(Control, _items,
@@ -649,34 +621,34 @@ class ComboBox: ListControl // docmain
             _blankListCallback!(Control), _removed,
             true, false, false, false) _wraparray;
     }
-    
-    
+
+
     ///
     protected ObjectCollection createItemCollection()
     {
         return new ObjectCollection(this);
     }
-    
-    
+
+
     protected override void onHandleCreated(EventArgs ea)
     {
         super.onHandleCreated(ea);
-        
+
         // Set the Ctrl ID to the HWND so that it is unique
         // and WM_MEASUREITEM will work properly.
         SetWindowLongA(hwnd, GWL_ID, cast(LONG)hwnd);
-        
+
         //prevwproc(EM_SETLIMITTEXT, cast(WPARAM)lim, 0);
         maxLength = lim; // Call virtual function.
-        
+
         if(dropw < width)
             prevwproc(CB_SETDROPPEDWIDTH, width, 0);
         else
             prevwproc(CB_SETDROPPEDWIDTH, dropw, 0);
-        
+
         if(iheight != DEFAULT_ITEM_HEIGHT)
             prevwproc(CB_SETITEMHEIGHT, 0, iheight);
-        
+
         Message m;
         m.hWnd = hwnd;
         m.msg = CB_INSERTSTRING;
@@ -690,8 +662,6 @@ class ComboBox: ListControl // docmain
             if(m.result < 0)
                 throw new DflException("Unable to add combo box item");
         }
-
-        //redrawEntire();
     }
 
 
@@ -708,69 +678,61 @@ class ComboBox: ListControl // docmain
         pea.clipRectangle.getRect(&rect);
         FillRect(pea.graphics.handle, &rect, parent.hbrBg); // Hack.
     }
-    
-    
+
+
     override void createHandle()
     {
         if(isHandleCreated)
             return;
-        
+
         // TODO: check if correct implementation.
         if(hasDropList)
             wrect.height = DEFAULT_ITEM_HEIGHT * 8;
-        
+
         wstring ft;
         ft = wtext;
-        
+
         super.createHandle();
-        
-        // Fix the cached window rect.
-        // This is getting screen coords, not parent coords. Why was it here, anyway?
-        //RECT rect;
-        //GetWindowRect(hwnd, &rect);
-        //wrect = Rect(&rect);
-        
+
         // Fix the combo box's text since the initial window
         // text isn't put in the edit box for some reason.
         Message m;
         m = Message(hwnd, WM_SETTEXT, 0, cast(LPARAM)ft.ptr);
         prevWndProc(m);
     }
-    
-    
+
+
     protected override void createParams(ref CreateParams cp)
     {
         super.createParams(cp);
-        
+
         cp.className = COMBOBOX_CLASSNAME;
     }
-    
-    
-    //DrawItemEventHandler drawItem;
+
+
     Event!(ComboBox, DrawItemEventArgs) drawItem;
-    //MeasureItemEventHandler measureItem;
     Event!(ComboBox, MeasureItemEventArgs) measureItem;
-    
-    
+
+
     protected:
     override @property Size defaultSize() // getter
     {
         return Size(120, 23); // ?
     }
-    
-    
+
+
     void onDrawItem(DrawItemEventArgs dieh)
     {
         drawItem(this, dieh);
     }
-    
-    
+
+
     void onMeasureItem(MeasureItemEventArgs miea)
     {
         measureItem(this, miea);
     }
-    
-    
+
+
     package final void _WmDrawItem(DRAWITEMSTRUCT* dis)
     in
     {
@@ -781,7 +743,7 @@ class ComboBox: ListControl // docmain
     {
         DrawItemState state;
         state = cast(DrawItemState)dis.itemState;
-        
+
         if(dis.itemID == -1)
         {
             if(state & DrawItemState.FOCUS)
@@ -791,7 +753,7 @@ class ComboBox: ListControl // docmain
         {
             DrawItemEventArgs diea;
             Color bc, fc;
-            
+
             if(state & DrawItemState.SELECTED)
             {
                 bc = Color.systemColor(COLOR_HIGHLIGHT);
@@ -802,16 +764,16 @@ class ComboBox: ListControl // docmain
                 bc = backColor;
                 fc = foreColor;
             }
-            
+
             prepareDc(dis.hDC);
             diea = new DrawItemEventArgs(new Graphics(dis.hDC, false), wfont,
                 Rect(&dis.rcItem), dis.itemID, state, fc, bc);
-            
+
             onDrawItem(diea);
         }
     }
-    
-    
+
+
     package final void _WmMeasureItem(MEASUREITEMSTRUCT* mis)
     in
     {
@@ -823,147 +785,122 @@ class ComboBox: ListControl // docmain
         scope Graphics gpx = new CommonGraphics(handle(), GetDC(handle));
         miea = new MeasureItemEventArgs(gpx, mis.itemID, /+ mis.itemHeight +/ iheight);
         miea.itemWidth = mis.itemWidth;
-        
+
         onMeasureItem(miea);
-        
+
         mis.itemHeight = miea.itemHeight;
         mis.itemWidth = miea.itemWidth;
     }
-    
-    
+
+
     override void prevWndProc(ref Message msg)
     {
-        //msg.result = CallWindowProcA(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
         msg.result = CallWindowProcW(comboboxPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
     }
-    
-    
+
+
     protected override void onReflectedMessage(ref Message m)
     {
         super.onReflectedMessage(m);
-        
+
         switch(m.msg)
         {
             case WM_DRAWITEM:
                 _WmDrawItem(cast(DRAWITEMSTRUCT*)m.lParam);
                 m.result = 1;
                 break;
-            
+
             case WM_MEASUREITEM:
                 _WmMeasureItem(cast(MEASUREITEMSTRUCT*)m.lParam);
                 m.result = 1;
                 break;
-            
-            /+
-            case WM_CTLCOLORSTATIC:
-            case WM_CTLCOLOREDIT:
-                /+
-                //SetBkColor(cast(HDC)m.wParam, backColor.toRgb()); // ?
-                SetBkMode(cast(HDC)m.wParam, OPAQUE); // ?
-                +/
-                break;
-            +/
-            
+
             case WM_COMMAND:
-                //assert(cast(HWND)msg.lParam == handle); // Might be one of its children.
                 switch(HIWORD(m.wParam))
                 {
                     case CBN_SELCHANGE:
-                        /+
-                        if(drawMode != DrawMode.NORMAL)
-                        {
-                            // Hack.
-                            Object item = selectedItem;
-                            text = item ? getObjectString(item) : cast(string)null;
-                        }
-                        +/
                         onSelectedIndexChanged(EventArgs.empty);
                         onTextChanged(EventArgs.empty); // ?
                         break;
-                    
+
                     case CBN_SETFOCUS:
                         _wmSetFocus();
                         break;
-                    
+
                     case CBN_KILLFOCUS:
                         _wmKillFocus();
                         break;
-                    
+
                     case CBN_EDITCHANGE:
                         onTextChanged(EventArgs.empty); // ?
                         break;
-                    
+
                     default:
                 }
                 break;
-            
+
             default:
         }
     }
-    
-    
+
+
     override void wndProc(ref Message msg)
     {
         switch(msg.msg)
         {
             case CB_ADDSTRING:
-                //msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
-                //msg.result = icollection.add2(stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
                 msg.result = icollection.add2(cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
                 return;
-            
+
             case CB_INSERTSTRING:
-                //msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).dup); // TODO: fix.
-                //msg.result = icollection.insert2(msg.wParam, stringFromStringz(cast(char*)msg.lParam).idup); // TODO: fix. // Needed in D2. Doesn't work in D1.
                 msg.result = icollection.insert2(msg.wParam, cast(wstring)fromStringz(cast(wchar*)msg.lParam).dup); // TODO: fix. // Needed in D2.
                 return;
-            
+
             case CB_DELETESTRING:
                 icollection.removeAt(cast(int)msg.wParam);
                 msg.result = icollection.length;
                 return;
-            
+
             case CB_RESETCONTENT:
                 icollection.clear();
                 return;
-            
+
             case CB_SETITEMDATA:
                 // Cannot set item data from outside DFL.
                 msg.result = CB_ERR;
                 return;
-            
+
             case CB_DIR:
                 msg.result = CB_ERR;
                 return;
-            
+
             case CB_LIMITTEXT:
                 maxLength = cast(uint)msg.wParam;
                 return;
-            
+
             case WM_SETFOCUS:
             case WM_KILLFOCUS:
                 prevWndProc(msg);
                 return; // Handled by reflected message.
-            
+
             default:
         }
         super.wndProc(msg);
     }
-    
-    
+
+
     private:
     int iheight = DEFAULT_ITEM_HEIGHT;
     int dropw = -1;
     ObjectCollection icollection;
     package uint lim = 30_000; // Documented as default.
     bool _sorting = false;
-    
-    
+
+
     package:
     final:
     LRESULT prevwproc(UINT msg, WPARAM wparam, LPARAM lparam)
     {
-        //return CallWindowProcA(listviewPrevWndProc, hwnd, msg, wparam, lparam);
         return CallWindowProcW(comboboxPrevWndProc, hwnd, msg, wparam, lparam);
     }
 }

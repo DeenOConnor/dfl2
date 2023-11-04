@@ -26,56 +26,56 @@ abstract class ButtonBase: ControlSuperClass // docmain
     @property void textAlign(ContentAlignment calign) // setter
     {
         LONG wl = _bstyle() & ~(BS_BOTTOM | BS_CENTER | BS_TOP | BS_RIGHT | BS_LEFT | BS_VCENTER);
-        
+
         final switch(calign)
         {
             case ContentAlignment.TOP_LEFT:
                 wl |= BS_TOP | BS_LEFT;
                 break;
-            
+
             case ContentAlignment.BOTTOM_CENTER:
                 wl |= BS_BOTTOM | BS_CENTER;
                 break;
-            
+
             case ContentAlignment.BOTTOM_LEFT:
                 wl |= BS_BOTTOM | BS_LEFT;
                 break;
-            
+
             case ContentAlignment.BOTTOM_RIGHT:
                 wl |= BS_BOTTOM | BS_RIGHT;
                 break;
-            
+
             case ContentAlignment.MIDDLE_CENTER:
                 wl |= BS_CENTER | BS_VCENTER;
                 break;
-            
+
             case ContentAlignment.MIDDLE_LEFT:
                 wl |= BS_VCENTER | BS_LEFT;
                 break;
-            
+
             case ContentAlignment.MIDDLE_RIGHT:
                 wl |= BS_VCENTER | BS_RIGHT;
                 break;
-            
+
             case ContentAlignment.TOP_CENTER:
                 wl |= BS_TOP | BS_CENTER;
                 break;
-            
+
             case ContentAlignment.TOP_RIGHT:
                 wl |= BS_TOP | BS_RIGHT;
                 break;
         }
-        
+
         _bstyle(wl);
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     @property ContentAlignment textAlign() // getter
     {
         LONG wl = _bstyle();
-        
+
         if(wl & BS_VCENTER) // Middle.
         {
             if(wl & BS_CENTER)
@@ -101,7 +101,7 @@ abstract class ButtonBase: ControlSuperClass // docmain
             return ContentAlignment.TOP_LEFT;
         }
     }    
-    
+
     protected override void createParams(ref CreateParams cp)
     {
         super.createParams(cp);
@@ -118,37 +118,37 @@ abstract class ButtonBase: ControlSuperClass // docmain
             cp.style &= ~BS_DEFPUSHBUTTON;
         }
     }
-    
+
     protected override void prevWndProc(ref Message msg)
     {
         msg.result = CallWindowProcW(buttonPrevWndProc, msg.hWnd, msg.msg, msg.wParam, msg.lParam);
     }
-    
-    
+
+
     protected override void onReflectedMessage(ref Message m)
     {
         super.onReflectedMessage(m);
-        
+
         switch(m.msg)
         {
             case WM_COMMAND:
                 assert(cast(HWND)m.lParam == handle);
-                
+
                 switch(HIWORD(m.wParam))
                 {
                     case BN_CLICKED:
                         onClick(EventArgs.empty);
                         break;
-                    
+
                     default:
                 }
                 break;
-            
+
             default:
         }
     }
-    
-    
+
+
     protected override void wndProc(ref Message msg)
     {
         switch(msg.msg)
@@ -156,44 +156,44 @@ abstract class ButtonBase: ControlSuperClass // docmain
             case WM_LBUTTONDOWN:
                 onMouseDown(new MouseEventArgs(MouseButtons.LEFT, 0, cast(short)LOWORD(msg.lParam), cast(short)HIWORD(msg.lParam), 0));
                 break;
-            
+
             case WM_LBUTTONUP:
                 onMouseUp(new MouseEventArgs(MouseButtons.LEFT, 1, cast(short)LOWORD(msg.lParam), cast(short)HIWORD(msg.lParam), 0));
                 break;
-            
+
             default:
                 super.wndProc(msg);
                 return;
         }
         prevWndProc(msg);
     }
-    
-    
+
+
     this()
     {
         _initButton();
-        
+
         wstyle |= WS_TABSTOP /+ | BS_NOTIFY +/;
         ctrlStyle |= ControlStyles.SELECTABLE;
         wclassStyle = buttonClassStyle;
     }
-    
-    
+
+
     protected:
-    
+
     ///
     final @property void isDefault(bool byes) // setter
     {
         isdef = byes;
     }
-    
+
     /// ditto
     final @property bool isDefault() // getter
     {
         return isdef;
     }
-    
-    
+
+
     protected override bool processMnemonic(dchar charCode)
     {
         if(canSelect)
@@ -207,19 +207,19 @@ abstract class ButtonBase: ControlSuperClass // docmain
         }
         return false;
     }
-    
-    
+
+
     ///
     override @property Size defaultSize() // getter
     {
         return Size(75, 23);
     }
-    
-    
+
+
     // protected
     bool isdef = false;
-    
-    
+
+
     package:
     final:
     // Automatically redraws button styles, unlike _style().
@@ -228,11 +228,11 @@ abstract class ButtonBase: ControlSuperClass // docmain
     {
         if(isHandleCreated)
             SendMessageA(handle, BM_SETSTYLE, newStyle, MAKELPARAM(TRUE, 0));
-        
+
         wstyle = newStyle;
     }
-    
-    
+
+
     LONG _bstyle()
     {
         return _style();
@@ -246,27 +246,27 @@ class Button: ButtonBase, IButtonControl // docmain
     this()
     {
     }
-    
-    
+
+
     ///
     @property DialogResult dialogResult() // getter
     {
         return dresult;
     }
-    
+
     /// ditto
     @property void dialogResult(DialogResult dr) // setter
     {
         dresult = dr;
     }
-    
-    
+
+
     ///
     // True if default button.
     void notifyDefault(bool byes)
     {
         isDefault = byes;
-        
+
         if(byes)
         {
             if(enabled) // Only show thick border if enabled.
@@ -277,8 +277,8 @@ class Button: ButtonBase, IButtonControl // docmain
             _bstyle(_bstyle() & ~BS_DEFPUSHBUTTON);
         }
     }
-    
-    
+
+
     ///
     void performClick()
     {
@@ -286,12 +286,12 @@ class Button: ButtonBase, IButtonControl // docmain
             return; // ?
         onClick(EventArgs.empty);
     }
-    
-    
+
+
     protected override void onClick(EventArgs ea)
     {
         super.onClick(ea);
-        
+
         if(!(Application._compat & DflCompat.FORM_DIALOGRESULT_096))
         {
             if(DialogResult.NONE != this.dialogResult)
@@ -302,8 +302,8 @@ class Button: ButtonBase, IButtonControl // docmain
             }
         }
     }
-    
-    
+
+
     protected override void wndProc(ref Message m)
     {
         switch(m.msg)
@@ -311,9 +311,9 @@ class Button: ButtonBase, IButtonControl // docmain
             case WM_ENABLE:
                 {
                     // Fixing the thick border of a default button when enabling and disabling it.
-                    
+
                     // To-do: check if correct implementation.
-                    
+
                     DWORD bst;
                     bst = _bstyle();
                     if(bst & BS_DEFPUSHBUTTON)
@@ -332,31 +332,31 @@ class Button: ButtonBase, IButtonControl // docmain
                     }
                 }
                 break;
-            
+
             default:
         }
-        
+
         super.wndProc(m);
     }
-    
-    
+
+
     override @property void text(wstring txt) // setter
     {
         if(txt.length)
             assert(!this.image, "Button image with text not supported");
-        
+
         super.text = txt;
     }
-    
+
     alias Control.text text; // Overload.
-    
-    
+
+
     ///
     final @property Image image() // getter
     {
         return _img;
     }
-    
+
     /// ditto
     final @property void image(Image img) // setter
     in
@@ -375,17 +375,17 @@ class Button: ButtonBase, IButtonControl // docmain
                 case 1:
                     imgst = BS_BITMAP;
                     break;
-                
+
                 case 2:
                     imgst = BS_ICON;
                     break;
-                
+
                 default:
                     throw new DflException("Unsupported image format");
                     not_unsupported: ;
             }
         }
-        
+
         _img = img;
         _style((_style() & ~(BS_BITMAP | BS_ICON)) | imgst); // Redrawn manually in setImg().
         if(img)
@@ -394,8 +394,8 @@ class Button: ButtonBase, IButtonControl // docmain
                 setImg(imgst);
         }
     }
-    
-    
+
+
     private void setImg(LONG bsImageStyle)
     in
     {
@@ -414,11 +414,11 @@ class Button: ButtonBase, IButtonControl // docmain
             case 1:
                 wparam = IMAGE_BITMAP;
                 break;
-            
+
             case 2:
                 wparam = IMAGE_ICON;
                 break;
-            
+
             default:
                 return;
         }
@@ -427,26 +427,25 @@ class Button: ButtonBase, IButtonControl // docmain
         SendMessageA(handle, BM_SETIMAGE, wparam, lparam);
         invalidate();
     }
-    
-    
+
+
     protected override void onHandleCreated(EventArgs ea)
     {
         super.onHandleCreated(ea);
-        
+
         setImg(_bstyle());
     }
-    
-    
+
+
     protected override void onHandleDestroyed(EventArgs ea)
     {
         super.onHandleDestroyed(ea);
     }
-    
-    
+
+
     private:
     DialogResult dresult = DialogResult.NONE;
     Image _img = null;
-    //Bitmap _picbm = null; // If -_img- is a Picture, need to keep a separate Bitmap.
 }
 
 
@@ -461,15 +460,15 @@ class CheckBox: ButtonBase // docmain
             case Appearance.NORMAL:
                 _bstyle(_bstyle() & ~BS_PUSHLIKE);
                 break;
-            
+
             case Appearance.BUTTON:
                 _bstyle(_bstyle() | BS_PUSHLIKE);
                 break;
         }
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     final @property Appearance appearance() // getter
     {
@@ -477,8 +476,8 @@ class CheckBox: ButtonBase // docmain
             return Appearance.BUTTON;
         return Appearance.NORMAL;
     }
-    
-    
+
+
     ///
     final @property void autoCheck(bool byes) // setter
     {
@@ -488,14 +487,14 @@ class CheckBox: ButtonBase // docmain
             _bstyle((_bstyle() & ~BS_AUTOCHECKBOX) | BS_CHECKBOX);
         _autocheck = byes;
     }
-    
+
     /// ditto
     final @property bool autoCheck() // getter
     {
         return _autocheck;
     }
-    
-    
+
+
     this()
     {
         wstyle |= BS_AUTOCHECKBOX | BS_LEFT | BS_VCENTER; // Auto check and MIDDLE_LEFT by default.
@@ -509,11 +508,11 @@ class CheckBox: ButtonBase // docmain
             _check = CheckState.CHECKED;
         else
             _check = CheckState.UNCHECKED;
-        
+
         if(isHandleCreated)
             SendMessageA(handle, BM_SETCHECK, cast(WPARAM)_check, 0);
     }
-    
+
     /// ditto
     // Returns true for indeterminate too.
     final @property bool checked() // getter
@@ -522,17 +521,17 @@ class CheckBox: ButtonBase // docmain
             _updateState();
         return _check != CheckState.UNCHECKED;
     }
-    
-    
+
+
     ///
     final @property void checkState(CheckState st) // setter
     {
         _check = st;
-        
+
         if(isHandleCreated)
             SendMessageA(handle, BM_SETCHECK, cast(WPARAM)st, 0);
     }
-    
+
     /// ditto
     final @property CheckState checkState() // getter
     {
@@ -540,26 +539,26 @@ class CheckBox: ButtonBase // docmain
             _updateState();
         return _check;
     }
-    
-    
+
+
     protected override void onHandleCreated(EventArgs ea)
     {
         super.onHandleCreated(ea);
-        
+
         if(_autocheck)
             _bstyle((_bstyle() & ~BS_CHECKBOX) | BS_AUTOCHECKBOX);
         else
             _bstyle((_bstyle() & ~BS_AUTOCHECKBOX) | BS_CHECKBOX);
-        
+
         SendMessageA(handle, BM_SETCHECK, cast(WPARAM)_check, 0);
     }
-    
-    
+
+
     private:
     CheckState _check = CheckState.UNCHECKED; // Not always accurate.
     bool _autocheck = true;
-    
-    
+
+
     void _updateState()
     {
         _check = cast(CheckState)SendMessageA(handle, BM_GETCHECK, 0, 0);
@@ -578,15 +577,15 @@ class RadioButton: ButtonBase // docmain
             case Appearance.NORMAL:
                 _bstyle(_bstyle() & ~BS_PUSHLIKE);
                 break;
-            
+
             case Appearance.BUTTON:
                 _bstyle(_bstyle() | BS_PUSHLIKE);
                 break;
         }
-        
+
         _crecreate();
     }
-    
+
     /// ditto
     final @property Appearance appearance() // getter
     {
@@ -594,22 +593,22 @@ class RadioButton: ButtonBase // docmain
             return Appearance.BUTTON;
         return Appearance.NORMAL;
     }
-    
-    
+
+
     ///
     final @property void autoCheck(bool byes) // setter
     {
         _autocheck = byes;
     }
-    
-    
+
+
     /// ditto
     final @property bool autoCheck() // getter
     {
         return _autocheck;
     }
-    
-    
+
+
     this()
     {
         wstyle &= ~WS_TABSTOP;
@@ -635,7 +634,7 @@ class RadioButton: ButtonBase // docmain
             }
             checked = true;
         }
-        
+
         super.onClick(ea);
     }
 
@@ -646,11 +645,11 @@ class RadioButton: ButtonBase // docmain
             _check = CheckState.CHECKED;
         else
             _check = CheckState.UNCHECKED;
-        
+
         if(isHandleCreated)
             SendMessageA(handle, BM_SETCHECK, cast(WPARAM)_check, 0);
     }
-    
+
     /// ditto
     // Returns true for indeterminate too.
     final @property bool checked() // getter
@@ -659,17 +658,17 @@ class RadioButton: ButtonBase // docmain
             _updateState();
         return _check != CheckState.UNCHECKED;
     }
-    
-    
+
+
     ///
     final @property void checkState(CheckState st) // setter
     {
         _check = st;
-        
+
         if(isHandleCreated)
             SendMessageA(handle, BM_SETCHECK, cast(WPARAM)st, 0);
     }
-    
+
     /// ditto
     final @property CheckState checkState() // getter
     {
@@ -677,35 +676,35 @@ class RadioButton: ButtonBase // docmain
             _updateState();
         return _check;
     }
-    
-    
+
+
     ///
     void performClick()
     {
         SendMessageA(handle, BM_CLICK, 0, 0); // So that wndProc() gets it.
     }
-    
-    
+
+
     protected override void onHandleCreated(EventArgs ea)
     {
         super.onHandleCreated(ea);
         SendMessageA(handle, BM_SETCHECK, cast(WPARAM)_check, 0);
     }
-    
-    
-    /+ package +/ /+ protected +/ override int _rtype() // package
+
+
+    override int _rtype() // package
     {
         if(autoCheck)
             return 1 | 8; // Radio button + auto check.
         return 1; // Radio button.
     }
-    
-    
+
+
     private:
     CheckState _check = CheckState.UNCHECKED; // Not always accurate.
     bool _autocheck = true;
-    
-    
+
+
     void _updateState()
     {
         _check = cast(CheckState)SendMessageA(handle, BM_GETCHECK, 0, 0);

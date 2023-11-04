@@ -19,11 +19,11 @@ class Label: Control // docmain
     this()
     {
         resizeRedraw = true; // Word wrap and center correctly.
-        
+
         tfmt = new TextFormat(TextFormatFlags.WORD_BREAK | TextFormatFlags.LINE_LIMIT);
     }
-    
-    
+
+
     ///
     @property void borderStyle(BorderStyle bs) // setter
     {
@@ -33,24 +33,24 @@ class Label: Control // docmain
                 _style(_style() & ~WS_BORDER);
                 _exStyle(_exStyle() | WS_EX_CLIENTEDGE);
                 break;
-                
+
             case BorderStyle.FIXED_SINGLE:
                 _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
                 _style(_style() | WS_BORDER);
                 break;
-                
+
             case BorderStyle.NONE:
                 _style(_style() & ~WS_BORDER);
                 _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
                 break;
         }
-        
+
         if(isHandleCreated)
         {
             redrawEntire();
         }
     }
-    
+
     /// ditto
     @property BorderStyle borderStyle() // getter
     {
@@ -60,8 +60,8 @@ class Label: Control // docmain
             return BorderStyle.FIXED_SINGLE;
         return BorderStyle.NONE;
     }
-    
-    
+
+
     ///
     final @property void useMnemonic(bool byes) // setter
     {
@@ -75,18 +75,18 @@ class Label: Control // docmain
             tfmt.formatFlags = tfmt.formatFlags | TextFormatFlags.NO_PREFIX;
             _style(_style() | SS_NOPREFIX);
         }
-        
+
         if(isHandleCreated)
             invalidate();
     }
-    
+
     /// ditto
     final @property bool useMnemonic() // getter
     {
         return (tfmt.formatFlags & TextFormatFlags.NO_PREFIX) == 0;
     }
-    
-    
+
+
     ///
     @property Size preferredSize() // getter
     {
@@ -97,51 +97,46 @@ class Label: Control // docmain
         g.dispose();
         return result;
     }
-    
-    
+
+
     private void doAutoSize(wstring text)
     {
-        //if(isHandleCreated)
-        {
-            clientSize = preferredSize;
-        }
+        clientSize = preferredSize;
     }
-    
-    
+
+
     override @property void text(wstring newText) // setter
     {
         super.text = newText;
-        
+
         if(autosz)
             doAutoSize(newText);
-        
-        //invalidate(false);
     }
-    
+
     alias Control.text text; // Overload.
-    
-    
+
+
     ///
     @property void autoSize(bool byes) // setter
     {
         if(byes != autosz)
         {
             autosz = byes;
-            
+
             if(byes)
             {
                 doAutoSize(text);
             }
         }
     }
-    
+
     /// ditto
     @property bool autoSize() // getter
     {
         return autosz;
     }
-    
-    
+
+
     ///
     @property void textAlign(ContentAlignment calign) // setter
     {
@@ -150,49 +145,49 @@ class Label: Control // docmain
             case ContentAlignment.TOP_LEFT:
                 tfmt.alignment = TextAlignment.TOP | TextAlignment.LEFT;
                 break;
-            
+
             case ContentAlignment.BOTTOM_CENTER:
                 tfmt.alignment = TextAlignment.BOTTOM | TextAlignment.CENTER;
                 break;
-            
+
             case ContentAlignment.BOTTOM_LEFT:
                 tfmt.alignment = TextAlignment.BOTTOM | TextAlignment.LEFT;
                 break;
-            
+
             case ContentAlignment.BOTTOM_RIGHT:
                 tfmt.alignment = TextAlignment.BOTTOM | TextAlignment.RIGHT;
                 break;
-            
+
             case ContentAlignment.MIDDLE_CENTER:
                 tfmt.alignment = TextAlignment.MIDDLE | TextAlignment.CENTER;
                 break;
-            
+
             case ContentAlignment.MIDDLE_LEFT:
                 tfmt.alignment = TextAlignment.MIDDLE | TextAlignment.LEFT;
                 break;
-            
+
             case ContentAlignment.MIDDLE_RIGHT:
                 tfmt.alignment = TextAlignment.MIDDLE | TextAlignment.RIGHT;
                 break;
-            
+
             case ContentAlignment.TOP_CENTER:
                 tfmt.alignment = TextAlignment.TOP | TextAlignment.CENTER;
                 break;
-            
+
             case ContentAlignment.TOP_RIGHT:
                 tfmt.alignment = TextAlignment.TOP | TextAlignment.RIGHT;
                 break;
         }
-        
+
         invalidate(); // ?
     }
-    
+
     /// ditto
     @property ContentAlignment textAlign() // getter
     {
         TextAlignment ta;
         ta = tfmt.alignment;
-        
+
         if(ta & TextAlignment.BOTTOM)
         {
             if(ta & TextAlignment.RIGHT)
@@ -239,21 +234,21 @@ class Label: Control // docmain
             }
         }
     }
-    
-    
+
+
     protected override @property Size defaultSize() // getter
     {
         return Size(100, 23);
     }
-    
-    
+
+
     protected override void onPaint(PaintEventArgs ea)
     {
         int x, y, w, h;
         wstring text;
-        
+
         text = this.text;
-        
+
         if(tfmt.alignment & TextAlignment.MIDDLE)
         {
             // Graphics.drawText() does not support middle alignment
@@ -261,10 +256,7 @@ class Label: Control // docmain
             Size sz;
             sz = ea.graphics.measureText(text, font, tfmt);
             x = 0;
-            //if(sz.height >= this.clientSize.height)
-            //    y = 0;
-            //else
-                y = (this.clientSize.height - sz.height) / 2;
+            y = (this.clientSize.height - sz.height) / 2;
             w = clientSize.width;
             h = sz.height;
         }
@@ -275,10 +267,7 @@ class Label: Control // docmain
             Size sz;
             sz = ea.graphics.measureText(text, font, tfmt);
             x = 0;
-            //if(sz.height >= this.clientSize.height)
-            //    y = 0;
-            //else
-                y = this.clientSize.height - sz.height;
+            y = this.clientSize.height - sz.height;
             w = clientSize.width;
             h = sz.height;
         }
@@ -289,11 +278,10 @@ class Label: Control // docmain
             w = clientSize.width;
             h = clientSize.height;
         }
-        
+
         Color c;
         c = foreColor;
-        //c = foreColor.solidColor(backColor);
-        
+
         if(enabled)
         {
             ea.graphics.drawText(text, font, c, Rect(x, y, w, h), tfmt);
@@ -302,59 +290,45 @@ class Label: Control // docmain
         {
             ea.graphics.drawTextDisabled(text, font, c, backColor, Rect(x, y, w, h), tfmt);
         }
-        
+
         super.onPaint(ea);
     }
-    
-    
-    /+
-    protected override void onHandleCreated(EventArgs ea)
-    {
-        super.onHandleCreated(ea);
-        
-        /+
-        if(autosz)
-            doAutoSize(text);
-        +/
-    }
-    +/
-    
-    
+
+
     protected override void onEnabledChanged(EventArgs ea)
     {
         invalidate(false);
-        
+
         super.onEnabledChanged(ea);
     }
-    
-    
+
+
     protected override void onFontChanged(EventArgs ea)
     {
         if(autosz)
             doAutoSize(text);
-        
+
         invalidate(false);
-        
+
         super.onFontChanged(ea);
     }
-    
-    
+
+
     protected override void wndProc(ref Message m)
     {
         switch(m.msg)
         {
             case WM_GETDLGCODE:
                 super.wndProc(m);
-                //if(useMnemonic)
-                    m.result |= DLGC_STATIC;
+                m.result |= DLGC_STATIC;
                 break;
-            
+
             default:
                 super.wndProc(m);
         }
     }
-    
-    
+
+
     protected override bool processMnemonic(dchar charCode)
     {
         if(visible && enabled)
@@ -367,29 +341,21 @@ class Label: Control // docmain
         }
         return false;
     }
-    
-    
+
+
     private:
     TextFormat _tfmt;
     bool autosz = false;
-    
-    
+
+
     final @property void tfmt(TextFormat tf) // setter
     {
         _tfmt = tf;
     }
-    
-    
+
+
     final @property TextFormat tfmt() // getter
     {
-        /+
-        // This causes it to invert.
-        if(rightToLeft)
-            _tfmt.formatFlags = _tfmt.formatFlags | TextFormatFlags.DIRECTION_RIGHT_TO_LEFT;
-        else
-            _tfmt.formatFlags = _tfmt.formatFlags & ~TextFormatFlags.DIRECTION_RIGHT_TO_LEFT;
-        +/
-        
         return _tfmt;
     }
 }
