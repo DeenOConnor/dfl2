@@ -19,8 +19,6 @@ class CommandButton : ButtonBase {
     These exist in core.sys.windows.commctrl, but the way
     they're defined there is weird, so they're copied here
     */
-    private static enum BS_SPLITBUTTON = 0x0000_000C;
-    private static enum BS_DEFSPLITBUTTON = 0x0000_000D;
     private static enum BS_COMMANDLINK = 0x0000_000E;
     private static enum BS_DEFCOMMANDLINK = 0x0000_000F;
 
@@ -31,7 +29,12 @@ class CommandButton : ButtonBase {
 
         // BS_DEFPUSHBUTTON is appied in ButtonBase
         cp.style &= ~BS_DEFPUSHBUTTON;
-        cp.style |= BS_DEFCOMMANDLINK;
+        cp.style &= ~BS_PUSHBUTTON;
+        if (this.isDefault) {
+            cp.style |= BS_DEFCOMMANDLINK;
+        } else {
+            cp.style |= BS_COMMANDLINK;
+        }
     }
 
     // performClick is defined in Button, not in ButtonBase
@@ -142,6 +145,5 @@ class CommandButton : ButtonBase {
 private:
     wstring lowtext = ""; // For BCM_SETNOTE
     Image _img = null;
-    bool isdefault = false;
 
 }

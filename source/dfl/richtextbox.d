@@ -958,7 +958,7 @@ class RichTextBox: TextBoxBase // docmain
 
     override void prevWndProc(ref Message m)
     {
-        m.result = CallWindowProcA(richtextboxPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
+        m.result = CallWindowProcW(richtextboxPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
     }
 
 
