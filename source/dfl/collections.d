@@ -18,428 +18,420 @@ void _blankListCallback(TValue)(size_t idx, TValue val) // package
 // Item*Callback called before modifications.
 // For clear(), index is size_t.max and value is null. If CLEAR_EACH, also called back for each value.
 template ListWrapArray(TValue, alias Array,/+ // DMD 1.005: basic type expected, not function
-	alias ItemAddingCallback = function(size_t idx, TValue val){},
-	alias ItemAddedCallback = function(size_t idx, TValue val){},
-	alias ItemRemovingCallback = function(size_t idx, TValue val){},
-	alias ItemRemovedCallback = function(size_t idx, TValue val){},
-	+/
-	// At least for DMD 2.102.0 this is the way, otherwise error instantiating
-	alias ItemAddingCallback,
-	alias ItemAddedCallback,
-	alias ItemRemovingCallback,
-	alias ItemRemovedCallback,
-	bool OVERLOAD_STRING = false,
-	bool OVERLOAD_OBJECT = false,
-	bool COW = true,
-	bool CLEAR_EACH = false) {
+    alias ItemAddingCallback = function(size_t idx, TValue val){},
+    alias ItemAddedCallback = function(size_t idx, TValue val){},
+    alias ItemRemovingCallback = function(size_t idx, TValue val){},
+    alias ItemRemovedCallback = function(size_t idx, TValue val){},
+    +/
+    // At least for DMD 2.102.0 this is the way, otherwise error instantiating
+    alias ItemAddingCallback,
+    alias ItemAddedCallback,
+    alias ItemRemovingCallback,
+    alias ItemRemovedCallback,
+    bool OVERLOAD_STRING = false,
+    bool OVERLOAD_OBJECT = false,
+    bool COW = true,
+    bool CLEAR_EACH = false) {
 
-	mixin OpApplyWrapArray!(TValue, Array); // Note: this overrides COW.
+    mixin OpApplyWrapArray!(TValue, Array); // Note: this overrides COW.
 
-	static if (OVERLOAD_OBJECT) {
-		static assert(!is(TValue == Object));
-	}
+    static if (OVERLOAD_OBJECT) {
+        static assert(!is(TValue == Object));
+    }
 
-	static if (OVERLOAD_STRING) {
+    static if (OVERLOAD_STRING) {
         static if (is(TValue == Object))
-			alias StringObject TValueString;
-		else
-			alias TValue TValueString;
-	}
+            alias StringObject TValueString;
+        else
+            alias TValue TValueString;
+    }
 
-	///
-	void opIndexAssign(TValue value, int index) {
-		TValue oldval = Array[index];
-		ItemRemovingCallback(index, oldval); // Removing.
-		static if (COW) {
-			Array = Array.dup;
-		} else {
-			//Array[index] = TValue.init;
-		}
-		ItemRemovedCallback(index, oldval); // Removed.
+    ///
+    void opIndexAssign(TValue value, int index) {
+        TValue oldval = Array[index];
+        ItemRemovingCallback(index, oldval); // Removing.
+        static if (COW) {
+            Array = Array.dup;
+        } else {
+        }
+        ItemRemovedCallback(index, oldval); // Removed.
 
-		ItemAddingCallback(index, value); // Adding.
-		Array[index] = value;
-		ItemAddedCallback(index, value); // Added.
-	}
+        ItemAddingCallback(index, value); // Adding.
+        Array[index] = value;
+        ItemAddedCallback(index, value); // Added.
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		void opIndexAssign(Object value, int index) {
-			TValue tval;
-			tval = cast(TValue) value;
-			if (tval)
-				return opIndexAssign(tval, index);
-			else
-				return opIndexAssign(new TValue(value), index); // ?
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        void opIndexAssign(Object value, int index) {
+            TValue tval;
+            tval = cast(TValue) value;
+            if (tval)
+                return opIndexAssign(tval, index);
+            else
+                return opIndexAssign(new TValue(value), index); // ?
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		void opIndexAssign(wstring value, int index) {
-			opIndexAssign(new TValueString(value), index);
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        void opIndexAssign(wstring value, int index) {
+            opIndexAssign(new TValueString(value), index);
+        }
+    }
 
-	///
-	@property TValue opIndex(int index) // getter
-	{
-		return Array[index];
-	}
+    ///
+    @property TValue opIndex(int index) // getter
+    {
+        return Array[index];
+    }
 
-	///
-	void add(TValue value) {
-		_insert(cast(int) Array.length, value);
-	}
+    ///
+    void add(TValue value) {
+        _insert(cast(int) Array.length, value);
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		void add(Object value) {
-			_insert(cast(int) Array.length, value);
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        void add(Object value) {
+            _insert(cast(int) Array.length, value);
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		void add(wstring value) {
-			_insert(cast(int) Array.length, new TValueString(value));
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        void add(wstring value) {
+            _insert(cast(int) Array.length, new TValueString(value));
+        }
+    }
 
-	///
-	void clear() {
-		ItemRemovingCallback(int.max, null); // Removing ALL.
+    ///
+    void clear() {
+        ItemRemovingCallback(int.max, null); // Removing ALL.
 
-		int iw;
-		iw = cast(int) Array.length;
-		if (iw) {
-			static if (CLEAR_EACH) {
-				try {
-					// Remove in reverse order so the indices don't keep shifting.
-					TValue oldval;
-					for (--iw;; iw--) {
-						oldval = Array[iw];
-						static if (CLEAR_EACH) {
-							ItemRemovingCallback(iw, oldval); // Removing.
-						}
-						/+static if(COW)
-						{
-						}
-						else
-						{
-							//Array[iw] = TValue.init;
-						}+/
-						debug {
-							Array = Array[0 .. iw]; // 'Temporarily' removes it for ItemRemovedCallback.
-						}
-						static if (CLEAR_EACH) {
-							ItemRemovedCallback(iw, oldval); // Removed.
-						}
-						if (!iw)
-							break;
-					}
-				} finally {
-					Array = Array[0 .. iw];
-					static if (COW) {
-						if (!iw)
-							Array = null;
-					}
-				}
-			} else {
-				Array = Array[0 .. 0];
-				static if (COW) {
-					Array = null;
-				}
-			}
-		}
+        int iw;
+        iw = cast(int) Array.length;
+        if (iw) {
+            static if (CLEAR_EACH) {
+                try {
+                    // Remove in reverse order so the indices don't keep shifting.
+                    TValue oldval;
+                    for (--iw;; iw--) {
+                        oldval = Array[iw];
+                        static if (CLEAR_EACH) {
+                            ItemRemovingCallback(iw, oldval); // Removing.
+                        }
+                        debug {
+                            Array = Array[0 .. iw]; // 'Temporarily' removes it for ItemRemovedCallback.
+                        }
+                        static if (CLEAR_EACH) {
+                            ItemRemovedCallback(iw, oldval); // Removed.
+                        }
+                        if (!iw)
+                            break;
+                    }
+                } finally {
+                    Array = Array[0 .. iw];
+                    static if (COW) {
+                        if (!iw)
+                            Array = null;
+                    }
+                }
+            } else {
+                Array = Array[0 .. 0];
+                static if (COW) {
+                    Array = null;
+                }
+            }
+        }
 
-		ItemRemovedCallback(int.max, null); // Removed ALL.
-	}
+        ItemRemovedCallback(int.max, null); // Removed ALL.
+    }
 
-	///
-	bool contains(TValue value) {
-		return -1 != findIsIndex!(TValue)(Array, value);
-	}
+    ///
+    bool contains(TValue value) {
+        return -1 != findIsIndex!(TValue)(Array, value);
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		bool contains(Object value) {
-			return -1 != indexOf(value);
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        bool contains(Object value) {
+            return -1 != indexOf(value);
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		bool contains(wstring value) {
-			return -1 != indexOf(value);
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        bool contains(wstring value) {
+            return -1 != indexOf(value);
+        }
+    }
 
-	///
-	int indexOf(TValue value) {
-		return findIsIndex!(TValue)(Array, value);
-	}
+    ///
+    int indexOf(TValue value) {
+        return findIsIndex!(TValue)(Array, value);
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		int indexOf(Object value) {
-			TValue tval;
-			tval = cast(TValue) value;
-			if (tval) {
-				return indexOf(tval);
-			} else {
-				foreach (size_t idx, TValue onval; Array) {
-					if (onval == value) // TValue must have opEquals.
-						return idx;
-				}
-				return -1;
-			}
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        int indexOf(Object value) {
+            TValue tval;
+            tval = cast(TValue) value;
+            if (tval) {
+                return indexOf(tval);
+            } else {
+                foreach (size_t idx, TValue onval; Array) {
+                    if (onval == value) // TValue must have opEquals.
+                        return idx;
+                }
+                return -1;
+            }
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		int indexOf(wstring value) {
-			import std.conv : to;
-			foreach (size_t idx, TValue onval; Array) {
-				static if (is(TValue == TValueString)) {
-					if (onval == value) // TValue must have opEquals.
-						return to!uint(idx);
-				} else {
-					if (to!wstring(onval.toString()) == value)
-						return to!uint(idx);
-				}
-			}
-			return -1;
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        int indexOf(wstring value) {
+            import std.conv : to;
+            foreach (size_t idx, TValue onval; Array) {
+                static if (is(TValue == TValueString)) {
+                    if (onval == value) // TValue must have opEquals.
+                        return to!uint(idx);
+                } else {
+                    if (to!wstring(onval.toString()) == value)
+                        return to!uint(idx);
+                }
+            }
+            return -1;
+        }
+    }
 
-	private final void _insert(int index, TValue value) {
-		if (index > Array.length)
-			index = cast(int) Array.length;
-		ItemAddingCallback(index, value); // Adding.
-		static if (COW) {
-			if (index >= Array.length) {
-				if (Array.length) // Workaround old bug ?
-				{
-					Array = Array[0 .. index] ~ (&value)[0 .. 1];
-				} else {
-					Array = (&value)[0 .. 1].dup;
-				}
-				goto insert_done;
-			}
-		} else {
-			if (index >= Array.length) {
-				Array ~= value;
-				goto insert_done;
-			}
-		}
-		Array = Array[0 .. index] ~ (&value)[0 .. 1] ~ Array[index .. Array.length];
-	insert_done:
-		ItemAddedCallback(index, value); // Added.
-	}
+    private final void _insert(int index, TValue value) {
+        if (index > Array.length)
+            index = cast(int) Array.length;
+        ItemAddingCallback(index, value); // Adding.
+        static if (COW) {
+            if (index >= Array.length) {
+                if (Array.length) // Workaround old bug ?
+                {
+                    Array = Array[0 .. index] ~ (&value)[0 .. 1];
+                } else {
+                    Array = (&value)[0 .. 1].dup;
+                }
+                goto insert_done;
+            }
+        } else {
+            if (index >= Array.length) {
+                Array ~= value;
+                goto insert_done;
+            }
+        }
+        Array = Array[0 .. index] ~ (&value)[0 .. 1] ~ Array[index .. Array.length];
+    insert_done:
+        ItemAddedCallback(index, value); // Added.
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		private final void _insert(int index, Object value) {
-			TValue tval;
-			tval = cast(TValue) value;
-			if (tval)
-				return _insert(index, tval);
-			else
-				return _insert(index, new TValue(value)); // ?
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        private final void _insert(int index, Object value) {
+            TValue tval;
+            tval = cast(TValue) value;
+            if (tval)
+                return _insert(index, tval);
+            else
+                return _insert(index, new TValue(value)); // ?
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		private final void _insert(int index, wstring value) {
-			_insert(index, new TValueString(value));
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        private final void _insert(int index, wstring value) {
+            _insert(index, new TValueString(value));
+        }
+    }
 
-	///
-	void insert(int index, TValue value) {
-		_insert(index, value);
-	}
+    ///
+    void insert(int index, TValue value) {
+        _insert(index, value);
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		void insert(int index, Object value) {
-			_insert(index, value);
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        void insert(int index, Object value) {
+            _insert(index, value);
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		void insert(int index, wstring value) {
-			return _insert(index, value);
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        void insert(int index, wstring value) {
+            return _insert(index, value);
+        }
+    }
 
-	///
-	void remove(TValue value) {
-		int index;
-		index = findIsIndex!(TValue)(Array, value);
-		if (-1 != index)
-			removeAt(index);
-	}
+    ///
+    void remove(TValue value) {
+        int index;
+        index = findIsIndex!(TValue)(Array, value);
+        if (-1 != index)
+            removeAt(index);
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		void remove(Object value) {
-			TValue tval;
-			tval = cast(TValue) value;
-			if (tval) {
-				return remove(tval);
-			} else {
-				int i;
-				i = indexOf(value);
-				if (-1 != i)
-					removeAt(i);
-			}
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        void remove(Object value) {
+            TValue tval;
+            tval = cast(TValue) value;
+            if (tval) {
+                return remove(tval);
+            } else {
+                int i;
+                i = indexOf(value);
+                if (-1 != i)
+                    removeAt(i);
+            }
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		void remove(wstring value) {
-			int i;
-			i = indexOf(value);
-			if (-1 != i)
-				removeAt(i);
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        void remove(wstring value) {
+            int i;
+            i = indexOf(value);
+            if (-1 != i)
+                removeAt(i);
+        }
+    }
 
-	///
-	void removeAt(int index) {
-		TValue oldval = Array[index];
-		ItemRemovingCallback(index, oldval); // Removing.
-		if (!index)
-			Array = Array[1 .. Array.length];
-		else if (index == Array.length - 1)
-			Array = Array[0 .. index];
-		else if (index > 0 && index < cast(int) Array.length)
-			Array = Array[0 .. index] ~ Array[index + 1 .. Array.length];
-		ItemRemovedCallback(index, oldval); // Removed.
-	}
+    ///
+    void removeAt(int index) {
+        TValue oldval = Array[index];
+        ItemRemovingCallback(index, oldval); // Removing.
+        if (!index)
+            Array = Array[1 .. Array.length];
+        else if (index == Array.length - 1)
+            Array = Array[0 .. index];
+        else if (index > 0 && index < cast(int) Array.length)
+            Array = Array[0 .. index] ~ Array[index + 1 .. Array.length];
+        ItemRemovedCallback(index, oldval); // Removed.
+    }
 
-	deprecated alias length count;
+    deprecated alias length count;
 
-	///
-	@property size_t length() // getter
-	{
-		return Array.length;
-	}
+    ///
+    @property size_t length() // getter
+    {
+        return Array.length;
+    }
 
-	deprecated alias dup clone;
+    deprecated alias dup clone;
 
-	///
-	TValue[] dup() {
-		return Array.dup;
-	}
+    ///
+    TValue[] dup() {
+        return Array.dup;
+    }
 
-	///
-	void copyTo(TValue[] dest, int destIndex) {
-		dest[destIndex .. destIndex + Array.length] = Array[];
-	}
+    ///
+    void copyTo(TValue[] dest, int destIndex) {
+        dest[destIndex .. destIndex + Array.length] = Array[];
+    }
 
-	///
-	void addRange(TValue[] values) {
-		foreach (TValue value; values) {
-			add(value);
-		}
-	}
+    ///
+    void addRange(TValue[] values) {
+        foreach (TValue value; values) {
+            add(value);
+        }
+    }
 
-	static if (OVERLOAD_OBJECT) {
-		/// ditto
-		void addRange(Object[] values) {
-			foreach (Object value; values) {
-				add(value);
-			}
-		}
-	}
+    static if (OVERLOAD_OBJECT) {
+        /// ditto
+        void addRange(Object[] values) {
+            foreach (Object value; values) {
+                add(value);
+            }
+        }
+    }
 
-	static if (OVERLOAD_STRING) {
-		/// ditto
-		void addRange(wstring[] values) {
-			foreach (wstring value; values) {
-				add(value);
-			}
-		}
-	}
+    static if (OVERLOAD_STRING) {
+        /// ditto
+        void addRange(wstring[] values) {
+            foreach (wstring value; values) {
+                add(value);
+            }
+        }
+    }
 }
 
 // Mixin.
 template OpApplyAddIndex(alias ApplyFunc, TValue, bool ADD_APPLY_FUNC = false) // package
 {
-	///
-	int opApply(int delegate(ref size_t, ref TValue val) dg) {
-		size_t idx = 0;
-		return ApplyFunc(
-			(ref TValue val) {
-			int result;
-			result = dg(idx, val);
-			idx++;
-			return result;
-		});
-	}
+    ///
+    int opApply(int delegate(ref size_t, ref TValue val) dg) {
+        size_t idx = 0;
+        return ApplyFunc(
+            (ref TValue val) {
+            int result;
+            result = dg(idx, val);
+            idx++;
+            return result;
+        });
+    }
 
-	static if (ADD_APPLY_FUNC) {
-		/// ditto
-		int opApply(int delegate(ref TValue val) dg) {
-			return ApplyFunc(dg);
-		}
-	}
+    static if (ADD_APPLY_FUNC) {
+        /// ditto
+        int opApply(int delegate(ref TValue val) dg) {
+            return ApplyFunc(dg);
+        }
+    }
 }
 
 // Mixin.
 template OpApplyWrapArray(TValue, alias Array) // package
 {
-	///
-	int opApply(int delegate(ref TValue val) dg) {
-		int result = 0;
-		foreach (ref TValue val; Array) {
-			result = dg(val);
-			if (result)
-				break;
-		}
-		return result;
-	}
+    ///
+    int opApply(int delegate(ref TValue val) dg) {
+        int result = 0;
+        foreach (ref TValue val; Array) {
+            result = dg(val);
+            if (result)
+                break;
+        }
+        return result;
+    }
 
-	/// ditto
-	int opApply(int delegate(ref size_t, ref TValue val) dg) {
-		int result = 0;
-		foreach (size_t idx, ref TValue val; Array) {
-			result = dg(idx, val);
-			if (result)
-				break;
-		}
-		return result;
-	}
+    /// ditto
+    int opApply(int delegate(ref size_t, ref TValue val) dg) {
+        int result = 0;
+        foreach (size_t idx, ref TValue val; Array) {
+            result = dg(idx, val);
+            if (result)
+                break;
+        }
+        return result;
+    }
 }
 
 template removeIndex(T) // package
 {
-	T[] removeIndex(T[] array, size_t index) {
-		if (!index)
-			array = array[1 .. array.length];
-		else if (index == array.length - 1)
-			array = array[0 .. index];
-		else
-			array = array[0 .. index] ~ array[index + 1 .. array.length];
-		return array;
-	}
+    T[] removeIndex(T[] array, size_t index) {
+        if (!index)
+            array = array[1 .. array.length];
+        else if (index == array.length - 1)
+            array = array[0 .. index];
+        else
+            array = array[0 .. index] ~ array[index + 1 .. array.length];
+        return array;
+    }
 }
 
 // Returns -1 if not found.
 template findIsIndex(T) // package
 {
-	int findIsIndex(T[] array, T obj) {
-		int idx;
-		for (idx = 0; idx != array.length; idx++) {
-			if (obj is array[idx])
-				return idx;
-		}
-		return -1;
-	}
+    int findIsIndex(T[] array, T obj) {
+        int idx;
+        for (idx = 0; idx != array.length; idx++) {
+            if (obj is array[idx])
+                return idx;
+        }
+        return -1;
+    }
 }
