@@ -94,7 +94,7 @@ class SplitButton : ButtonBase {
                 SetMenuInfo(menu, &menuInfo);
 
                 foreach(item; this.icollection._items) {
-                    auto menuText = item.text.dup;
+                    auto menuText = item.text.dup ~ '\0';
                     MENUITEMINFOW itemInfo;
                     itemInfo.cbSize = MENUITEMINFOW.sizeof;
                     itemInfo.fMask = MIIM_STRING;
@@ -115,6 +115,11 @@ class SplitButton : ButtonBase {
     protected override void wndProc(ref Message m)
     {
         // Placeholder
+        switch(m.msg) {
+            case WM_COMMAND:
+            break;
+            default:
+        }
         super.wndProc(m);
     }
 
