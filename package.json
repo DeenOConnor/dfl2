@@ -3,9 +3,9 @@
 	"description": "dfl2 is a GUI library for Windows,now it can be built by dco, DUB or Visual Studio .NET(such as VS 2010).",
 	"license": "LGPL-3.0",
 	"authors": [
-		"Christopher E. Miller","FrankLIKE"
+		"Christopher E. Miller","FrankLIKE","DeenOConnor"
 	],
-	"homepage": "https://github.com/FrankLIKE/dfl2",
+	"homepage": "https://github.com/DeenOConnor/dfl2",
 	"importPaths": ["source/"],
 	"targetType": "library",
 	"targetName": "dfl_debug",
