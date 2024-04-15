@@ -20,7 +20,7 @@ class TrackBar : ControlSuperClass {
     {
         _initTrackBar();
         wstyle &= ~WS_CLIPCHILDREN & ~WS_CLIPSIBLINGS;
-        wstyle |= TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_REVERSED;// | TBS_BOTH| this.orient;
+        wstyle |= TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_REVERSED;
         wclassStyle = trackbarClassStyle;
         super();
     }
@@ -29,13 +29,8 @@ class TrackBar : ControlSuperClass {
     protected override void createParams(ref CreateParams cp)
     {
         super.createParams(cp);
-
-        // TODO : Fix
-        // If i use TRACKBAR_CLASSNAME, then CreateWindowEx fails for no obvious reason
-        // I checked how Rayerd made it, and apparently his code is more or less the same
-        // Simply changing the window class somehow fixes the issue, and it works fine
-        cp.className = "msctls_trackbar32"w;//TRACKBAR_CLASSNAME;
-        //cp.style |= TBS_TOOLTIPS | TBS_BOTH | this.orient;
+        cp.className = TRACKBAR_CLASSNAME;
+        cp.style |= TBS_TOOLTIPS | TBS_BOTTOM | this.orient;
     }
 
 
@@ -81,12 +76,13 @@ class TrackBar : ControlSuperClass {
 
     protected override void prevWndProc(ref Message m)
     {
-        CallWindowProcW(trackbarPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
+        m.result = CallWindowProcW(trackbarPrevWndProc, m.hWnd, m.msg, m.wParam, m.lParam);
     }
 
 
     protected override void onHandleCreated(EventArgs ea)
     {
+        super.onHandleCreated(ea);
         SendMessageA(this.hwnd, TBM_SETRANGEMIN, 0, this.minVal);
         // No need to redraw twice
         SendMessageA(this.hwnd, TBM_SETRANGEMAX, 1, this.maxVal);
