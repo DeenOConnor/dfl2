@@ -2,13 +2,14 @@
 
 module dfl.splitbutton;
 
-
 private import dfl.base;
 private import dfl.button; // Based on a regular button
 private import dfl.collections;
 private import dfl.control;
 private import dfl.event;
 private import dfl.drawing;
+
+import std.conv : to;
 
 import core.sys.windows.windows;
 import core.sys.windows.commctrl;
@@ -70,8 +71,8 @@ class SplitButton : ButtonBase {
         super.text = txt;
     }
 
-    public void addItem(wstring item) {
-        
+    public @property int selectedIndex() {
+        return this.selectedItemIndex;
     }
 
     alias Control.text text; // Overload.
@@ -93,34 +94,25 @@ class SplitButton : ButtonBase {
                 menuInfo.hbrBack = GetSysColorBrush(COLOR_INFOBK);
                 SetMenuInfo(menu, &menuInfo);
 
-                foreach(item; this.icollection._items) {
+                foreach(i, item; this.icollection._items) {
                     auto menuText = item.text.dup ~ '\0';
                     MENUITEMINFOW itemInfo;
                     itemInfo.cbSize = MENUITEMINFOW.sizeof;
-                    itemInfo.fMask = MIIM_STRING;
+                    itemInfo.fMask = MIIM_STRING | MIIM_ID;
                     itemInfo.fType = MFT_STRING;
                     itemInfo.fState = MFS_ENABLED;
+                    itemInfo.wID = to!uint(i);
                     itemInfo.dwTypeData = menuText.ptr;
                     itemInfo.cch = cast(uint)menuText.length;
                     InsertMenuItemW(menu, -1, 1, &itemInfo);
                 }
 
-                TrackPopupMenu(menu, TPM_LEFTBUTTON | TPM_VERPOSANIMATION, points.left, points.bottom, 0, this.hwnd, null);
+                auto returned = TrackPopupMenuEx(menu, TPM_LEFTBUTTON | TPM_RETURNCMD, points.left, points.bottom, this.hwnd, null);
+                this.selectedItemIndex = returned;
+                this.text(this.icollection._items[returned].text);
             }
         }
         super.onReflectedMessage(m);
-    }
-
-
-    protected override void wndProc(ref Message m)
-    {
-        // Placeholder
-        switch(m.msg) {
-            case WM_COMMAND:
-            break;
-            default:
-        }
-        super.wndProc(m);
     }
 
 
@@ -161,6 +153,8 @@ class SplitButton : ButtonBase {
 
     private ObjectCollection icollection;
     private bool sorted = false;
+
+    private int selectedItemIndex = -1;
 
 
     final @property ObjectCollection items() // getter
