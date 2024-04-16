@@ -107,14 +107,23 @@ class SplitButton : ButtonBase {
                     InsertMenuItemW(menu, -1, 1, &itemInfo);
                 }
 
-                auto returned = TrackPopupMenuEx(menu, TPM_LEFTBUTTON | TPM_RETURNCMD, points.left, points.bottom, this.hwnd, null);
-                this.selectedItemIndex = returned;
-                this.text(this.icollection._items[returned].text);
+                TrackPopupMenuEx(menu, TPM_LEFTBUTTON, points.left, points.bottom, this.hwnd, null);
             }
         }
         super.onReflectedMessage(m);
     }
 
+    protected override void wndProc(ref Message m) {
+        switch(m.msg) {
+            case WM_COMMAND:
+                uint sel = cast(uint)(m.wParam);
+                this.selectedItemIndex = sel;
+                this.text(this.icollection._items[sel].text);
+            break;
+            default:
+        }
+        super.wndProc(m);
+    }
 
     protected override void onHandleCreated(EventArgs ea)
     {
