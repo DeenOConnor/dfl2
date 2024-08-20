@@ -27,7 +27,7 @@ How to build separately:
 Your best option is to use Visual Studio with VisualD extension to open and build the project. \
 Building with DMD only is also possible, starting in dfl2\source folder: \
 To generate a .lib file `dmd -m64 -J=dfl -lib -of="..\dfl2.lib" dfl\package.d` \
-To generate a .dll file `dmd -m64 -J=dfl -shared -c -of="..\dfl2.dll" dfl\package.d` \
+DLLs are not supported for now
 Build command tested with powershell on windows 10 22h2
 
 
