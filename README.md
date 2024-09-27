@@ -3,7 +3,7 @@ DFL2
 DFL2, or D Forms Library 2, is a GUI library for Windows. \
 DFL2 is based on original DFL by Christopher E. Miller, which was abandoned in 2011. \
 This project is an attempt to bring DFL to modern D2 and make it a viable alternative to other existing GUI libraries. \
-Latest DMD version that compiles the library - 2.108.0
+Latest DMD version that compiles the library - 2.109.1
 
 Linker dependencies:
 ---
