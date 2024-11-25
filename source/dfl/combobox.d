@@ -656,7 +656,7 @@ class ComboBox: ListControl // docmain
         foreach(size_t i, Control obj; icollection._items)
         {
             m.wParam = i;
-            m.lParam = cast(LPARAM)obj.toString().ptr;
+            m.lParam = cast(LPARAM)obj.toWString().ptr;
 
             prevWndProc(m);
             if(m.result < 0)
