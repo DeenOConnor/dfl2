@@ -22,14 +22,12 @@ abstract class FileDialog: CommonDialog // docmain
 {
     private this()
     {
-        Application.ppin(cast(void*)this);
-
-        ofn.lStructSize = ofn.sizeof;
-        ofn.lCustData = cast(typeof(ofn.lCustData))cast(void*)this;
-        ofn.Flags = INIT_FLAGS;
-        ofn.nFilterIndex = INIT_FILTER_INDEX;
+        ofname.lStructSize = ofname.sizeof;
+        ofname.lCustData = cast(typeof(ofname.lCustData))cast(void*)this;
+        ofname.Flags = INIT_FLAGS;
+        ofname.nFilterIndex = INIT_FILTER_INDEX;
         initInstance();
-        ofn.lpfnHook = cast(typeof(ofn.lpfnHook))&ofnHookProc;
+        ofname.lpfnHook = cast(typeof(ofname.lpfnHook))&ofnHookProc;
     }
 
 
@@ -48,17 +46,17 @@ abstract class FileDialog: CommonDialog // docmain
 
     override void reset()
     {
-        ofn.Flags = INIT_FLAGS;
-        ofn.lpstrFilter = null;
-        ofn.nFilterIndex = INIT_FILTER_INDEX;
-        ofn.lpstrDefExt = null;
+        ofname.Flags = INIT_FLAGS;
+        ofname.lpstrFilter = null;
+        ofname.nFilterIndex = INIT_FILTER_INDEX;
+        ofname.lpstrDefExt = null;
         _defext = null;
         _fileNames = null;
         needRebuildFiles = false;
         _filter = null;
-        ofn.lpstrInitialDir = null;
+        ofname.lpstrInitialDir = null;
         _initDir = null;
-        ofn.lpstrTitle = null;
+        ofname.lpstrTitle = null;
         _title = null;
         initInstance();
     }
@@ -73,15 +71,15 @@ abstract class FileDialog: CommonDialog // docmain
     @property void checkFileExists(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_FILEMUSTEXIST;
+            ofname.Flags |= OFN_FILEMUSTEXIST;
         else
-            ofn.Flags &= ~OFN_FILEMUSTEXIST;
+            ofname.Flags &= ~OFN_FILEMUSTEXIST;
     }
 
     /// ditto
     @property bool checkFileExists() // getter
     {
-        return (ofn.Flags & OFN_FILEMUSTEXIST) != 0;
+        return (ofname.Flags & OFN_FILEMUSTEXIST) != 0;
     }
 
 
@@ -89,24 +87,24 @@ abstract class FileDialog: CommonDialog // docmain
     final @property void checkPathExists(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_PATHMUSTEXIST;
+            ofname.Flags |= OFN_PATHMUSTEXIST;
         else
-            ofn.Flags &= ~OFN_PATHMUSTEXIST;
+            ofname.Flags &= ~OFN_PATHMUSTEXIST;
     }
 
     /// ditto
     final @property bool checkPathExists() // getter
     {
-        return (ofn.Flags & OFN_PATHMUSTEXIST) != 0;
+        return (ofname.Flags & OFN_PATHMUSTEXIST) != 0;
     }
 
 
     ///
-    final @property void defaultExt(string ext) // setter
+    final @property void defaultExt(wstring ext) // setter
     {
         if(!ext.length)
         {
-            ofn.lpstrDefExt = null;
+            ofname.lpstrDefExt = null;
             _defext = null;
         }
         else
@@ -114,13 +112,13 @@ abstract class FileDialog: CommonDialog // docmain
             if(ext.length && ext[0] == '.')
                 ext = ext[1 .. ext.length];
 
-            ofna.lpstrDefExt = ext.ptr;
+            ofname.lpstrDefExt = ext.ptr;
             _defext = ext;
         }
     }
 
     /// ditto
-    final @property string defaultExt() // getter
+    final @property wstring defaultExt() // getter
     {
         return _defext;
     }
@@ -130,20 +128,20 @@ abstract class FileDialog: CommonDialog // docmain
     final @property void dereferenceLinks(bool byes) // setter
     {
         if(byes)
-            ofn.Flags &= ~OFN_NODEREFERENCELINKS;
+            ofname.Flags &= ~OFN_NODEREFERENCELINKS;
         else
-            ofn.Flags |= OFN_NODEREFERENCELINKS;
+            ofname.Flags |= OFN_NODEREFERENCELINKS;
     }
 
     /// ditto
     final @property bool dereferenceLinks() // getter
     {
-        return (ofn.Flags & OFN_NODEREFERENCELINKS) == 0;
+        return (ofname.Flags & OFN_NODEREFERENCELINKS) == 0;
     }
 
 
     ///
-    final @property void fileName(string fn) // setter
+    final @property void fileName(wstring fn) // setter
     {
         // TODO: check if correct implementation.
 
@@ -156,13 +154,13 @@ abstract class FileDialog: CommonDialog // docmain
         }
         else
         {
-            _fileNames = new string[1];
+            _fileNames = new wstring[1];
             _fileNames[0] = fn;
         }
     }
 
     /// ditto
-    final @property string fileName() // getter
+    final @property wstring fileName() // getter
     {
         if(fileNames.length)
             return fileNames[0];
@@ -171,7 +169,7 @@ abstract class FileDialog: CommonDialog // docmain
 
 
     ///
-    final @property string[] fileNames() // getter
+    final @property wstring[] fileNames() // getter
     {
         if(needRebuildFiles)
             populateFiles();
@@ -182,32 +180,22 @@ abstract class FileDialog: CommonDialog // docmain
 
     ///
     // The format string is like "Text files (*.txt)|*.txt|All files (*.*)|*.*".
-    final @property void filter(string filterString) // setter
+    final @property void filter(wstring filterString) // setter
     {
         if(!filterString.length)
         {
-            ofn.lpstrFilter = null;
+            ofname.lpstrFilter = null;
             _filter = null;
         }
         else
         {
-            struct _Str
-            {
-                union
-                {
-                    wchar[] sw;
-                    char[] sa;
-                }
-            }
-            _Str str;
+            wchar[] sw;
 
             size_t i, starti;
             size_t nitems = 0;
 
-            str.sw = new wchar[filterString.length + 2];
-            str.sw = str.sw[0 .. 0];
-            str.sa = new char[filterString.length + 2];
-            str.sa = str.sa[0 .. 0];
+            sw = new wchar[filterString.length + 2];
+            sw = sw[0 .. 0];
 
 
             for(i = starti = 0; i != filterString.length; i++)
@@ -218,10 +206,8 @@ abstract class FileDialog: CommonDialog // docmain
                         if(starti == i)
                             goto bad_filter;
 
-                        str.sw ~= to!wstring(filterString[starti .. i]);
-                        str.sw ~= "\0"w;
-                        str.sa ~= filterString[starti .. i];
-                        str.sa ~= "\0";
+                        sw ~= filterString[starti .. i];
+                        sw ~= "\0"w;
 
                         starti = i + 1;
                         nitems++;
@@ -236,13 +222,9 @@ abstract class FileDialog: CommonDialog // docmain
             if(starti == i || !(nitems % 2))
                 goto bad_filter;
 
-            str.sw ~= to!wstring(filterString[starti .. i]);
-            str.sw ~= "\0\0"w;
-            ofnw.lpstrFilter = str.sw.ptr;
-
-            str.sa ~= filterString[starti .. i];
-            str.sa ~= "\0\0";
-            ofna.lpstrFilter = str.sa.ptr;
+            sw ~= filterString[starti .. i];
+            sw ~= "\0\0"w;
+            ofname.lpstrFilter = sw.ptr;
 
             _filter = filterString;
             return;
@@ -253,7 +235,7 @@ abstract class FileDialog: CommonDialog // docmain
     }
 
     /// ditto
-    final @property string filter() // getter
+    final @property wstring filter() // getter
     {
         return _filter;
     }
@@ -263,33 +245,33 @@ abstract class FileDialog: CommonDialog // docmain
     // Note: index is 1-based.
     final @property void filterIndex(int index) // setter
     {
-        ofn.nFilterIndex = (index > 0) ? index : 1;
+        ofname.nFilterIndex = (index > 0) ? index : 1;
     }
 
     /// ditto
     final @property int filterIndex() // getter
     {
-        return ofn.nFilterIndex;
+        return ofname.nFilterIndex;
     }
 
 
     ///
-    final @property void initialDirectory(string dir) // setter
+    final @property void initialDirectory(wstring dir) // setter
     {
         if(!dir.length)
         {
-            ofn.lpstrInitialDir = null;
+            ofname.lpstrInitialDir = null;
             _initDir = null;
         }
         else
         {
-            ofna.lpstrInitialDir = dir.ptr;
+            ofname.lpstrInitialDir = dir.ptr;
             _initDir = dir;
         }
     }
 
     /// ditto
-    final @property string initialDirectory() // getter
+    final @property wstring initialDirectory() // getter
     {
         return _initDir;
     }
@@ -300,20 +282,20 @@ abstract class FileDialog: CommonDialog // docmain
     ///
     protected @property void inst(HINSTANCE hinst) // setter
     {
-        ofn.hInstance = hinst;
+        ofname.hInstance = hinst;
     }
 
     /// ditto
     protected @property HINSTANCE inst() // getter
     {
-        return ofn.hInstance;
+        return ofname.hInstance;
     }
 
 
     ///
     protected @property DWORD options() // getter
     {
-        return ofn.Flags;
+        return ofname.Flags;
     }
 
 
@@ -321,15 +303,15 @@ abstract class FileDialog: CommonDialog // docmain
     final @property void restoreDirectory(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_NOCHANGEDIR;
+            ofname.Flags |= OFN_NOCHANGEDIR;
         else
-            ofn.Flags &= ~OFN_NOCHANGEDIR;
+            ofname.Flags &= ~OFN_NOCHANGEDIR;
     }
 
     /// ditto
     final @property bool restoreDirectory() // getter
     {
-        return (ofn.Flags & OFN_NOCHANGEDIR) != 0;
+        return (ofname.Flags & OFN_NOCHANGEDIR) != 0;
     }
 
 
@@ -337,35 +319,35 @@ abstract class FileDialog: CommonDialog // docmain
     final @property void showHelp(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_SHOWHELP;
+            ofname.Flags |= OFN_SHOWHELP;
         else
-            ofn.Flags &= ~OFN_SHOWHELP;
+            ofname.Flags &= ~OFN_SHOWHELP;
     }
 
     /// ditto
     final @property bool showHelp() // getter
     {
-        return (ofn.Flags & OFN_SHOWHELP) != 0;
+        return (ofname.Flags & OFN_SHOWHELP) != 0;
     }
 
 
     ///
-    final @property void title(string newTitle) // setter
+    final @property void title(wstring newTitle) // setter
     {
         if(!newTitle.length)
         {
-            ofn.lpstrTitle = null;
+            ofname.lpstrTitle = null;
             _title = null;
         }
         else
         {
-            ofna.lpstrTitle = newTitle.ptr;
+            ofname.lpstrTitle = newTitle.ptr;
             _title = newTitle;
         }
     }
 
     /// ditto
-    final @property string title() // getter
+    final @property wstring title() // getter
     {
         return _title;
     }
@@ -375,15 +357,15 @@ abstract class FileDialog: CommonDialog // docmain
     final @property void validateNames(bool byes) // setter
     {
         if(byes)
-            ofn.Flags &= ~OFN_NOVALIDATE;
+            ofname.Flags &= ~OFN_NOVALIDATE;
         else
-            ofn.Flags |= OFN_NOVALIDATE;
+            ofname.Flags |= OFN_NOVALIDATE;
     }
 
     /// ditto
     final @property bool validateNames() // getter
     {
-        return(ofn.Flags & OFN_NOVALIDATE) == 0;
+        return(ofname.Flags & OFN_NOVALIDATE) == 0;
     }
 
 
@@ -423,7 +405,7 @@ abstract class FileDialog: CommonDialog // docmain
                                 onFileOk(cea);
                                 if(cea.cancel)
                                 {
-                                    SetWindowLongA(hwnd, DWL_MSGRESULT, 1);
+                                    SetWindowLongW(hwnd, DWL_MSGRESULT, 1);
                                     return 1;
                                 }
                             }
@@ -442,6 +424,7 @@ abstract class FileDialog: CommonDialog // docmain
 
 
     private:
+    /*
     union
     {
         OPENFILENAMEW ofnw;
@@ -451,11 +434,14 @@ abstract class FileDialog: CommonDialog // docmain
         static assert(OPENFILENAMEW.sizeof == OPENFILENAMEA.sizeof);
         static assert(OPENFILENAMEW.Flags.offsetof == OPENFILENAMEA.Flags.offsetof);
     }
-    string[] _fileNames;
-    string _filter;
-    string _initDir;
-    string _defext;
-    string _title;
+    */
+    OPENFILENAMEW ofname;
+
+    wstring[] _fileNames;
+    wstring _filter;
+    wstring _initDir;
+    wstring _defext;
+    wstring _title;
     bool needRebuildFiles = false;
 
     enum DWORD INIT_FLAGS = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY |
@@ -466,22 +452,22 @@ abstract class FileDialog: CommonDialog // docmain
 
     void beginOfn(HWND owner)
     {
-        auto buf = new char[(ofn.Flags & OFN_ALLOWMULTISELECT) ? FILE_BUF_LEN : MAX_PATH];
+        auto buf = new wchar[(ofname.Flags & OFN_ALLOWMULTISELECT) ? FILE_BUF_LEN : MAX_PATH];
         buf[0] = 0;
 
         if(fileNames.length)
         {
-            string ts;
+            wstring ts;
             ts = _fileNames[0];
             buf[0 .. ts.length] = ts[];
             buf[ts.length] = 0;
         }
 
-        ofna.nMaxFile = cast(uint)buf.length;
-        ofna.lpstrFile = buf.ptr;
+        ofname.nMaxFile = cast(uint)buf.length;
+        ofname.lpstrFile = buf.ptr;
 
 
-        ofn.hwndOwner = owner;
+        ofname.hwndOwner = owner;
     }
 
 
@@ -489,23 +475,23 @@ abstract class FileDialog: CommonDialog // docmain
     void populateFiles()
     in
     {
-        assert(ofn.lpstrFile !is null);
+        assert(ofname.lpstrFile !is null);
     }
     do
     {
-        if(ofn.Flags & OFN_ALLOWMULTISELECT)
+        if(ofname.Flags & OFN_ALLOWMULTISELECT)
         {
             // Nonstandard reserve.
-            _fileNames = new string[4];
+            _fileNames = new wstring[4];
             _fileNames = _fileNames[0 .. 0];
 
-            char* startp, p;
-            p = startp = ofna.lpstrFile;
+            wchar* startp, p;
+            p = startp = ofname.lpstrFile;
             for(;;)
             {
                 if(!*p)
                 {
-                    _fileNames ~= to!string(fromStringz(startp[0 .. p - startp])); // dup later.
+                    _fileNames ~= fromStringz(startp[0 .. p - startp]).idup; // dup later.
 
                     p++;
                     if(!*p)
@@ -521,11 +507,11 @@ abstract class FileDialog: CommonDialog // docmain
             assert(_fileNames.length);
             if(_fileNames.length == 1)
             {
-                _fileNames[0] = cast(string)_fileNames[0].dup; // Needed in D2.
+                //_fileNames[0] = cast(string)_fileNames[0].dup; // Needed in D2.
             }
             else
             {
-                string s;
+                wstring s;
                 size_t i;
                 s = _fileNames[0];
 
@@ -539,8 +525,8 @@ abstract class FileDialog: CommonDialog // docmain
         }
         else
         {
-            _fileNames = new string[1];
-            _fileNames[0] = to!string(fromStringz(ofna.lpstrFile));
+            _fileNames = new wstring[1];
+            _fileNames[0] = fromStringz(ofname.lpstrFile).idup;
         }
 
         needRebuildFiles = false;
@@ -553,7 +539,7 @@ abstract class FileDialog: CommonDialog // docmain
         if(needRebuildFiles)
             populateFiles();
 
-        ofn.lpstrFile = null;
+        ofname.lpstrFile = null;
     }
 
 
@@ -562,7 +548,7 @@ abstract class FileDialog: CommonDialog // docmain
     {
         needRebuildFiles = false;
 
-        ofn.lpstrFile = null;
+        ofname.lpstrFile = null;
         _fileNames = null;
     }
 }
@@ -581,14 +567,14 @@ class OpenFileDialog: FileDialog // docmain
     this()
     {
         super();
-        ofn.Flags |= OFN_FILEMUSTEXIST;
+        ofname.Flags |= OFN_FILEMUSTEXIST;
     }
 
 
     override void reset()
     {
         super.reset();
-        ofn.Flags |= OFN_FILEMUSTEXIST;
+        ofname.Flags |= OFN_FILEMUSTEXIST;
     }
 
 
@@ -596,15 +582,15 @@ class OpenFileDialog: FileDialog // docmain
     final @property void multiselect(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_ALLOWMULTISELECT;
+            ofname.Flags |= OFN_ALLOWMULTISELECT;
         else
-            ofn.Flags &= ~OFN_ALLOWMULTISELECT;
+            ofname.Flags &= ~OFN_ALLOWMULTISELECT;
     }
 
     /// ditto
     final @property bool multiselect() // getter
     {
-        return (ofn.Flags & OFN_ALLOWMULTISELECT) != 0;
+        return (ofname.Flags & OFN_ALLOWMULTISELECT) != 0;
     }
 
 
@@ -612,15 +598,15 @@ class OpenFileDialog: FileDialog // docmain
     final @property void readOnlyChecked(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_READONLY;
+            ofname.Flags |= OFN_READONLY;
         else
-            ofn.Flags &= ~OFN_READONLY;
+            ofname.Flags &= ~OFN_READONLY;
     }
 
     /// ditto
     final @property bool readOnlyChecked() // getter
     {
-        return (ofn.Flags & OFN_READONLY) != 0;
+        return (ofname.Flags & OFN_READONLY) != 0;
     }
 
 
@@ -628,22 +614,22 @@ class OpenFileDialog: FileDialog // docmain
     final @property void showReadOnly(bool byes) // setter
     {
         if(byes)
-            ofn.Flags &= ~OFN_HIDEREADONLY;
+            ofname.Flags &= ~OFN_HIDEREADONLY;
         else
-            ofn.Flags |= OFN_HIDEREADONLY;
+            ofname.Flags |= OFN_HIDEREADONLY;
     }
 
     /// ditto
     final @property bool showReadOnly() // getter
     {
-        return (ofn.Flags & OFN_HIDEREADONLY) == 0;
+        return (ofname.Flags & OFN_HIDEREADONLY) == 0;
     }
 
     ///
-    final File openFile()
+    final File openFile(string mode = "rb")
     {
         // TODO : Test if this actually works by studying old versions of the library
-        return File(fileName(), "rb");
+        return File(fileName(), mode);
     }
 
 
@@ -667,7 +653,7 @@ class OpenFileDialog: FileDialog // docmain
 
         beginOfn(owner);
 
-        result = GetOpenFileNameA(&ofna);
+        result = GetOpenFileNameW(&ofname);
 
         if(result)
         {
@@ -687,14 +673,14 @@ class SaveFileDialog: FileDialog // docmain
     this()
     {
         super();
-        ofn.Flags |= OFN_OVERWRITEPROMPT;
+        ofname.Flags |= OFN_OVERWRITEPROMPT;
     }
 
 
     override void reset()
     {
         super.reset();
-        ofn.Flags |= OFN_OVERWRITEPROMPT;
+        ofname.Flags |= OFN_OVERWRITEPROMPT;
     }
 
 
@@ -702,15 +688,15 @@ class SaveFileDialog: FileDialog // docmain
     final @property void createPrompt(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_CREATEPROMPT;
+            ofname.Flags |= OFN_CREATEPROMPT;
         else
-            ofn.Flags &= ~OFN_CREATEPROMPT;
+            ofname.Flags &= ~OFN_CREATEPROMPT;
     }
 
     /// ditto
     final @property bool createPrompt() // getter
     {
-        return (ofn.Flags & OFN_CREATEPROMPT) != 0;
+        return (ofname.Flags & OFN_CREATEPROMPT) != 0;
     }
 
 
@@ -718,23 +704,23 @@ class SaveFileDialog: FileDialog // docmain
     final @property void overwritePrompt(bool byes) // setter
     {
         if(byes)
-            ofn.Flags |= OFN_OVERWRITEPROMPT;
+            ofname.Flags |= OFN_OVERWRITEPROMPT;
         else
-            ofn.Flags &= ~OFN_OVERWRITEPROMPT;
+            ofname.Flags &= ~OFN_OVERWRITEPROMPT;
     }
 
     /// ditto
     final @property bool overwritePrompt() // getter
     {
-        return (ofn.Flags & OFN_OVERWRITEPROMPT) != 0;
+        return (ofname.Flags & OFN_OVERWRITEPROMPT) != 0;
     }
 
     ///
     // Opens and creates with read and write access.
     // Warning: if file exists, it's truncated. // Is it really? Needs testing - D.O
-    final File openFile()
+    final File openFile(string mode = "w+b")
     {
-        return File(fileName(), "w+b");
+        return File(fileName(), mode);
     }
 
 
@@ -744,7 +730,7 @@ class SaveFileDialog: FileDialog // docmain
     {
         beginOfn(owner);
 
-        if(GetSaveFileNameA(&ofna))
+        if(GetSaveFileNameW(&ofname))
         {
             finishOfn();
             return true;
@@ -758,7 +744,7 @@ class SaveFileDialog: FileDialog // docmain
 
 private extern(Windows) LRESULT ofnHookProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) nothrow
 {
-    enum PROP_STR = "DFL_FileDialog";
+    enum PROP_STR = "DFL_FileDialog"w;
     FileDialog fd;
     LRESULT result = 0;
 
@@ -766,14 +752,14 @@ private extern(Windows) LRESULT ofnHookProc(HWND hwnd, UINT msg, WPARAM wparam, 
     {
         if(msg == WM_INITDIALOG)
         {
-            OPENFILENAMEA* ofn;
-            ofn = cast(OPENFILENAMEA*)lparam;
-            SetPropA(hwnd, PROP_STR.ptr, cast(HANDLE)ofn.lCustData);
+            OPENFILENAMEW* ofn;
+            ofn = cast(OPENFILENAMEW*)lparam;
+            SetPropW(hwnd, PROP_STR.ptr, cast(HANDLE)ofn.lCustData);
             fd = cast(FileDialog)cast(void*)ofn.lCustData;
         }
         else
         {
-            fd = cast(FileDialog)cast(void*)GetPropA(hwnd, PROP_STR.ptr);
+            fd = cast(FileDialog)cast(void*)GetPropW(hwnd, PROP_STR.ptr);
         }
 
         if(fd)

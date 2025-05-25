@@ -31,9 +31,9 @@ class FolderBrowserDialog: CommonDialog // docmain
     {
         Application.ppin(cast(void*)this);
 
-        bi.ulFlags = INIT_FLAGS;
-        bi.lParam = cast(typeof(bi.lParam))cast(void*)this;
-        bi.lpfn = &fbdHookProc;
+        binfo.ulFlags = INIT_FLAGS;
+        binfo.lParam = cast(typeof(binfo.lParam))cast(void*)this;
+        binfo.lpfn = &fbdHookProc;
     }
 
 
@@ -60,14 +60,14 @@ class FolderBrowserDialog: CommonDialog // docmain
 
     override void reset()
     {
-        bi.ulFlags = INIT_FLAGS;
+        binfo.ulFlags = INIT_FLAGS;
         _desc = null;
         _selpath = null;
     }
 
 
     ///
-    final @property void description(string desc) // setter
+    final @property void description(wstring desc) // setter
     {
         // lpszTitle
 
@@ -75,14 +75,14 @@ class FolderBrowserDialog: CommonDialog // docmain
     }
 
     /// ditto
-    final @property string description() // getter
+    final @property wstring description() // getter
     {
         return _desc;
     }
 
 
     ///
-    final @property void selectedPath(string selpath) // setter
+    final @property void selectedPath(wstring selpath) // setter
     {
         // pszDisplayName
 
@@ -90,7 +90,7 @@ class FolderBrowserDialog: CommonDialog // docmain
     }
 
     /// ditto
-    final @property string selectedPath() // getter
+    final @property wstring selectedPath() // getter
     {
         return _selpath;
     }
@@ -105,15 +105,15 @@ class FolderBrowserDialog: CommonDialog // docmain
         // "&New Folder" and hide it, then shift "OK" and "Cancel" over.
 
         if(byes)
-            bi.ulFlags &= ~0x0200; // BIF_NONEWFOLDERBUTTON
+            binfo.ulFlags &= ~0x0200; // BIF_NONEWFOLDERBUTTON
         else
-            bi.ulFlags |= 0x0200; // BIF_NONEWFOLDERBUTTON
+            binfo.ulFlags |= 0x0200; // BIF_NONEWFOLDERBUTTON
     }
 
     // /// ditto
     final @property bool showNewFolderButton() // getter
     {
-        return (bi.ulFlags & 0x0200) == 0; // BIF_NONEWFOLDERBUTTON
+        return (binfo.ulFlags & 0x0200) == 0; // BIF_NONEWFOLDERBUTTON
     }
 
 
@@ -139,42 +139,42 @@ class FolderBrowserDialog: CommonDialog // docmain
     {
         IMalloc shmalloc;
 
-        bi.hwndOwner = owner;
+        binfo.hwndOwner = owner;
 
-        char[MAX_PATH] pdescz; // Initialize because SHBrowseForFolder() is modal.
+        wchar[MAX_PATH] pdescz; // Initialize because SHBrowseForFolder() is modal.
 
-        bia.lpszTitle = _desc.ptr;
+        binfo.lpszTitle = _desc.ptr;
 
-        bia.pszDisplayName = cast(char*)pdescz;
+        binfo.pszDisplayName = pdescz.ptr;
         if(_desc.length)
         {
-            string tmp; // ansi.
+            wstring tmp; // ansi.
             tmp = _desc.dup;
             if(tmp.length >= MAX_PATH)
                 _errPathTooLong();
-            bia.pszDisplayName[0 .. tmp.length] = tmp[];
-            bia.pszDisplayName[tmp.length] = 0;
+            binfo.pszDisplayName[0 .. tmp.length] = tmp[];
+            binfo.pszDisplayName[tmp.length] = 0;
         }
         else
         {
-            bia.pszDisplayName[0] = 0;
+            binfo.pszDisplayName[0] = 0;
         }
 
         // Show the dialog!
         LPITEMIDLIST result;
-        result = SHBrowseForFolderA(&bia);
+        result = SHBrowseForFolderW(&binfo);
 
         if(!result)
         {
-            bia.lpszTitle = null;
+            binfo.lpszTitle = null;
             return false;
         }
 
         if(NOERROR != SHGetMalloc(&shmalloc))
             _errNoShMalloc();
 
-        char[MAX_PATH] abuf = void;
-        if(!SHGetPathFromIDListA(result, abuf.ptr))
+        wchar[MAX_PATH] abuf = void;
+        if(!SHGetPathFromIDListW(result, abuf.ptr))
         {
             shmalloc.Free(result);
             shmalloc.Release();
@@ -182,12 +182,12 @@ class FolderBrowserDialog: CommonDialog // docmain
             assert(0);
         }
 
-        _selpath = to!string(fromStringz(abuf.ptr)); // Assumes fromAnsiz() copies.
+        _selpath = to!wstring(fromStringz(abuf.ptr)); // Assumes fromAnsiz() copies.
 
         shmalloc.Free(result);
         shmalloc.Release();
 
-        bia.lpszTitle = null;
+        binfo.lpszTitle = null;
 
         return true;
     }
@@ -195,6 +195,7 @@ class FolderBrowserDialog: CommonDialog // docmain
 
     private:
 
+    /*
     union
     {
         BROWSEINFOW biw;
@@ -204,9 +205,12 @@ class FolderBrowserDialog: CommonDialog // docmain
         static assert(BROWSEINFOW.sizeof == BROWSEINFOA.sizeof);
         static assert(BROWSEINFOW.ulFlags.offsetof == BROWSEINFOA.ulFlags.offsetof);
     }
+    */
 
-    string _desc;
-    string _selpath;
+    BROWSEINFOW binfo;
+
+    wstring _desc;
+    wstring _selpath;
 
 
     enum UINT INIT_FLAGS = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
@@ -225,14 +229,14 @@ private extern(Windows) int fbdHookProc(HWND hwnd, UINT msg, LPARAM lparam, LPAR
         fd = cast(FolderBrowserDialog)cast(void*)lpData;
         if(fd)
         {
-            string s;
+            wstring s;
             switch(msg)
             {
                 case BFFM_INITIALIZED:
                     s = fd.selectedPath;
                     if(s.length)
                     {
-                        SendMessageA(hwnd, BFFM_SETSELECTIONA, TRUE, cast(LPARAM)s.ptr);
+                        SendMessageW(hwnd, BFFM_SETSELECTIONA, TRUE, cast(LPARAM)s.ptr);
                     }
                     break;
 
