@@ -8,6 +8,8 @@ www.dprogramming.com/entice.php
 
 import dfl.all;
 
+import std.conv : to;
+
 
 class Example1: dfl.form.Form
 {
@@ -133,9 +135,9 @@ int main()
 
         Application.run();
     }
-    catch(Throwable o)
+    catch(Exception o)
     {
-        msgBox(o.toString(), "Fatal Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
+        msgBox(to!wstring(o.toString()), "Fatal Error", MsgBoxButtons.OK, MsgBoxIcon.ERROR);
 
         result = 1;
     }
