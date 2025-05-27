@@ -229,7 +229,7 @@ class ComboBox: ListControl // docmain
 
 
     ///
-    final int findString(string str, int startIndex)
+    final int findString(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -244,14 +244,14 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int findString(string str)
+    final int findString(wstring str)
     {
         return findString(str, -1); // Start at beginning.
     }
 
 
     ///
-    final int findStringExact(string str, int startIndex)
+    final int findStringExact(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -266,7 +266,7 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int findStringExact(string str)
+    final int findStringExact(wstring str)
     {
         return findStringExact(str, -1); // Start at beginning.
     }
@@ -411,7 +411,7 @@ class ComboBox: ListControl // docmain
     {
         if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && isHandleCreated)
             //return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-            return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+            return cast(uint)SendMessageW(handle, WM_GETTEXTLENGTH, 0, 0);
         return cast(uint)wtext.length;
     }
 
