@@ -268,6 +268,12 @@ class ListBox: ListControl // docmain
         }
 
 
+        bool contains(ListString str)
+        {
+            return contains(str.toWString());
+        }
+
+
         int indexOf(Object obj)
         {
             int idx = 0;
@@ -291,6 +297,12 @@ class ListBox: ListControl // docmain
                 idx++;
             }
             return -1;
+        }
+
+
+        int indexOf(ListString str)
+        {
+            return indexOf(str.toWString());
         }
 
 
