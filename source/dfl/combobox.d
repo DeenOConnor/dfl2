@@ -172,6 +172,15 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
+    final @property void selectedItem(StringObject str) // setter
+    {
+        int i;
+        i = items.indexOf(str.toWString());
+        if(i != -1)
+            selectedIndex = i;
+    }
+
+    /// ditto
     final @property Control selectedItem() // getter
     {
         int idx;
@@ -190,6 +199,12 @@ class ComboBox: ListControl // docmain
 
     /// ditto
     override @property void selectedValue(wstring str) // setter
+    {
+        selectedItem = str;
+    }
+
+    /// ditto
+    override @property void selectedValue(StringObject str) // setter
     {
         selectedItem = str;
     }
@@ -505,6 +520,13 @@ class ComboBox: ListControl // docmain
         }
 
 
+        protected this(ComboBox lbox, StringObject[] range)
+        {
+            this.lbox = lbox;
+            addRange(range);
+        }
+
+
         void add(Control value)
         {
             add2(value);
@@ -513,6 +535,11 @@ class ComboBox: ListControl // docmain
         void add(wstring value)
         {
             add(new Control(value));
+        }
+
+        void add(StringObject value)
+        {
+            add(new Control(value.toWString()));
         }
 
 
@@ -536,6 +563,14 @@ class ComboBox: ListControl // docmain
             foreach(wstring s; range)
             {
                 add(s);
+            }
+        }
+
+        void addRange(StringObject[] range)
+        {
+            foreach(StringObject s; range)
+            {
+                add(s.toWString());
             }
         }
 
