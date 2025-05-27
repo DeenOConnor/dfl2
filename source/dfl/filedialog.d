@@ -405,7 +405,7 @@ abstract class FileDialog: CommonDialog // docmain
                                 onFileOk(cea);
                                 if(cea.cancel)
                                 {
-                                    SetWindowLongW(hwnd, DWL_MSGRESULT, 1);
+                                    SetWindowLongPtrW(hwnd, DWL_MSGRESULT, 1);
                                     return 1;
                                 }
                             }

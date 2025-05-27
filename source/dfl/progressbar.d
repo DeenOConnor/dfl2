@@ -219,22 +219,22 @@ class ProgressBar: ControlSuperClass // docmain
     final @property void style(ProgressBar.STYLES newStyle) {
         this.currentStyle = newStyle;
 
-        auto windowStyle = GetWindowLongPtrA(handle, GWL_STYLE);
+        auto windowStyle = GetWindowLongPtrW(handle, GWL_STYLE);
         final switch (newStyle)
         {
             case STYLES.BLOCKS:
-                SetWindowLongPtrA(handle, GWL_STYLE, windowStyle & ~PBS_SMOOTH & ~PBS_MARQUEE);
+                SetWindowLongPtrW(handle, GWL_STYLE, windowStyle & ~PBS_SMOOTH & ~PBS_MARQUEE);
                 prevwproc(PBM_SETPOS, _val, 0);
                 recreateHandle();
                 break;
             case STYLES.SMOOTH:
-                SetWindowLongPtrA(handle, GWL_STYLE, windowStyle | PBS_SMOOTH & ~PBS_MARQUEE);
+                SetWindowLongPtrW(handle, GWL_STYLE, windowStyle | PBS_SMOOTH & ~PBS_MARQUEE);
                 prevwproc(PBM_SETPOS, _val, 0);
                 recreateHandle();
                 break;
             case STYLES.MARQUEE:
                 this.state(STATE.NORMAL); // If not NORMAL then there's no animation
-                SetWindowLongPtrA(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
+                SetWindowLongPtr@(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
         }
         bool isMarquee = newStyle == STYLES.MARQUEE;
         prevwproc(PBM_SETMARQUEE, isMarquee, this.speed * (isMarquee ? 1 : 0));

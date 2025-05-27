@@ -113,7 +113,7 @@ class ToolTip // docmain
                 return;
             wl &= ~TTS_ALWAYSTIP;
         }
-        SetWindowLongA(hwtt, GWL_STYLE, wl);
+        SetWindowLongPtrW(hwtt, GWL_STYLE, wl);
     }
 
     /// ditto

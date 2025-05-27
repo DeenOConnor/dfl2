@@ -5977,7 +5977,7 @@ class Control: Object, IWindow // docmain
     {
         if(isHandleCreated)
         {
-            SetWindowLongA(hwnd, GWL_EXSTYLE, wl);
+            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, wl);
         }
 
         wexstyle = wl;
@@ -5994,7 +5994,7 @@ class Control: Object, IWindow // docmain
     {
         if(isHandleCreated)
         {
-            SetWindowLongA(hwnd, GWL_STYLE, wl);
+            SetWindowLongPtrW(hwnd, GWL_STYLE, wl);
         }
 
         wstyle = wl;
