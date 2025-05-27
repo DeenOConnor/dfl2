@@ -229,7 +229,7 @@ class ComboBox: ListControl // docmain
 
 
     ///
-    final int finstring(string str, int startIndex)
+    final int findString(string str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -244,14 +244,14 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstring(string str)
+    final int findString(string str)
     {
-        return finstring(str, -1); // Start at beginning.
+        return findString(str, -1); // Start at beginning.
     }
 
 
     ///
-    final int finstringExact(string str, int startIndex)
+    final int findStringExact(string str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -266,9 +266,9 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstringExact(string str)
+    final int findStringExact(string str)
     {
-        return finstringExact(str, -1); // Start at beginning.
+        return findStringExact(str, -1); // Start at beginning.
     }
 
 

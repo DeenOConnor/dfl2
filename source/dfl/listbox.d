@@ -843,7 +843,7 @@ class ListBox: ListControl // docmain
 
 
     ///
-    final int finstring(wstring str, int startIndex)
+    final int findString(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -860,14 +860,14 @@ class ListBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstring(wstring str)
+    final int findString(wstring str)
     {
-        return finstring(str, -1); // Start at beginning.
+        return findString(str, -1); // Start at beginning.
     }
 
 
     ///
-    final int finstringExact(wstring str, int startIndex)
+    final int findStringExact(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -884,9 +884,9 @@ class ListBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstringExact(wstring str)
+    final int findStringExact(wstring str)
     {
-        return finstringExact(str, -1); // Start at beginning.
+        return findStringExact(str, -1); // Start at beginning.
     }
 
 
