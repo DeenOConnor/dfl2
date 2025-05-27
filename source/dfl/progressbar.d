@@ -234,7 +234,7 @@ class ProgressBar: ControlSuperClass // docmain
                 break;
             case STYLES.MARQUEE:
                 this.state(STATE.NORMAL); // If not NORMAL then there's no animation
-                SetWindowLongPtr@(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
+                SetWindowLongPtrW(handle, GWL_STYLE, windowStyle | PBS_MARQUEE);
         }
         bool isMarquee = newStyle == STYLES.MARQUEE;
         prevwproc(PBM_SETMARQUEE, isMarquee, this.speed * (isMarquee ? 1 : 0));

@@ -5419,7 +5419,7 @@ class Control: Object, IWindow // docmain
                 debug
                 {
                     import std.string : format;
-                    er = format("CreateWindowEx failed {exStyle=0x%X;className='%s';caption='%s';style=0x%X;x=%d;y=%d;width=%d;height=%d;parent=0x%X;menu=0x%X;inst=0x%X;param=0x%X}\nLast error 0x%04X",
+                    er = format("CreateWindowEx failed {exStyle=0x%X;className='%s';caption='%s';style=0x%X;x=%d;y=%d;width=%d;height=%d;parent=0x%X;menu=0x%X;inst=0x%X;param=0x%X}\nLast error 0x%04X"w,
                         exStyle, className, caption, style, x, y, width, height, cast(void*)parent, cast(void*)menu, cast(void*)inst, cast(void*)param, GetLastError());
                 }
 

@@ -13,6 +13,7 @@ private import dfl.collections;
 
 private import core.sys.windows.windows;
 private import std.string : format;
+private import std.conv : to;
 
 
 
@@ -389,7 +390,7 @@ class Form: ContainerControl, IDialogResult // docmain
             create_err:
             string kmsg = "Form creation failure";
             if(name.length)
-                kmsg ~= " (" ~ name ~ ")";
+                kmsg ~= " (" ~ to!string(name) ~ ")";
             debug
             {
                 if(er.length)
