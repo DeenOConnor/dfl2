@@ -49,6 +49,10 @@ abstract class ListControl: ControlSuperClass // docmain
 
     ///
     abstract @property void selectedValue(wstring str); // setter
+
+    ///
+    abstract @property void selectedValue(ListString str); // setter
+
     /// ditto
     abstract @property Control selectedValue(); // getter
 
@@ -666,6 +670,15 @@ class ListBox: ListControl // docmain
             selectedIndex = i;
     }
 
+    /// ditto
+    final @property void selectedItem(ListString str) // setter
+    {
+        int i;
+        i = items.indexOf(str.toWString());
+        if(i != -1)
+            selectedIndex = i;
+    }
+
     final @property Control selectedItem() // getter
     {
         int idx;
@@ -682,6 +695,11 @@ class ListBox: ListControl // docmain
     }
 
     override @property void selectedValue(wstring str) // setter
+    {
+        selectedItem = str;
+    }
+
+    override @property void selectedValue(ListString str) // setter
     {
         selectedItem = str;
     }
@@ -996,6 +1014,13 @@ class ListBox: ListControl // docmain
         }
 
 
+        protected this(ListBox lbox, ListString[] range)
+        {
+            this.lbox = lbox;
+            addRange(range);
+        }
+
+
         void add(Control value)
         {
             add2(value);
@@ -1004,6 +1029,11 @@ class ListBox: ListControl // docmain
         void add(wstring value)
         {
             add(new Control(value));
+        }
+
+        void add(ListString value)
+        {
+            add(new Control(value.toWString()));
         }
 
 
@@ -1027,6 +1057,14 @@ class ListBox: ListControl // docmain
             foreach(wstring value; range)
             {
                 add(value);
+            }
+        }
+
+        void addRange(ListString[] range)
+        {
+            foreach(ListString value; range)
+            {
+                add(value.toWString());
             }
         }
 
