@@ -49,6 +49,10 @@ abstract class ListControl: ControlSuperClass // docmain
 
     ///
     abstract @property void selectedValue(wstring str); // setter
+
+    ///
+    abstract @property void selectedValue(ListString str); // setter
+
     /// ditto
     abstract @property Control selectedValue(); // getter
 
@@ -264,6 +268,12 @@ class ListBox: ListControl // docmain
         }
 
 
+        bool contains(ListString str)
+        {
+            return contains(str.toWString());
+        }
+
+
         int indexOf(Object obj)
         {
             int idx = 0;
@@ -287,6 +297,12 @@ class ListBox: ListControl // docmain
                 idx++;
             }
             return -1;
+        }
+
+
+        int indexOf(ListString str)
+        {
+            return indexOf(str.toWString());
         }
 
 
@@ -666,6 +682,15 @@ class ListBox: ListControl // docmain
             selectedIndex = i;
     }
 
+    /// ditto
+    final @property void selectedItem(ListString str) // setter
+    {
+        int i;
+        i = items.indexOf(str.toWString());
+        if(i != -1)
+            selectedIndex = i;
+    }
+
     final @property Control selectedItem() // getter
     {
         int idx;
@@ -682,6 +707,11 @@ class ListBox: ListControl // docmain
     }
 
     override @property void selectedValue(wstring str) // setter
+    {
+        selectedItem = str;
+    }
+
+    override @property void selectedValue(ListString str) // setter
     {
         selectedItem = str;
     }
@@ -825,7 +855,7 @@ class ListBox: ListControl // docmain
 
 
     ///
-    final int finstring(wstring str, int startIndex)
+    final int findString(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -842,14 +872,14 @@ class ListBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstring(wstring str)
+    final int findString(wstring str)
     {
-        return finstring(str, -1); // Start at beginning.
+        return findString(str, -1); // Start at beginning.
     }
 
 
     ///
-    final int finstringExact(wstring str, int startIndex)
+    final int findStringExact(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -866,9 +896,9 @@ class ListBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstringExact(wstring str)
+    final int findStringExact(wstring str)
     {
-        return finstringExact(str, -1); // Start at beginning.
+        return findStringExact(str, -1); // Start at beginning.
     }
 
 
@@ -996,6 +1026,13 @@ class ListBox: ListControl // docmain
         }
 
 
+        protected this(ListBox lbox, ListString[] range)
+        {
+            this.lbox = lbox;
+            addRange(range);
+        }
+
+
         void add(Control value)
         {
             add2(value);
@@ -1004,6 +1041,11 @@ class ListBox: ListControl // docmain
         void add(wstring value)
         {
             add(new Control(value));
+        }
+
+        void add(ListString value)
+        {
+            add(new Control(value.toWString()));
         }
 
 
@@ -1027,6 +1069,14 @@ class ListBox: ListControl // docmain
             foreach(wstring value; range)
             {
                 add(value);
+            }
+        }
+
+        void addRange(ListString[] range)
+        {
+            foreach(ListString value; range)
+            {
+                add(value.toWString());
             }
         }
 
@@ -1130,7 +1180,7 @@ class ListBox: ListControl // docmain
 
         // Set the Ctrl ID to the HWND so that it is unique
         // and WM_MEASUREITEM will work properly.
-        SetWindowLongW(hwnd, GWL_ID, cast(LONG)hwnd);
+        SetWindowLongPtrW(hwnd, GWL_ID, cast(LONG_PTR)hwnd);
 
         if(hextent != 0)
             prevwproc(LB_SETHORIZONTALEXTENT, hextent, 0);

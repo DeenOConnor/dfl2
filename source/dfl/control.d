@@ -1475,9 +1475,9 @@ class Control: Object, IWindow // docmain
 
         try
         {
-            OSVERSIONINFOA osi;
-            osi.dwOSVersionInfoSize = osi.sizeof;
-            if(GetVersionExA(&osi) && osi.dwMajorVersion >= 5)
+            OSVERSIONINFOW osinfo;
+            osinfo.dwOSVersionInfoSize = osinfo.sizeof;
+            if(GetVersionExW(&osinfo) && osinfo.dwMajorVersion >= 5)
             {
                 // "MS Shell Dlg" / "MS Shell Dlg 2" not always supported.
                 result = new Font("MS Shell Dlg 2", result.getSize(GraphicsUnit.POINT), GraphicsUnit.POINT);
@@ -1952,13 +1952,13 @@ class Control: Object, IWindow // docmain
 
 
     /// Property: get or set the name of this control used in code.
-    final @property void name(string txt) // setter
+    final @property void name(wstring txt) // setter
     {
         _ctrlname = txt;
     }
 
     /// ditto
-    final @property string name() // getter
+    final @property wstring name() // getter
     {
         return _ctrlname;
     }
@@ -5347,7 +5347,7 @@ class Control: Object, IWindow // docmain
 
         debug
         {
-            string er;
+            wstring er;
         }
         if(killing)
         {
@@ -5362,7 +5362,7 @@ class Control: Object, IWindow // docmain
             }
 
             create_err:
-            string kmsg = "Control creation failure";
+            wstring kmsg = "Control creation failure";
             if(name.length)
                 kmsg ~= " (" ~ name ~ ")";
             debug
@@ -5370,7 +5370,7 @@ class Control: Object, IWindow // docmain
                 if(er.length)
                     kmsg ~= " - " ~ er;
             }
-            throw new DflException(kmsg, __FILE__, __LINE__);
+            throw new DflException(to!string(kmsg), __FILE__, __LINE__);
         }
 
         // Need the parent's handle to exist.
@@ -5419,7 +5419,7 @@ class Control: Object, IWindow // docmain
                 debug
                 {
                     import std.string : format;
-                    er = format("CreateWindowEx failed {exStyle=0x%X;className='%s';caption='%s';style=0x%X;x=%d;y=%d;width=%d;height=%d;parent=0x%X;menu=0x%X;inst=0x%X;param=0x%X}\nLast error 0x%04X",
+                    er = format("CreateWindowEx failed {exStyle=0x%X;className='%s';caption='%s';style=0x%X;x=%d;y=%d;width=%d;height=%d;parent=0x%X;menu=0x%X;inst=0x%X;param=0x%X}\nLast error 0x%04X"w,
                         exStyle, className, caption, style, x, y, width, height, cast(void*)parent, cast(void*)menu, cast(void*)inst, cast(void*)param, GetLastError());
                 }
 
@@ -5860,7 +5860,7 @@ class Control: Object, IWindow // docmain
         ContextMenu cmenu;
     }
     DockStyle sdock = DockStyle.NONE;
-    string _ctrlname;
+    wstring _ctrlname;
     Object otag;
     Color backc, forec;
     Rect wrect;
@@ -5977,7 +5977,7 @@ class Control: Object, IWindow // docmain
     {
         if(isHandleCreated)
         {
-            SetWindowLongA(hwnd, GWL_EXSTYLE, wl);
+            SetWindowLongPtrW(hwnd, GWL_EXSTYLE, wl);
         }
 
         wexstyle = wl;
@@ -5994,7 +5994,7 @@ class Control: Object, IWindow // docmain
     {
         if(isHandleCreated)
         {
-            SetWindowLongA(hwnd, GWL_STYLE, wl);
+            SetWindowLongPtrW(hwnd, GWL_STYLE, wl);
         }
 
         wstyle = wl;

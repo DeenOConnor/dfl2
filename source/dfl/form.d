@@ -13,6 +13,7 @@ private import dfl.collections;
 
 private import core.sys.windows.windows;
 private import std.string : format;
+private import std.conv : to;
 
 
 
@@ -389,7 +390,7 @@ class Form: ContainerControl, IDialogResult // docmain
             create_err:
             string kmsg = "Form creation failure";
             if(name.length)
-                kmsg ~= " (" ~ name ~ ")";
+                kmsg ~= " (" ~ to!string(name) ~ ")";
             debug
             {
                 if(er.length)
@@ -2054,8 +2055,8 @@ class Form: ContainerControl, IDialogResult // docmain
             //case WM_CREATE: // WM_NCCREATE seems like a better choice.
             case WM_NCCREATE:
                 // Make sure Windows doesn't magically change the styles.
-                SetWindowLongA(hwnd, GWL_EXSTYLE, wexstyle);
-                SetWindowLongA(hwnd, GWL_STYLE, wstyle & ~WS_VISIBLE);
+                SetWindowLongPtrW(hwnd, GWL_EXSTYLE, wexstyle);
+                SetWindowLongPtrW(hwnd, GWL_STYLE, wstyle & ~WS_VISIBLE);
 
                 SetWindowPos(hwnd, HWND.init, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE
                     | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE); // Recalculate the frame.

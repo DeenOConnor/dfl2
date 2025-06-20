@@ -172,6 +172,15 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
+    final @property void selectedItem(StringObject str) // setter
+    {
+        int i;
+        i = items.indexOf(str.toWString());
+        if(i != -1)
+            selectedIndex = i;
+    }
+
+    /// ditto
     final @property Control selectedItem() // getter
     {
         int idx;
@@ -190,6 +199,12 @@ class ComboBox: ListControl // docmain
 
     /// ditto
     override @property void selectedValue(wstring str) // setter
+    {
+        selectedItem = str;
+    }
+
+    /// ditto
+    override @property void selectedValue(StringObject str) // setter
     {
         selectedItem = str;
     }
@@ -229,7 +244,7 @@ class ComboBox: ListControl // docmain
 
 
     ///
-    final int finstring(string str, int startIndex)
+    final int findString(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -244,14 +259,14 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstring(string str)
+    final int findString(wstring str)
     {
-        return finstring(str, -1); // Start at beginning.
+        return findString(str, -1); // Start at beginning.
     }
 
 
     ///
-    final int finstringExact(string str, int startIndex)
+    final int findStringExact(wstring str, int startIndex)
     {
         // TODO: find string if control not created ?
 
@@ -266,9 +281,9 @@ class ComboBox: ListControl // docmain
     }
 
     /// ditto
-    final int finstringExact(string str)
+    final int findStringExact(wstring str)
     {
-        return finstringExact(str, -1); // Start at beginning.
+        return findStringExact(str, -1); // Start at beginning.
     }
 
 
@@ -411,7 +426,7 @@ class ComboBox: ListControl // docmain
     {
         if(!(ctrlStyle & ControlStyles.CACHE_TEXT) && isHandleCreated)
             //return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
-            return cast(uint)SendMessageA(handle, WM_GETTEXTLENGTH, 0, 0);
+            return cast(uint)SendMessageW(handle, WM_GETTEXTLENGTH, 0, 0);
         return cast(uint)wtext.length;
     }
 
@@ -505,6 +520,13 @@ class ComboBox: ListControl // docmain
         }
 
 
+        protected this(ComboBox lbox, StringObject[] range)
+        {
+            this.lbox = lbox;
+            addRange(range);
+        }
+
+
         void add(Control value)
         {
             add2(value);
@@ -513,6 +535,11 @@ class ComboBox: ListControl // docmain
         void add(wstring value)
         {
             add(new Control(value));
+        }
+
+        void add(StringObject value)
+        {
+            add(new Control(value.toWString()));
         }
 
 
@@ -536,6 +563,14 @@ class ComboBox: ListControl // docmain
             foreach(wstring s; range)
             {
                 add(s);
+            }
+        }
+
+        void addRange(StringObject[] range)
+        {
+            foreach(StringObject s; range)
+            {
+                add(s.toWString());
             }
         }
 
@@ -636,7 +671,7 @@ class ComboBox: ListControl // docmain
 
         // Set the Ctrl ID to the HWND so that it is unique
         // and WM_MEASUREITEM will work properly.
-        SetWindowLongA(hwnd, GWL_ID, cast(LONG)hwnd);
+        SetWindowLongPtrW(hwnd, GWL_ID, cast(LONG_PTR)hwnd);
 
         //prevwproc(EM_SETLIMITTEXT, cast(WPARAM)lim, 0);
         maxLength = lim; // Call virtual function.

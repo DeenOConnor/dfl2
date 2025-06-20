@@ -669,13 +669,13 @@ class RegistryKey // docmain
 
 
     // Note: name is not written to! it's just not "invariant".
-    private static void _deleteSubKeyTree(HKEY shkey, string name)
+    private static void _deleteSubKeyTree(HKEY shkey, wstring name)
     {
         HKEY openHkey;
 
         auto namez = name.ptr;
 
-        if(ERROR_SUCCESS == RegOpenKeyExA(shkey, namez, 0, KEY_ALL_ACCESS, &openHkey))
+        if(ERROR_SUCCESS == RegOpenKeyExW(shkey, namez, 0, KEY_ALL_ACCESS, &openHkey))
         {
             void ouch(LONG why = 0)
             {
@@ -685,7 +685,7 @@ class RegistryKey // docmain
 
             DWORD count;
 
-            LONG querycode = RegQueryInfoKeyA(openHkey, null, null, null, &count,
+            LONG querycode = RegQueryInfoKeyW(openHkey, null, null, null, &count,
                 null, null, null, null, null, null, null);
             if(ERROR_SUCCESS == querycode)
             {
@@ -693,7 +693,7 @@ class RegistryKey // docmain
                 {
                     del_me:
                     RegCloseKey(openHkey);
-                    LONG delcode = RegDeleteKeyA(shkey, namez);
+                    LONG delcode = RegDeleteKeyW(shkey, namez);
                     if(ERROR_SUCCESS == delcode)
                         return; // OK.
 
@@ -705,17 +705,17 @@ class RegistryKey // docmain
                     {
                         // deleteSubKeyTree on all subkeys.
 
-                        char[MAX_REG_BUFFER] skn;
+                        wchar[MAX_REG_BUFFER] skn;
                         DWORD len;
 
                         next_subkey:
                         len = skn.length;
-                        LONG enumcode = RegEnumKeyExA(openHkey, 0, skn.ptr, &len, null, null, null, null);
+                        LONG enumcode = RegEnumKeyExW(openHkey, 0, skn.ptr, &len, null, null, null, null);
                         switch(enumcode)
                         {
                             case ERROR_SUCCESS:
                                 //_deleteSubKeyTree(openHkey, skn[0 .. len]);
-                                _deleteSubKeyTree(openHkey, cast(string)skn[0 .. len]); // Needed in D2. WARNING: NOT REALLY INVARIANT.
+                                _deleteSubKeyTree(openHkey, skn[0 .. len].idup); // Needed in D2. WARNING: NOT REALLY INVARIANT.
                                 goto next_subkey;
 
                             case ERROR_NO_MORE_ITEMS:
@@ -763,7 +763,7 @@ class RegistryKey // docmain
 
 
     /// ditto
-    final void deleteValue(string name)
+    final void deleteValue(wstring name)
     {
         deleteValue(name, true);
     }
