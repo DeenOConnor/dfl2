@@ -44,7 +44,7 @@ class TrackBar : ControlSuperClass {
                 if (cast(uint)m.wParam == TB_THUMBTRACK) {
                     int oldval = this.val;
                     this.val = cast(int)(m.wParam >>> 32);
-                    valueChanged(this, new ValueChangedEventArgs(this.val, this.val));
+                    valueChanged(this, new ValueChangedEventArgs(oldval, this.val));
                 }
                 break;
             default:
@@ -64,7 +64,7 @@ class TrackBar : ControlSuperClass {
                 if (cast(uint)m.wParam == TB_THUMBTRACK) {
                     int oldval = this.val;
                     this.val = cast(int)(m.wParam >>> 32);
-                    valueChanged(this, new ValueChangedEventArgs(this.val, this.val));
+                    valueChanged(this, new ValueChangedEventArgs(oldval, this.val));
                 }
                 break;
             default:
