@@ -41,6 +41,7 @@ class ExampleForm: dfl.form.Form
     dfl.splitbutton.SplitButton splitButton1;
     dfl.commandbutton.CommandButton commandButton1;
     dfl.trackbar.TrackBar trackBar1;
+    dfl.spinner.Spinner spinner1;
     //~Entice Designer variables end here.
 
     MyTab tabPage1;
@@ -225,6 +226,13 @@ class ExampleForm: dfl.form.Form
         commandButton1.note = "in panel";
         commandButton1.bounds = dfl.all.Rect(235, 8, 225, 70);
         commandButton1.parent = panel2;
+        //~DFL dfl.spinner.Spinner=spinner1
+        spinner1 = new dfl.spinner.Spinner();
+        spinner1.name = "spinner1";
+        spinner1.bounds = dfl.all.Rect(8, 61, 99, 23);
+        //trackBar1.max = 5;
+        //trackBar1.showTip = false;
+        spinner1.parent = panel2;
         //~Entice Designer 0.8.5.02 code ends here.
 
         comboBox1.items.add(new Control("BLOCKS"w));
@@ -298,6 +306,10 @@ class ExampleForm: dfl.form.Form
         void trackBar1_valueChanged (Object sender, EventArgs evt) {
             writefln("Trackbar value is %d", trackBar1.value);
         }
+        
+        void commandButton1_click (Object sender, EventArgs evt) {
+            writefln("Spinner value: %d", spinner1.value);
+        }
 
         void splitButton1_click (Object sender, EventArgs evt) {
             writefln("SplitButton clicked with text '%s'", splitButton1.text);
@@ -310,6 +322,7 @@ class ExampleForm: dfl.form.Form
         checkBox1.click.addHandler(&checkBox1_click);
         radioButton1.click.addHandler(&radioButton1_click);
         trackBar1.valueChanged.addHandler(&trackBar1_valueChanged);
+        commandButton1.click.addHandler(&commandButton1_click);
         splitButton1.click.addHandler(&splitButton1_click);
     }
 }

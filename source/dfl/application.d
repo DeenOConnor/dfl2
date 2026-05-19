@@ -2042,6 +2042,7 @@ enum LISTVIEW_CLASSNAME = "DFL_ListView";
 enum STATUSBAR_CLASSNAME = "DFL_StatusBar";
 enum PROGRESSBAR_CLASSNAME = "DFL_ProgressBar";
 enum TRACKBAR_CLASSNAME = "DFL_TrackBar";
+enum UPDOWN_CLASSNAME = "DFL_UpDown";
 
 WNDPROC textBoxPrevWndProc;
 WNDPROC listboxPrevWndProc;
@@ -2056,6 +2057,7 @@ WNDPROC listviewPrevWndProc;
 WNDPROC statusbarPrevWndProc;
 WNDPROC progressbarPrevWndProc;
 WNDPROC trackbarPrevWndProc;
+WNDPROC updownPrevWndProc;
 
 LONG textBoxClassStyle;
 LONG listboxClassStyle;
@@ -2070,6 +2072,7 @@ LONG listviewClassStyle;
 LONG statusbarClassStyle;
 LONG progressbarClassStyle;
 LONG trackbarClassStyle;
+LONG updownClassStyle;
 
 HMODULE hmodRichtextbox;
 
@@ -2417,6 +2420,20 @@ extern(Windows)
             if(!trackbarPrevWndProc)
                 _unableToInit(TRACKBAR_CLASSNAME);
             trackbarClassStyle = info.style;
+        }
+    }
+
+    void _initUpDown()
+    {
+        if (!updownPrevWndProc)
+        {
+            _initCommonControls(ICC_UPDOWN_CLASS);
+
+            WNDCLASSW info;
+            updownPrevWndProc = superClass(HINSTANCE.init, "msctls_updown32", UPDOWN_CLASSNAME, info);
+            if(!updownPrevWndProc)
+                _unableToInit(UPDOWN_CLASSNAME);
+            updownClassStyle = info.style;
         }
     }
 }
