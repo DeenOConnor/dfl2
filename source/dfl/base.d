@@ -579,9 +579,10 @@ enum ColumnHeaderStyle: ubyte
 enum BorderStyle: ubyte
 {
     NONE, ///
-
     FIXED_3D, ///
-    FIXED_SINGLE, /// ditto
+    FIXED_SINGLE,
+    FIXED_RAISED_3D,
+    FIXED_FLAT_3D, /// ditto
 }
 
 
