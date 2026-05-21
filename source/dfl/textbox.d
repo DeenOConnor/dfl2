@@ -53,19 +53,29 @@ abstract class TextBoxBase: ControlSuperClass // docmain
     {
         final switch(bs)
         {
-            case BorderStyle.FIXED_3D:
+            case BorderStyle.NONE:
                 _style(_style() & ~WS_BORDER);
-                _exStyle(_exStyle() | WS_EX_CLIENTEDGE);
+                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE & ~WS_EX_DLGMODALFRAME);
                 break;
 
             case BorderStyle.FIXED_SINGLE:
-                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
+                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE & ~WS_EX_DLGMODALFRAME);
                 _style(_style() | WS_BORDER);
                 break;
 
-            case BorderStyle.NONE:
+            case BorderStyle.FIXED_3D:
                 _style(_style() & ~WS_BORDER);
-                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE);
+                _exStyle(_exStyle() & ~WS_EX_DLGMODALFRAME & ~WS_EX_STATICEDGE | WS_EX_CLIENTEDGE);
+                break;
+
+            case BorderStyle.FIXED_RAISED_3D:
+                _style(_style() & ~WS_BORDER);
+                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE & ~WS_EX_STATICEDGE | WS_EX_DLGMODALFRAME);
+                break;
+
+            case BorderStyle.FIXED_FLAT_3D:
+                _style(_style() & ~WS_BORDER);
+                _exStyle(_exStyle() & ~WS_EX_CLIENTEDGE & ~WS_EX_DLGMODALFRAME | WS_EX_STATICEDGE);
                 break;
         }
 
@@ -78,7 +88,11 @@ abstract class TextBoxBase: ControlSuperClass // docmain
     /// ditto
     @property BorderStyle borderStyle() // getter
     {
-        if(_exStyle() & WS_EX_CLIENTEDGE)
+        if(_exStyle() & WS_EX_STATICEDGE)
+            return BorderStyle.FIXED_FLAT_3D;
+        else if(_exStyle() & WS_EX_DLGMODALFRAME)
+            return BorderStyle.FIXED_RAISED_3D;
+        else if(_exStyle() & WS_EX_CLIENTEDGE)
             return BorderStyle.FIXED_3D;
         else if(_style() & WS_BORDER)
             return BorderStyle.FIXED_SINGLE;
